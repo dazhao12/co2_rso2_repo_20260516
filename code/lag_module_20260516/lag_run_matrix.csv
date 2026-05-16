@@ -1,0 +1,6 @@
+enabled,run_key,lag_seconds,outdir_tag
+1,lag0,0,lag0_modelB_n10000_b200
+1,lag30,30,lag30_modelB_n10000_b200
+1,lag60,60,lag60_modelB_n10000_b200
+1,lag120,120,lag120_modelB_n10000_b200
+1,lag180,180,lag180_modelB_n10000_b200
