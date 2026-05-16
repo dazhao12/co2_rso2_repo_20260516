@@ -20,3 +20,12 @@ logs/
 
 # Keep directory placeholders if needed
 !.gitkeep
+
+# Analysis runtime outputs (do not sync heavy/generated files)
+code/analysis_bundle/result/
+code/analysis_bundle/output/logs/
+code/lag_module_20260516/output/
+
+# Generic large result trees
+results/**/raw_cache/
+results/**/processed_pool_cache/
