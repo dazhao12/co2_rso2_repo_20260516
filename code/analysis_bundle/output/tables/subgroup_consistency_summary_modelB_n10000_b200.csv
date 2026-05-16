@@ -1,0 +1,7 @@
+subgroup,n_channels,n_same_direction,prop_same_direction,interaction_direction_note
+Age_less_70,3,3,1.0,mostly_consistent
+Age_more_70,3,3,1.0,mostly_consistent
+Female,3,2,0.6666666666666666,mostly_consistent
+Male,3,3,1.0,mostly_consistent
+Pre_hypertension_less_140_90,3,3,1.0,mostly_consistent
+Pre_hypertension_more_140_90,3,3,1.0,mostly_consistent

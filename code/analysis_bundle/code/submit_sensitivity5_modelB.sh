@@ -5,7 +5,7 @@ cd /N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_c
 mkdir -p output/logs
 
 python3 - <<'PY'
-import csv, subprocess
+import csv, os, subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -24,10 +24,19 @@ with matrix.open('r', encoding='utf-8') as f:
         cmd = [
             'sbatch',
             '--job-name', f'sens_{run_key}',
-            '--export', f'ALL,RUN_KEY={run_key},OUTDIR_TAG={outdir_tag},INTRAOP_SMOOTH_COVARS={intraop}',
+            '--export', f'ALL,RUN_KEY={run_key},OUTDIR_TAG={outdir_tag}',
             'code/submit_one_sensitivity_modelB.sbatch',
         ]
-        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, check=True)
+        env = os.environ.copy()
+        env['INTRAOP_SMOOTH_COVARS'] = intraop
+        p = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            check=True,
+            env=env,
+        )
         txt = (p.stdout or '').strip()
         job_id = txt.split()[-1] if txt else ''
         print(f'submitted {run_key} => {job_id}')
