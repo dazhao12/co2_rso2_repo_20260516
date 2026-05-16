@@ -51,24 +51,45 @@ def delta_from_curve(curve_fp, step=5.0):
     return d, float(d - 1.96 * se), float(d + 1.96 * se), None
 
 
-def find_result_dir(result_root, outdir_tag):
-    cands = sorted(result_root.glob(f"*_{outdir_tag}"))
-    if not cands:
+def find_result_dir(result_roots, outdir_tag):
+    if isinstance(result_roots, (str, Path)):
+        result_roots = [result_roots]
+    all_cands = []
+    for rr in result_roots:
+        rr = Path(rr)
+        if not rr.exists():
+            continue
+        all_cands.extend(sorted(rr.glob(f"*_{outdir_tag}")))
+    if not all_cands:
         return None
-    return cands[-1]
+    all_cands = sorted(all_cands, key=lambda p: p.name)
+    return all_cands[-1]
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--workspace', default='/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513')
     ap.add_argument('--matrix', default='code/sensitivity5_run_matrix.csv')
-    ap.add_argument('--result-root', default='/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/result')
+    ap.add_argument(
+        '--result-root',
+        default='',
+        help='Optional single root. If omitted, auto-search workspace/result then legacy contour result roots.',
+    )
     ap.add_argument('--step', type=float, default=5.0)
     args = ap.parse_args()
 
     ws = Path(args.workspace)
     matrix = pd.read_csv(ws / args.matrix)
-    result_root = Path(args.result_root)
+    candidate_roots = []
+    if args.result_root.strip():
+        candidate_roots.append(Path(args.result_root.strip()))
+    else:
+        # Prefer workspace-local result folder, then legacy locations.
+        candidate_roots.extend([
+            ws / 'result',
+            Path('/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513/result'),
+            Path('/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/result'),
+        ])
 
     rows = []
     dist = {}
@@ -78,7 +99,7 @@ def main():
             continue
         run_key = str(r['run_key'])
         outdir_tag = str(r['outdir_tag'])
-        result_dir = find_result_dir(result_root, outdir_tag)
+        result_dir = find_result_dir(candidate_roots, outdir_tag)
         if result_dir is None:
             for ch in ['rSO2_Ch1', 'rSO2_Ch2', 'rSO2_Ch3']:
                 rows.append({'run_key': run_key, 'outdir_tag': outdir_tag, 'ycol': ch, 'status': 'missing_result_dir'})

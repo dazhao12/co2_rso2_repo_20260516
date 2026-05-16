@@ -1,16 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-cd /N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513
-mkdir -p output/logs
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WS="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${WS}"
+mkdir -p code/analysis_bundle/output/logs
 
 python3 - <<'PY'
 import csv, subprocess
 from datetime import datetime
 from pathlib import Path
 
-matrix = Path('code/sensitivity5_run_matrix.csv')
-out = Path('output/logs') / f"sensitivity5_job_ids_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+matrix = Path('code/analysis_bundle/code/sensitivity5_run_matrix.csv')
+out = Path('code/analysis_bundle/output/logs') / f"sensitivity5_job_ids_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
 rows_out = []
 with matrix.open('r', encoding='utf-8') as f:
@@ -25,7 +27,7 @@ with matrix.open('r', encoding='utf-8') as f:
             'sbatch',
             '--job-name', f'sens_{run_key}',
             '--export', f'ALL,RUN_KEY={run_key},OUTDIR_TAG={outdir_tag},INTRAOP_SMOOTH_COVARS={intraop}',
-            'code/submit_one_sensitivity_modelB.sbatch',
+            'code/analysis_bundle/code/submit_one_sensitivity_modelB.sbatch',
         ]
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, check=True)
         txt = (p.stdout or '').strip()
