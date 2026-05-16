@@ -25,6 +25,9 @@ logs/
 code/analysis_bundle/result/
 code/analysis_bundle/output/logs/
 code/lag_module_20260516/output/
+code/analysis_bundle/output/
+results/
+image/
 
 # Generic large result trees
 results/**/raw_cache/

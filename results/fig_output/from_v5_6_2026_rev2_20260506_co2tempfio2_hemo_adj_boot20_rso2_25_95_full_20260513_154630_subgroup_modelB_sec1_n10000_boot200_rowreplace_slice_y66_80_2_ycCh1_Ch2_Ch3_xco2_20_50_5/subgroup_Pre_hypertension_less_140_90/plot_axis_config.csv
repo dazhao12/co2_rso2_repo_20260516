@@ -1,4 +1,0 @@
-subgroup,xvar,x_lim_lo,x_lim_hi,x_breaks,y_lim_lo,y_lim_hi,y_breaks
-Pre_hypertension_less_140_90,ET_CO2,20,50,20|25|30|35|40|45|50,66,81,66|68|70|72|74|76|78|80
-Pre_hypertension_less_140_90,TEMP,34,37.5,34|34.5|35|35.5|36|36.5|37|37.5,66,81,66|68|70|72|74|76|78|80
-Pre_hypertension_less_140_90,FiO2_new,30,100,30|40|50|60|70|80|90|100,66,81,66|68|70|72|74|76|78|80
