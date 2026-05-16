@@ -1,0 +1,10 @@
+plot_mode,subgroup,ycol,xvar,sec,n_sample,x_hist_available,y_hist_available,x_hist_range,y_hist_range,x_hist_peak,y_hist_peak,subtitle,caption
+slice_median,Female,rSO2_Ch1,ET_CO2,1,10000,TRUE,TRUE,20-50,66-81,30.62,72.5,,
+slice_median,Female,rSO2_Ch2,ET_CO2,1,10000,TRUE,TRUE,20-50,66-81,30.62,72.5,,
+slice_median,Female,rSO2_Ch3,ET_CO2,1,10000,TRUE,TRUE,20-50,66-81,30.62,80.5,,
+slice_median,Female,rSO2_Ch1,TEMP,1,10000,TRUE,TRUE,34-37.5,66-81,35.53,72.5,,
+slice_median,Female,rSO2_Ch2,TEMP,1,10000,TRUE,TRUE,34-37.5,66-81,35.53,72.5,,
+slice_median,Female,rSO2_Ch3,TEMP,1,10000,TRUE,TRUE,34-37.5,66-81,35.53,80.5,,
+slice_median,Female,rSO2_Ch1,FiO2_new,1,10000,TRUE,TRUE,30-100,66-81,57.71,72.5,,
+slice_median,Female,rSO2_Ch2,FiO2_new,1,10000,TRUE,TRUE,30-100,66-81,57.71,72.5,,
+slice_median,Female,rSO2_Ch3,FiO2_new,1,10000,TRUE,TRUE,30-100,66-81,57.71,80.5,,

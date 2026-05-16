@@ -1,0 +1,19 @@
+sec,subgroup,subgroup_query,ycol,cache_hit,cache_written,cache_key,pool_rows,pool_patients
+1,Age_less_70,Age <= 70,rSO2_Ch1,1,1,aa5448115c3a,13264150,1164
+1,Age_less_70,Age <= 70,rSO2_Ch2,1,1,f9c900bdbd26,13299857,1164
+1,Age_less_70,Age <= 70,rSO2_Ch3,1,1,57d606032cff,13285475,1162
+1,Age_more_70,Age > 70,rSO2_Ch1,1,1,4b4c02269b63,6757553,628
+1,Age_more_70,Age > 70,rSO2_Ch2,1,1,0d8f90b1835d,6775740,628
+1,Age_more_70,Age > 70,rSO2_Ch3,1,1,02851caa2e22,6783284,627
+1,Male,Sex == 1,rSO2_Ch1,1,1,37e0afbebb8c,14460614,1255
+1,Male,Sex == 1,rSO2_Ch2,1,1,8f6ded313884,14477373,1255
+1,Male,Sex == 1,rSO2_Ch3,1,1,0bd361627a19,14451447,1254
+1,Female,Sex == 0,rSO2_Ch1,1,1,fb23bb4760d4,5561089,537
+1,Female,Sex == 0,rSO2_Ch2,1,1,c7c653d00d10,5598224,537
+1,Female,Sex == 0,rSO2_Ch3,1,1,693e4c6962d6,5617312,535
+1,Pre_hypertension_more_140_90,Hypertension_140_90 == 1,rSO2_Ch1,1,1,859506197cc1,4440179,407
+1,Pre_hypertension_more_140_90,Hypertension_140_90 == 1,rSO2_Ch2,1,1,1e9f3a6e0b11,4462302,407
+1,Pre_hypertension_more_140_90,Hypertension_140_90 == 1,rSO2_Ch3,1,1,4873124ff942,4463257,406
+1,Pre_hypertension_less_140_90,Hypertension_140_90 == 0,rSO2_Ch1,1,1,13097debf5c4,15581524,1385
+1,Pre_hypertension_less_140_90,Hypertension_140_90 == 0,rSO2_Ch2,1,1,d10727685c83,15613295,1385
+1,Pre_hypertension_less_140_90,Hypertension_140_90 == 0,rSO2_Ch3,1,1,4afa7900b4c2,15605502,1383

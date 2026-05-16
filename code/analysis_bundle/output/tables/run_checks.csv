@@ -1,0 +1,2 @@
+n_expected,n_rows,n_missing,summary_csv,by_channel_csv,ppt
+9,9,0,/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513/output/tables/crossvar_effect_summary.csv,/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513/output/tables/crossvar_effect_by_channel.csv,/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513/output/ppt/crossvar_summary_n10000.pptx

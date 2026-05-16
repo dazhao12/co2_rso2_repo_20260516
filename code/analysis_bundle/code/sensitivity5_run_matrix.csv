@@ -1,0 +1,6 @@
+run_key,enabled,intraop_smooth_covars,outdir_tag,description
+base,1,,sensA_base_no_ventcov_modelB_n10000_b200,Base no RRtotal TVinsp Pmean
+rrtotal_only,1,RRtotal,sensB_rrtotal_only_modelB_n10000_b200,Only RRtotal added
+tvinsp_only,1,TVinsp,sensB_tvinsp_only_modelB_n10000_b200,Only TVinsp added
+pmean_only,1,Pmean,sensB_pmean_only_modelB_n10000_b200,Only Pmean added
+all_three,1,"RRtotal,TVinsp,Pmean",sensB_all_three_modelB_n10000_b200,All three added

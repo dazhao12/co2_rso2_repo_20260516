@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# R
+.Rhistory
+.RData
+
+# OS/Editor
+.DS_Store
+*.swp
+*.swo
+
+# Logs/tmp
+logs/
+*.log
+*.out
+*.err
+
+# Keep directory placeholders if needed
+!.gitkeep
