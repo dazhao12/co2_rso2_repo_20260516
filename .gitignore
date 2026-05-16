@@ -18,5 +18,10 @@ logs/
 *.out
 *.err
 
+# Generated analysis outputs
+code/analysis_bundle/result/
+code/lag_module_20260516/
+results/modelb_n_sweep_eval/
+
 # Keep directory placeholders if needed
 !.gitkeep
