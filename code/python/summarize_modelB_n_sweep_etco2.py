@@ -108,10 +108,30 @@ def pick_curve(result_dir: Path, ch: str):
     return cands[0] if cands else None
 
 
-def plot_delta(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
-    plt.figure(figsize=(8.6, 5.2))
-    colors = {"rSO2_Ch1": "#1f77b4", "rSO2_Ch2": "#ff7f0e", "rSO2_Ch3": "#2ca02c"}
+CHANNEL_MAP = {
+    "rSO2_Ch1": "Left SctO₂ (%)",
+    "rSO2_Ch2": "Right SctO₂ (%)",
+    "rSO2_Ch3": "SftO₂ (%)"
+}
 
+CHANNEL_COLORS = {
+    "rSO2_Ch1": "#1f77b4",
+    "rSO2_Ch2": "#2ca02c",
+    "rSO2_Ch3": "#d62728"
+}
+
+
+def plot_delta(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
+    plt.figure(figsize=(8.0, 5.0))
+    ax = plt.gca()
+    
+    # Apply clean classic styles
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#616161')
+    ax.spines['bottom'].set_color('#616161')
+    ax.tick_params(colors='#616161', which='both', width=0.8)
+    
     for ch in CHANNELS:
         d = df_ok[df_ok["ycol"] == ch].sort_values("sample_size")
         if d.empty:
@@ -121,14 +141,22 @@ def plot_delta(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
         lo = d["delta_ci_lo"].to_numpy(dtype=float)
         hi = d["delta_ci_hi"].to_numpy(dtype=float)
         yerr = np.vstack([y - lo, hi - y])
-        plt.errorbar(x, y, yerr=yerr, marker="o", linestyle="-", capsize=3, linewidth=1.5, color=colors[ch], label=ch)
+        
+        plt.errorbar(
+            x, y, yerr=yerr, 
+            marker="o", linestyle="-", capsize=3, linewidth=1.5, 
+            color=CHANNEL_COLORS[ch], 
+            label=CHANNEL_MAP[ch]
+        )
 
     plt.xscale("log")
-    plt.axvline(10000, color="black", linestyle="--", linewidth=1.0, alpha=0.7)
-    plt.xlabel("Sample size (log scale)")
-    plt.ylabel("Delta rSO2 (+5 mmHg ET_CO2)")
-    plt.title("Model B n-sweep stability: ET_CO2 effect")
-    plt.legend(frameon=False)
+    plt.axvline(10000, color="#7f7f7f", linestyle="--", linewidth=1.2, alpha=0.85, label="Main Study Baseline (N=10,000)")
+    
+    plt.xlabel("Subsample Size N (log scale)", fontsize=11, color="black")
+    plt.ylabel("Delta rSO₂ (%) for +5 mmHg ET-CO₂", fontsize=11, color="black")
+    plt.title("Sample Size Sensitivity: Stability of ET-CO₂ Effect", fontsize=12, fontweight="bold", pad=15)
+    
+    plt.legend(frameon=False, loc="upper right", fontsize=10)
     plt.tight_layout()
     plt.savefig(out_png, dpi=220)
     plt.savefig(out_pdf)
@@ -137,13 +165,21 @@ def plot_delta(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
 
 def plot_curve_overlay(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
     picks = [1000, 10000, 100000, 1000000]
-    fig, axes = plt.subplots(1, 3, figsize=(14.5, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(13.33, 4.5), sharey=True)
 
     for i, ch in enumerate(CHANNELS):
         ax = axes[i]
+        
+        # Apply clean classic styles to each panel
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_color('#616161')
+        ax.spines['bottom'].set_color('#616161')
+        ax.tick_params(colors='#616161', width=0.8)
+        
         dch = df_ok[df_ok["ycol"] == ch].copy()
         if dch.empty:
-            ax.set_title(ch)
+            ax.set_title(CHANNEL_MAP[ch], fontsize=11, fontweight="bold")
             continue
 
         ns_avail = sorted(dch["sample_size"].unique())
@@ -157,19 +193,19 @@ def plot_curve_overlay(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
             curve_fp = Path(one["curve_fp"])
             x, y, lo, hi = load_curve(curve_fp)
             color = cmap(j / max(1, len(draw_ns) - 1))
-            ax.plot(x, y, color=color, linewidth=2.0, label=f"N={n}")
-            ax.fill_between(x, lo, hi, color=color, alpha=0.12)
+            ax.plot(x, y, color=color, linewidth=2.0, label=f"N={n:,}")
+            ax.fill_between(x, lo, hi, color=color, alpha=0.10)
 
-        ax.set_title(ch)
-        ax.set_xlabel("ET_CO2 (mmHg)")
-        ax.grid(alpha=0.2)
+        ax.set_title(CHANNEL_MAP[ch], fontsize=12, fontweight="bold", pad=10)
+        ax.set_xlabel("ET-CO₂ (mmHg)", fontsize=11, color="black")
+        ax.grid(alpha=0.15, linestyle=":")
         if i == 0:
-            ax.set_ylabel("Predicted rSO2")
+            ax.set_ylabel("Predicted Oxygenation (%)", fontsize=11, color="black")
 
     handles, labels = axes[0].get_legend_handles_labels()
     if handles:
-        fig.legend(handles, labels, loc="lower center", ncol=min(4, len(labels)), frameon=False)
-    fig.suptitle("ET_CO2 curve shape across sample sizes (Model B)", y=1.02)
+        fig.legend(handles, labels, loc="lower center", ncol=min(4, len(labels)), frameon=False, fontsize=10)
+    fig.suptitle("Estimated ET-CO₂ Response Curves across Subsample Sizes (Model B)", y=1.02, fontsize=13, fontweight="bold")
     plt.tight_layout()
     plt.savefig(out_png, dpi=220, bbox_inches="tight")
     plt.savefig(out_pdf, bbox_inches="tight")
