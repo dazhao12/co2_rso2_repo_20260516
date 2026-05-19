@@ -32,3 +32,6 @@ image/
 # Generic large result trees
 results/**/raw_cache/
 results/**/processed_pool_cache/
+
+# Generated analysis outputs (local only, do not track)
+results/modelb_n_sweep_eval/
