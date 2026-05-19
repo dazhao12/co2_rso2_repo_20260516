@@ -25,3 +25,6 @@ results/modelb_n_sweep_eval/
 
 # Keep directory placeholders if needed
 !.gitkeep
+
+# Generated analysis outputs (local only, do not track)
+code/analysis_bundle/output/
