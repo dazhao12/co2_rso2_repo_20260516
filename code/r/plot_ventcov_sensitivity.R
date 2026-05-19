@@ -180,6 +180,66 @@ p <- ggplot(df, aes(x = delta_rso2_plus5, y = y_num, color = channel_f)) +
     legend.key        = element_rect(fill = NA, colour = NA)
   )
 
+# ── 5.1. ggplot2 方向热图绘制 (Direction Heatmap) ──────────────────────────────
+make_heatmap <- function(df) {
+  df_heat <- df
+  df_heat$ci_status <- with(df_heat, ifelse(
+    delta_ci_lo <= 0 & delta_ci_hi >= 0,
+    "95%CI \u220b 0",
+    ifelse(delta_rso2_plus5 > 0, "95%CI > 0", "95%CI < 0")
+  ))
+  df_heat$ci_status <- factor(df_heat$ci_status,
+                              levels = c("95%CI > 0", "95%CI \u220b 0", "95%CI < 0"))
+  df_heat$label_txt <- sprintf("%.2f", df_heat$delta_rso2_plus5)
+
+  ch_short <- setNames(
+    c("Left SctO\u2082", "Right SctO\u2082", "SftO\u2082"),
+    ch_labels[ch_levels]
+  )
+
+  ggplot(df_heat,
+         aes(x = channel_f, y = model_f, fill = ci_status)) +
+
+    geom_tile(color = "white", linewidth = 0.9) +
+    geom_text(aes(label = label_txt),
+              size = 3.8, fontface = "bold",
+              family = BASE_FAMILY, colour = "grey10") +
+
+    scale_fill_manual(
+      values = c(
+        "95%CI > 0"        = "#4f86c6",
+        "95%CI \u220b 0"   = "#e8e8e8",
+        "95%CI < 0"        = "#d95f5f"
+      ),
+      name = "Bootstrap 95%CI",
+      drop = FALSE
+    ) +
+
+    scale_x_discrete(labels = ch_short) +
+
+    labs(x = NULL, y = NULL, title = NULL) +
+
+    theme_clean() +
+    theme(
+      axis.line    = element_blank(),
+      axis.ticks   = element_blank(),
+      axis.text.x  = element_text(size = TICK_FONTSIZE, colour = "black",
+                                  margin = margin(t = 4, unit = "pt")),
+      axis.text.y  = element_text(size = TICK_FONTSIZE, hjust = 1, colour = "black",
+                                  margin = margin(r = 5, unit = "pt")),
+      plot.margin  = margin(PLOT_MARGIN_PT, PLOT_MARGIN_PT,
+                            PLOT_MARGIN_PT, PLOT_MARGIN_PT + 8, "pt"),
+      legend.position  = "right",
+      legend.title     = element_text(size = TICK_FONTSIZE, face = "bold",
+                                      family = BASE_FAMILY),
+      legend.text      = element_text(size = TICK_FONTSIZE, family = BASE_FAMILY),
+      legend.key.size  = unit(14, "pt"),
+      legend.background = element_rect(fill = NA, colour = NA),
+      legend.key        = element_rect(fill = NA, colour = NA),
+      panel.border      = element_blank()
+    )
+}
+
 # ── 6. 导出静态图与 PPTX ──────────────────────────────────────────────────────
 SLIDE_W <- 13.333
 SLIDE_H <- 7.5
@@ -200,30 +260,55 @@ add_blank <- function(ppt) {
             master = layout_summary(ppt)$master[1])
 }
 
-# 绘图区域尺寸限制（10 x 5.5 英寸，居中放置在 13.333 x 7.5 的幻灯片中）
-w_in <- 10
-h_in <- 5.5
+# 绘图区域尺寸限制
+w_forest <- 10
+h_forest <- 5.5
+w_heatmap <- 7.5
+h_heatmap <- 5.0
 
-png_path  <- file.path(out_dir, "etco2_sensitivity_5model_forest.png")
-pdf_path  <- file.path(out_dir, "etco2_sensitivity_5model_forest.pdf")
-pptx_path <- file.path(out_dir, "etco2_sensitivity_5model_forest.pptx")
+forest_png_path  <- file.path(out_dir, "etco2_sensitivity_5model_forest.png")
+forest_pdf_path  <- file.path(out_dir, "etco2_sensitivity_5model_forest.pdf")
+heatmap_png_path <- file.path(out_dir, "etco2_sensitivity_5model_heatmap.png")
+heatmap_pdf_path <- file.path(out_dir, "etco2_sensitivity_5model_heatmap.pdf")
+pptx_path        <- file.path(out_dir, "etco2_sensitivity_5model_forest.pptx")
 
-ggsave(png_path, p, width = w_in, height = h_in, dpi = 300, bg = "white")
-ggsave(pdf_path, p, width = w_in, height = h_in, device = cairo_pdf, bg = "white")
-message("Saved PNG: ", basename(png_path))
-message("Saved PDF: ", basename(pdf_path))
+# 保存 Forest 图
+ggsave(forest_png_path, p, width = w_forest, height = h_forest, dpi = 300, bg = "white")
+ggsave(forest_pdf_path, p, width = w_forest, height = h_forest, device = cairo_pdf, bg = "white")
+message("Saved Forest PNG: ", basename(forest_png_path))
+message("Saved Forest PDF: ", basename(forest_pdf_path))
 
-left_offset <- (SLIDE_W - w_in) / 2
-top_offset  <- (SLIDE_H - h_in) / 2
+# 保存 Heatmap 图
+p_heatmap <- make_heatmap(df)
+ggsave(heatmap_png_path, p_heatmap, width = w_heatmap, height = h_heatmap, dpi = 300, bg = "white")
+ggsave(heatmap_pdf_path, p_heatmap, width = w_heatmap, height = h_heatmap, device = cairo_pdf, bg = "white")
+message("Saved Heatmap PNG: ", basename(heatmap_png_path))
+message("Saved Heatmap PDF: ", basename(heatmap_pdf_path))
 
+# 制作 PPTX 并添加两个幻灯片 (均居中放置)
 ppt <- read_pptx()
 ppt <- set_ppt_slide_size(ppt, SLIDE_W, SLIDE_H)
+
+# Slide 1: Forest Plot
+forest_left <- (SLIDE_W - w_forest) / 2
+forest_top  <- (SLIDE_H - h_forest) / 2
 ppt <- add_blank(ppt)
 ppt <- ph_with(
   ppt,
   value    = dml(ggobj = p),
-  location = ph_location(left   = left_offset, top    = top_offset,
-                         width  = w_in,         height = h_in)
+  location = ph_location(left   = forest_left, top    = forest_top,
+                         width  = w_forest,     height = h_forest)
+)
+
+# Slide 2: Heatmap
+heatmap_left <- (SLIDE_W - w_heatmap) / 2
+heatmap_top  <- (SLIDE_H - h_heatmap) / 2
+ppt <- add_blank(ppt)
+ppt <- ph_with(
+  ppt,
+  value    = dml(ggobj = p_heatmap),
+  location = ph_location(left   = heatmap_left, top    = heatmap_top,
+                         width  = w_heatmap,     height = h_heatmap)
 )
 
 print(ppt, target = pptx_path)
