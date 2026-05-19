@@ -52,8 +52,8 @@ theme_clean <- function() {
 
 # ── 1. 路径设置 ──────────────────────────────────────────────────────────────
 base_dir <- "/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516/code/analysis_bundle"
-csv_path <- file.path(base_dir, "output/tables/etco2_sensitivity_5model_summary.csv")
-out_dir  <- file.path(base_dir, "output/figures")
+csv_path <- file.path(base_dir, "output/tables/sensitivity_ventcov/etco2_sensitivity_5model_summary.csv")
+out_dir  <- file.path(base_dir, "output/figures/sensitivity_ventcov")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 if (!file.exists(csv_path)) {

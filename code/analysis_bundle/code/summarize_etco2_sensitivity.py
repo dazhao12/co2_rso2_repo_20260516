@@ -68,7 +68,8 @@ def find_result_dir(result_roots, outdir_tag):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--workspace', default='/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/analysis_crossvar_bundle_20260513')
+    default_ws = str(Path(__file__).resolve().parents[1])
+    ap.add_argument('--workspace', default=default_ws)
     ap.add_argument('--matrix', default='code/sensitivity5_run_matrix.csv')
     ap.add_argument(
         '--result-root',
@@ -125,7 +126,7 @@ def main():
             dist[(run_key, ch)] = arr
 
     df = pd.DataFrame(rows)
-    out_tables = ws / 'output' / 'tables'
+    out_tables = ws / 'output' / 'tables' / 'sensitivity_ventcov'
     out_tables.mkdir(parents=True, exist_ok=True)
     sum_fp = out_tables / 'etco2_sensitivity_5model_summary.csv'
     df.to_csv(sum_fp, index=False)
