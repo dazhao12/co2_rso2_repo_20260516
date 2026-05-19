@@ -4,9 +4,9 @@ output_tag: all_intraop_n10000_mapci_te
 plot_mode: slice_median
 figure_formats: [png, pdf]
 output:
-  figures_dir: output/figures
-  tables_dir: output/tables
-  ppt_dir: output/ppt
+  figures_dir: output/figures/main
+  tables_dir: output/tables/main
+  ppt_dir: output/ppt/main
   logs_dir: output/logs
 clinical_steps:
   ET_CO2: 5.0
