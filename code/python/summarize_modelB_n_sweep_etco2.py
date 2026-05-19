@@ -129,9 +129,17 @@ def main():
     out_figs.mkdir(parents=True, exist_ok=True)
 
     dirs = sorted(result_root.glob("*overall_modelB_sec1_nSweep_*_boot50_rowreplace"))
-    rows = []
-
+    
+    # Deduplicate runs: keep only the latest run for each sample size N
+    n_to_dir = {}
     for d in dirs:
+        n = parse_n_from_name(d.name)
+        if n is not None:
+            n_to_dir[n] = d
+    unique_dirs = [n_to_dir[n] for n in sorted(n_to_dir.keys())]
+
+    rows = []
+    for d in unique_dirs:
         n = parse_n_from_name(d.name)
         if n is None:
             continue

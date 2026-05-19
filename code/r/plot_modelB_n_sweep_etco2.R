@@ -112,7 +112,7 @@ plot_curves_fn <- function() {
   df <- read.csv(CURVES_FILE, stringsAsFactors = FALSE)
   df$channel_f <- factor(ch_map[df$ycol], levels = unname(ch_map))
   
-  picks <- c(1000, 10000, 100000, 1000000)
+  picks <- c(1000L, 10000L, 100000L, 1000000L)
   df_sub <- df %>% filter(sample_size %in% picks)
   df_sub$n_factor <- factor(df_sub$sample_size, levels = picks, 
                             labels = c("N = 1,000", "N = 10,000", "N = 100,000", "N = 1,000,000"))
