@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_RESULT="/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/result"
-SCRIPT_DIR="/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516/code/python"
 SBATCH_SCRIPT="${SCRIPT_DIR}/submit_intraop3var_overall_modelB_n_sweep_boot50_single.sbatch"
-LOG_DIR="/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516/logs"
+LOG_DIR="${SCRIPT_DIR}/output/logs"
 mkdir -p "${LOG_DIR}"
 
 # Fixed grid from protocol

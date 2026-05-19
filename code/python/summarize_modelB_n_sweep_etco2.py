@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""
+v1.1 - 样本量敏感性汇总与 PPTX 报告生成脚本
+改动：
+  - 支持 python-pptx 自动将效应量折线图与曲线重叠对比图生成专业级幻灯片。
+  - 增加 PPT 标题和图表排版辅助函数。
+基于：原始 summarize_modelB_n_sweep_etco2.py
+解决问题：增加自动 PPT 报告生成，提升结果展现的直观性。
+"""
 import argparse
 import re
 from pathlib import Path
@@ -7,7 +15,32 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+try:
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+    HAS_PPTX = True
+except ImportError:
+    HAS_PPTX = False
+
 CHANNELS = ["rSO2_Ch1", "rSO2_Ch2", "rSO2_Ch3"]
+
+def add_title(slide, text, size=24):
+    tb = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(9.0), Inches(0.8))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    p.text = text
+    p.font.bold = True
+    p.font.size = Pt(size)
+
+def add_body(slide, text, top=1.5, size=14, height=4.5):
+    tb = slide.shapes.add_textbox(Inches(0.5), Inches(top), Inches(9.0), Inches(height))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    p.text = text
+    p.font.size = Pt(size)
+
 
 
 def interp(x, y, xq):
@@ -173,6 +206,63 @@ def build_stability_summary(df_ok: pd.DataFrame):
     return pd.DataFrame(rows)
 
 
+def build_ppt(df_ok: pd.DataFrame, fig1_png: Path, fig2_png: Path, stab: pd.DataFrame, out_pptx: Path):
+    if not HAS_PPTX:
+        print("[pptx] python-pptx is not installed, skipping PPTX slide generation.")
+        return
+    from datetime import datetime
+    prs = Presentation()
+    
+    # Title slide
+    s0 = prs.slides.add_slide(prs.slide_layouts[6])
+    add_title(s0, "Model B Sample Size Sensitivity Sweep Summary", size=24)
+    add_body(
+        s0, 
+        f"Sensitivity analysis on subsample size N\n"
+        f"Bootstrap resamples: b=50\n"
+        f"Date: {datetime.now().strftime('%Y-%m-%d')}",
+        top=1.5,
+        size=14
+    )
+
+    # Slide 1: Delta effect size over different sample sizes
+    if fig1_png.exists():
+        s1 = prs.slides.add_slide(prs.slide_layouts[6])
+        add_title(s1, "ET_CO2 effect size stability (+5 mmHg delta) vs Sample Size N", size=20)
+        s1.shapes.add_picture(str(fig1_png), Inches(0.5), Inches(0.9), width=Inches(9.0))
+        
+    # Slide 2: Curve overlays
+    if fig2_png.exists():
+        s2 = prs.slides.add_slide(prs.slide_layouts[6])
+        add_title(s2, "ET_CO2 response curves overlay across sample sizes", size=20)
+        s2.shapes.add_picture(str(fig2_png), Inches(0.5), Inches(0.9), width=Inches(9.0))
+
+    # Slide 3: Stability table
+    s3 = prs.slides.add_slide(prs.slide_layouts[6])
+    add_title(s3, "Stability Comparison: N=10,000 vs Maximum Sample Size N_ref", size=18)
+    
+    txt_summary = ""
+    if stab is not None and not stab.empty:
+        txt_summary += f"{'Channel':10s} | {'N_ref':8s} | {'Delta_ref':9s} | {'Delta_10k':9s} | {'Abs Diff':8s} | {'Rel Diff':8s} | {'Stable?':8s}\n"
+        txt_summary += "-" * 75 + "\n"
+        for _, row in stab.iterrows():
+            ch = row["ycol"]
+            n_ref = int(row["n_ref"])
+            d_ref = float(row["delta_ref"])
+            d_10k = float(row["delta_n10000"])
+            abs_diff = float(row["abs_diff_n10000_vs_ref"])
+            rel_diff = float(row["rel_diff_n10000_vs_ref"])
+            stable = "Yes" if bool(row["n10000_in_stable_plateau"]) else "No"
+            txt_summary += f"{ch:10s} | {n_ref:8d} | {d_ref:9.4f} | {d_10k:9.4f} | {abs_diff:8.4f} | {rel_diff:7.2%} | {stable:8s}\n"
+    else:
+        txt_summary += "No stability comparison data available."
+        
+    add_body(s3, txt_summary, top=1.2, size=11, height=5.0)
+    
+    prs.save(str(out_pptx))
+    print(f"Generated summary slides PPTX: {out_pptx}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--result-root", default="/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/result")
@@ -236,21 +326,22 @@ def main():
 
     df_ok = df[df["status"] == "ok"].copy()
     if not df_ok.empty:
-        plot_delta(
-            df_ok,
-            out_figs / "modelB_n_sweep_delta_plus5_by_channel.png",
-            out_figs / "modelB_n_sweep_delta_plus5_by_channel.pdf",
-        )
-        plot_curve_overlay(
-            df_ok,
-            out_figs / "modelB_n_sweep_curve_overlay_by_channel.png",
-            out_figs / "modelB_n_sweep_curve_overlay_by_channel.pdf",
-        )
+        fig1_png = out_figs / "modelB_n_sweep_delta_plus5_by_channel.png"
+        fig1_pdf = out_figs / "modelB_n_sweep_delta_plus5_by_channel.pdf"
+        plot_delta(df_ok, fig1_png, fig1_pdf)
+        
+        fig2_png = out_figs / "modelB_n_sweep_curve_overlay_by_channel.png"
+        fig2_pdf = out_figs / "modelB_n_sweep_curve_overlay_by_channel.pdf"
+        plot_curve_overlay(df_ok, fig2_png, fig2_pdf)
 
         stab = build_stability_summary(df_ok)
         stab_fp = out_tables / "modelB_n_sweep_stability_summary.csv"
         stab.to_csv(stab_fp, index=False)
         print(f"stability: {stab_fp}")
+        
+        # Build PPTX slides
+        out_pptx = out_figs / "modelB_n_sweep_etco2_stability_summary.pptx"
+        build_ppt(df_ok, fig1_png, fig2_png, stab, out_pptx)
 
     print(f"summary: {sum_fp}")
     print(f"figures: {out_figs}")
@@ -258,3 +349,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
