@@ -227,17 +227,30 @@ if ANALYSIS_SCOPE not in ("overall", "subgroup", "both"):
     ANALYSIS_SCOPE = "overall"
 SUBGROUP_ROOT_DIR = os.getenv("INTRA5_SUBGROUP_ROOT_DIR", "subgroups")
 
-# 年龄、性别、术前高血压(140/90) 三类亚组分析
+# 亚组分析定义：年龄、性别、高血压 + 糖尿病、贫血(WHO性别特异)、BMI、颈动脉
 SUBGROUP_DEFS = [
+    # ── 原有 ──
     {"tag": "Age_less_70", "query": "Age <= 70"},
     {"tag": "Age_more_70", "query": "Age > 70"},
     {"tag": "Male", "query": "Sex == 1"},
     {"tag": "Female", "query": "Sex == 0"},
     {"tag": "Pre_hypertension_more_140_90", "query": "Hypertension_140_90 == 1"},
     {"tag": "Pre_hypertension_less_140_90", "query": "Hypertension_140_90 == 0"},
+    # ── 新增 (2026-05-19) ──
+    {"tag": "Diabetes_Yes",   "query": "Diabetes_status == 1"},
+    {"tag": "Diabetes_No",    "query": "Diabetes_status == 0"},
+    {"tag": "Anemia_WHO_Yes", "query": "Anemia_WHO == 1"},
+    {"tag": "Anemia_WHO_No",  "query": "Anemia_WHO == 0"},
+    {"tag": "BMI_ge28",       "query": "BMI >= 28"},
+    {"tag": "BMI_lt28",       "query": "BMI < 28"},
+    {"tag": "Carotid_Yes",    "query": "Carotid_artery_disease >= 1"},
+    {"tag": "Carotid_No",     "query": "Carotid_artery_disease == 0"},
 ]
 # 这些列只用于分层过滤，不进入建模校正
-SUBGROUP_STATIC_VARS = ["Hypertension_140_90", "Sex", "Age"]
+SUBGROUP_STATIC_VARS = [
+    "Hypertension_140_90", "Sex", "Age",
+    "Diabetes_status", "Hb", "BMI", "Carotid_artery_disease",
+]
 
 PRETTY_LABELS = {
     "ET_CO2": "End-Tidal CO₂ (mmHg)",
@@ -1870,6 +1883,21 @@ def main():
         df_base["Sex"] = df_base["SEX"]
     if "SEX" not in df_base.columns and "Sex" in df_base.columns:
         df_base["SEX"] = df_base["Sex"]
+
+    # 衍生变量：Anemia_WHO（性别特异 WHO 标准，Male Hb<130, Female Hb<120 g/L）
+    if "Hb" in df_base.columns and "Sex" in df_base.columns:
+        df_base["Anemia_WHO"] = np.where(
+            (df_base["Sex"] == 1) & (df_base["Hb"] < 130), 1,
+            np.where(
+                (df_base["Sex"] == 0) & (df_base["Hb"] < 120), 1, 0
+            )
+        )
+        df_base.loc[df_base["Hb"].isna() | df_base["Sex"].isna(), "Anemia_WHO"] = np.nan
+        print(f"[derived] Anemia_WHO created: anemia={int((df_base['Anemia_WHO']==1).sum())}, "
+              f"normal={int((df_base['Anemia_WHO']==0).sum())}, "
+              f"missing={int(df_base['Anemia_WHO'].isna().sum())}")
+    else:
+        print("[warning] Cannot create Anemia_WHO: Hb or Sex column missing")
 
     safe_numeric(
         df_base,
