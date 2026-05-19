@@ -1,11 +1,29 @@
 #!/usr/bin/env python3
+"""
+v1.1 - 滞后效应结果汇总与 PPTX 报告生成脚本
+改动：
+  - 支持模型参数动态获取（Model A / Model B）。
+  - 支持输出动态文件名称与对应的子采样和自助抽样参数。
+  - 增加使用 python-pptx 自动将结果折线图与曲线对比图生成专业级 PPTX 幻灯片功能。
+基于：原始 summarize_lag_effects.py
+解决问题：支持动态模型参数配置，并实现汇报 PPT 自动化生成。
+"""
 import argparse
 from pathlib import Path
+import os
+
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+# Try importing python-pptx for professional report generation
+try:
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+    HAS_PPTX = True
+except ImportError:
+    HAS_PPTX = False
 
 CHANNELS = ["rSO2_Ch1", "rSO2_Ch2", "rSO2_Ch3"]
 
@@ -18,6 +36,7 @@ def find_result_dir(result_root: Path, outdir_tag: str):
     cands = sorted(result_root.glob(f"*_{outdir_tag}"))
     if not cands:
         return None
+    # Prioritize directories that actually completed and have summaries
     with_summary = [d for d in cands if (d / "run_summary.csv").exists()]
     return with_summary[-1] if with_summary else cands[-1]
 
@@ -105,7 +124,7 @@ def extract_sample_counts(flow_fp: Path, ycol: str):
     return n_required_rows, n_required_patients, n_final_rows, n_final_patients
 
 
-def plot_lag_delta(df: pd.DataFrame, out_png: Path, out_pdf: Path):
+def plot_lag_delta(df: pd.DataFrame, out_png: Path, out_pdf: Path, model_label: str, subsample: int, boot: int):
     ok = df[df["status"] == "ok"].copy()
     if ok.empty:
         return
@@ -140,7 +159,7 @@ def plot_lag_delta(df: pd.DataFrame, out_png: Path, out_pdf: Path):
     plt.axhline(0.0, color="black", linestyle="--", linewidth=1.0)
     plt.xlabel("ET_CO2 lag (seconds)")
     plt.ylabel("Delta rSO2 (+5 mmHg ET_CO2)")
-    plt.title("Lag sensitivity of ET_CO2 effect (Model B, n=10000, boot=200)")
+    plt.title(f"Lag sensitivity of ET_CO2 effect ({model_label}, n={subsample}, boot={boot})")
     plt.xticks([0, 30, 60, 120, 180])
     plt.legend(frameon=False)
     plt.tight_layout()
@@ -182,6 +201,85 @@ def plot_curve_compare(df: pd.DataFrame, lag0: int, lag_best: int, out_png: Path
     plt.close()
 
 
+# pptx helper functions
+def add_title(slide, text, left=0.5, top=0.2, width=12.0, height=0.6, size=28):
+    box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+    tf = box.text_frame
+    tf.clear()
+    p = tf.paragraphs[0]
+    p.text = text
+    p.font.size = Pt(size)
+    p.font.bold = True
+
+
+def add_body(slide, text, left=0.6, top=1.0, width=12.0, height=1.5, size=16):
+    box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+    tf = box.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    p.text = text
+    p.font.size = Pt(size)
+
+
+def build_ppt(model_label: str, subsample: int, boot: int, fig1_png: Path, fig2_png: Path, df_ok: pd.DataFrame, out_pptx: Path):
+    if not HAS_PPTX:
+        print("[pptx] python-pptx is not installed, skipping PPTX slide generation.")
+        return
+
+    prs = Presentation()
+    
+    # Title slide
+    s0 = prs.slides.add_slide(prs.slide_layouts[6])
+    add_title(s0, "ET_CO2 Lag Sensitivity Analysis Summary", size=24)
+    add_body(
+        s0, 
+        f"Model: {model_label}\n"
+        f"Subsample size: n={subsample}\n"
+        f"Bootstrap resamples: b={boot}\n"
+        f"Date: {datetime.now().strftime('%Y-%m-%d')}",
+        top=1.5,
+        size=14
+    )
+
+    # Slide 1: Delta effect size over different lag settings
+    if fig1_png.exists():
+        s1 = prs.slides.add_slide(prs.slide_layouts[6])
+        add_title(s1, "Lag sensitivity of ET_CO2 effect size (+5 mmHg)", size=20)
+        s1.shapes.add_picture(str(fig1_png), Inches(0.5), Inches(0.9), width=Inches(9.0))
+        
+    # Slide 2: Curve comparisons (lag0 vs lag_best)
+    if fig2_png.exists():
+        s2 = prs.slides.add_slide(prs.slide_layouts[6])
+        add_title(s2, "ET_CO2 response curves: lag0 vs best nonzero lag", size=20)
+        s2.shapes.add_picture(str(fig2_png), Inches(0.5), Inches(0.9), width=Inches(9.0))
+
+    # Slide 3: Key numeric values
+    s3 = prs.slides.add_slide(prs.slide_layouts[6])
+    add_title(s3, "Appendix: Key numeric summaries", size=20)
+    
+    # Build text summary of numeric outputs
+    txt_summary = ""
+    for ch in CHANNELS:
+        ch_df = df_ok[df_ok["ycol"] == ch].sort_values("lag_seconds")
+        txt_summary += f"--- {ch} ---\n"
+        for _, row in ch_df.iterrows():
+            lag = row["lag_seconds"]
+            d = row["delta_rso2_plus5"]
+            lo = row["delta_ci_lo"]
+            hi = row["delta_ci_hi"]
+            patients = int(row["n_final_patients"]) if pd.notna(row["n_final_patients"]) else 0
+            txt_summary += f"  Lag {lag:3d}s: Delta={d:5.2f} (95% CI: {lo:5.2f} to {hi:5.2f}) | Patients={patients}\n"
+        txt_summary += "\n"
+    
+    add_body(s3, txt_summary, top=1.0, size=11, height=5.5)
+    
+    prs.save(str(out_pptx))
+    print(f"Generated summary slides PPTX: {out_pptx}")
+
+
+from datetime import datetime
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument(
@@ -194,6 +292,9 @@ def main():
         default="/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516/code/analysis_bundle/result",
     )
     ap.add_argument("--step", type=float, default=5.0)
+    ap.add_argument("--model", choices=["A", "B"], default="B", help="Model type: A (map_ci_te) or B (map_sv_smooth) (default: B)")
+    ap.add_argument("--boot", type=int, default=200, help="Number of bootstrap resamples (default: 200)")
+    ap.add_argument("--subsample", type=int, default=10000, help="Subsample size (default: 10000)")
     args = ap.parse_args()
 
     ws = Path(args.workspace)
@@ -204,6 +305,7 @@ def main():
     out_tables.mkdir(parents=True, exist_ok=True)
     out_figs.mkdir(parents=True, exist_ok=True)
 
+    model_label = "modelA" if args.model == "A" else "modelB"
     matrix = pd.read_csv(matrix_fp)
     rows = []
 
@@ -212,7 +314,9 @@ def main():
             continue
         run_key = str(r["run_key"])
         lag_seconds = int(r["lag_seconds"])
-        outdir_tag = str(r["outdir_tag"])
+        
+        # Dynamically compute tag to find results
+        outdir_tag = f"lag{lag_seconds}_{model_label}_n{args.subsample}_b{args.boot}"
         result_dir = find_result_dir(result_root, outdir_tag)
 
         if result_dir is None:
@@ -264,13 +368,13 @@ def main():
             })
 
     df = pd.DataFrame(rows)
-    bych_fp = out_tables / "lag_effect_summary_by_channel.csv"
+    bych_fp = out_tables / f"lag_effect_summary_by_channel_{model_label}_n{args.subsample}_b{args.boot}.csv"
     df.to_csv(bych_fp, index=False)
 
     ok = df[df["status"] == "ok"].copy()
     if ok.empty:
-        print(f"no completed lag results found under: {result_root}")
-        print(f"wrote: {bych_fp}")
+        print(f"No completed lag results found under: {result_root} for model={model_label}, boot={args.boot}")
+        print(f"Wrote missing summary list to: {bych_fp}")
         return
 
     lag0_df = ok[ok["lag_seconds"] == 0][["ycol", "n_final_rows", "n_final_patients"]].rename(
@@ -279,7 +383,7 @@ def main():
     ok = ok.merge(lag0_df, on="ycol", how="left")
     ok["rows_loss_vs_lag0"] = ok["lag0_n_final_rows"] - ok["n_final_rows"]
 
-    bych_withloss_fp = out_tables / "lag_effect_summary_by_channel_with_loss.csv"
+    bych_withloss_fp = out_tables / f"lag_effect_summary_by_channel_with_loss_{model_label}_n{args.subsample}_b{args.boot}.csv"
     ok.to_csv(bych_withloss_fp, index=False)
 
     lag_tbl = (
@@ -293,20 +397,24 @@ def main():
         )
         .sort_values("lag_seconds")
     )
-    lag_tbl_fp = out_tables / "lag_effect_summary_overall.csv"
+    lag_tbl_fp = out_tables / f"lag_effect_summary_overall_{model_label}_n{args.subsample}_b{args.boot}.csv"
     lag_tbl.to_csv(lag_tbl_fp, index=False)
 
-    fig1_png = out_figs / "lag_delta_plus5_by_channel_modelB_n10000_b200.png"
-    fig1_pdf = out_figs / "lag_delta_plus5_by_channel_modelB_n10000_b200.pdf"
-    plot_lag_delta(ok, fig1_png, fig1_pdf)
+    fig1_png = out_figs / f"lag_delta_plus5_by_channel_{model_label}_n{args.subsample}_b{args.boot}.png"
+    fig1_pdf = out_figs / f"lag_delta_plus5_by_channel_{model_label}_n{args.subsample}_b{args.boot}.pdf"
+    plot_lag_delta(ok, fig1_png, fig1_pdf, model_label, args.subsample, args.boot)
 
     lag_best = pick_strongest_lag_nonzero(ok)
     if lag_best is None:
         lag_best = 60
 
-    fig2_png = out_figs / f"lag_curve_compare_lag0_vs_lag{lag_best}_modelB_n10000_b200.png"
-    fig2_pdf = out_figs / f"lag_curve_compare_lag0_vs_lag{lag_best}_modelB_n10000_b200.pdf"
+    fig2_png = out_figs / f"lag_curve_compare_lag0_vs_lag{lag_best}_{model_label}_n{args.subsample}_b{args.boot}.png"
+    fig2_pdf = out_figs / f"lag_curve_compare_lag0_vs_lag{lag_best}_{model_label}_n{args.subsample}_b{args.boot}.pdf"
     plot_curve_compare(ok, lag0=0, lag_best=lag_best, out_png=fig2_png, out_pdf=fig2_pdf)
+
+    # Build PPTX slides
+    out_pptx = out_figs / f"lag_effects_summary_{model_label}_n{args.subsample}_b{args.boot}.pptx"
+    build_ppt(model_label, args.subsample, args.boot, fig1_png, fig2_png, ok, out_pptx)
 
     print(f"summary_by_channel: {bych_fp}")
     print(f"summary_by_channel_with_loss: {bych_withloss_fp}")

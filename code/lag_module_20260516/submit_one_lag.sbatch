@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=lag_modelB
+#SBATCH --job-name=lag_sweep
 #SBATCH --account=r00209
 #SBATCH --partition=general
 #SBATCH --nodes=1
@@ -16,11 +16,22 @@ module load python/gpu
 cd /N/project/waveform_mortality/ZhaoZhang
 source /N/project/waveform_mortality/ZhaoZhang/timesfm311/bin/activate
 
+# Resolve workspace path relative to repository structure
 LAG_WS="/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516/code/lag_module_20260516"
-PY_SCRIPT="${LAG_WS}/run_lag_single_modelB.py"
+PY_SCRIPT="${LAG_WS}/run_lag_single.py"
 
 LAG_SECONDS="${LAG_SECONDS:-0}"
-OUTDIR_TAG="${OUTDIR_TAG:-lag${LAG_SECONDS}_modelB_n10000_b200}"
+HEMO_ADJUST="${HEMO_ADJUST:-map_sv_smooth}"
+N_BOOT="${N_BOOT:-200}"
+SUBSAMPLE_SIZE="${SUBSAMPLE_SIZE:-10000}"
+
+if [ "${HEMO_ADJUST}" = "map_ci_te" ]; then
+    MODEL_LABEL="modelA"
+else
+    MODEL_LABEL="modelB"
+fi
+
+OUTDIR_TAG="${OUTDIR_TAG:-lag${LAG_SECONDS}_${MODEL_LABEL}_n${SUBSAMPLE_SIZE}_b${N_BOOT}}"
 
 mkdir -p "${LAG_WS}/output/logs"
 
@@ -29,10 +40,10 @@ export MPLBACKEND=Agg
 
 export INTRA5_ENABLE_SUBGROUP=0
 export INTRA5_ANALYSIS_SCOPE=overall
-export INTRA5_HEMO_ADJUST_MODE=map_sv_smooth
+export INTRA5_HEMO_ADJUST_MODE="${HEMO_ADJUST}"
 export INTRA5_FREQUENCIES_SEC=1
-export INTRA5_SUBSAMPLE_SIZE=10000
-export INTRA5_N_OUTER_RESAMPLES=200
+export INTRA5_SUBSAMPLE_SIZE="${SUBSAMPLE_SIZE}"
+export INTRA5_N_OUTER_RESAMPLES="${N_BOOT}"
 export INTRA5_OUTER_RESAMPLE_REPLACE=1
 export INTRA5_REF_SAMPLE_REPLACE=1
 export INTRA5_AUTO_TUNE_SMOOTH=1

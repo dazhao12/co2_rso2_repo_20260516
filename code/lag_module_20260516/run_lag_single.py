@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Run one lag-L analysis by reusing the existing slicevars pipeline without
-overwriting legacy scripts. Only ET_CO2 timing is changed; all other settings
-are inherited from environment variables / base script defaults.
+v1.1 - 通用滞后单次运行脚本
+改动：
+  - 消除绝对路径硬编码，基于 Path(__file__) 动态获取 REPO_ROOT。
+  - 动态从环境变量读取 HEMO_ADJUST 并以 modelA/modelB 自动命名输出文件夹。
+基于：run_lag_single_modelB.py
+解决问题：模型配置写死、路径硬编码问题，提高可维护性。
 """
+
 
 import importlib.util
 import os
@@ -11,12 +15,9 @@ from pathlib import Path
 
 import pandas as pd
 
-
-BASE_SCRIPT = Path(
-    "/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516/"
-    "code/analysis_bundle/code/"
-    "contour_5_6_2026_rev2_20260506_co2tempfio2_main_hemo_adj_boot20_rso2_25_95_slicevars.py"
-)
+# Use relative pathing to resolve the base script path robustly
+REPO_ROOT = Path(__file__).resolve().parents[2]
+BASE_SCRIPT = REPO_ROOT / "code" / "analysis_bundle" / "code" / "contour_5_6_2026_rev2_20260506_co2tempfio2_main_hemo_adj_boot20_rso2_25_95_slicevars.py"
 
 
 def load_base_module():
@@ -79,4 +80,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
