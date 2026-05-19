@@ -10,6 +10,7 @@ suppressPackageStartupMessages({
   library(officer)
   library(rvg)
   library(xml2)
+  library(patchwork)
 })
 
 # ── 字体与常规变量 ─────────────────────────────────────────────────────────────
@@ -74,68 +75,104 @@ ch_colors <- c(
 )
 
 # =============================================================================
-# 1. 绘制 Delta 效应折线图 (Fig 1)
+# 1. 绘制 Delta 效应折线图 (Fig 1) - 图例在图内，对齐用户参考图
 # =============================================================================
 plot_delta_fn <- function() {
   df <- read.csv(DELTA_FILE, stringsAsFactors = FALSE)
   df <- df[df$status == "ok", ]
   df$channel_f <- factor(ch_map[df$ycol], levels = unname(ch_map))
   
+  legend_colors <- c(
+    "Main Study Baseline (N=10,000)" = "#7f7f7f",
+    "Left SctO\u2082 (%)" = "#1f77b4",
+    "Right SctO\u2082 (%)" = "#2ca02c",
+    "SftO\u2082 (%)" = "#d62728"
+  )
+  
   ggplot(df, aes(x = sample_size, y = delta_rso2_plus5, color = channel_f, group = channel_f)) +
+    geom_vline(aes(xintercept = 10000, color = "Main Study Baseline (N=10,000)"), linetype = "dashed", linewidth = 0.8) +
     geom_errorbar(aes(ymin = delta_ci_lo, ymax = delta_ci_hi), width = 0.05, linewidth = 0.6) +
     geom_line(linewidth = 1.0) +
     geom_point(size = 2.0) +
-    geom_vline(xintercept = 10000, linetype = "dashed", color = "#7f7f7f", linewidth = 0.8) +
     scale_x_log10(
       breaks = c(500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000),
-      labels = c("500", "1k", "5k", "10k", "50k", "100k", "500k", "1M", "5M")
+      labels = c("", expression(10^3), "", expression(10^4), "", expression(10^5), "", expression(10^6), ""),
+      limits = c(400, 8000000)
     ) +
-    scale_color_manual(values = ch_colors, name = NULL) +
+    scale_color_manual(
+      name = NULL,
+      values = legend_colors,
+      breaks = c("Main Study Baseline (N=10,000)", "Left SctO\u2082 (%)", "Right SctO\u2082 (%)", "SftO\u2082 (%)")
+    ) +
+    guides(
+      color = guide_legend(
+        override.aes = list(
+          linetype = c("dashed", "solid", "solid", "solid"),
+          shape = c(NA, 16, 16, 16)
+        )
+      )
+    ) +
     labs(
       x = "Subsample Size N (log scale)",
-      y = expression(Delta*"rSO"[2]*" (%) for +5 mmHg ET-CO"[2]),
+      y = expression("Delta rSO"[2]*" (%) for +5 mmHg ET-CO"[2]),
       title = NULL
     ) +
     theme_clean() +
     theme(
-      legend.position = "right",
-      legend.title = element_blank(),
-      legend.background = element_rect(fill = NA, colour = NA),
-      legend.key = element_rect(fill = NA, colour = NA)
+      legend.position = c(0.70, 0.80),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      legend.box.background = element_rect(fill = "transparent", colour = NA),
+      legend.key = element_rect(fill = "transparent", colour = NA),
+      legend.text = element_text(size = 9, family = BASE_FAMILY),
+      legend.spacing.y = unit(0.01, "cm")
     )
 }
 
 # =============================================================================
-# 2. 绘制 Response Curves 重叠图 (Fig 2)
+# 2. 绘制 Response Curves 重叠图 (Fig 2) - 独立子图 & 独立内部图例
 # =============================================================================
 plot_curves_fn <- function() {
   df <- read.csv(CURVES_FILE, stringsAsFactors = FALSE)
-  df$channel_f <- factor(ch_map[df$ycol], levels = unname(ch_map))
   
-  picks <- c(1000L, 10000L, 100000L, 1000000L)
-  df_sub <- df %>% filter(sample_size %in% picks)
-  df_sub$n_factor <- factor(df_sub$sample_size, levels = picks, 
-                            labels = c("N = 1,000", "N = 10,000", "N = 100,000", "N = 1,000,000"))
+  make_ch_plot <- function(ch_name, title_str, show_y_label = TRUE) {
+    df_ch <- df %>% filter(ycol == ch_name)
+    picks <- c(1000L, 10000L, 100000L, 1000000L)
+    df_sub <- df_ch %>% filter(sample_size %in% picks)
+    df_sub$n_factor <- factor(df_sub$sample_size, levels = picks, 
+                              labels = c("N=1,000", "N=10,000", "N=100,000", "N=1,000,000"))
+    
+    y_title <- if (show_y_label) "Predicted Oxygenation (%)" else NULL
+    
+    ggplot(df_sub, aes(x = etco2, y = pred, color = n_factor, fill = n_factor, group = n_factor)) +
+      geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.08, color = NA) +
+      geom_line(linewidth = 1.0) +
+      scale_color_viridis_d(name = NULL) +
+      scale_fill_viridis_d(name = NULL) +
+      labs(
+        x = expression("ET-CO"[2]*" (mmHg)"),
+        y = y_title,
+        title = title_str
+      ) +
+      theme_clean() +
+      theme(
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5, family = BASE_FAMILY),
+        legend.position = c(0.28, 0.82),
+        legend.background = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.key = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 9, family = BASE_FAMILY),
+        legend.spacing.y = unit(0.01, "cm"),
+        panel.grid.major = element_line(linetype = "dashed", color = "#f3f3f3", linewidth = 0.5),
+        panel.grid.minor = element_blank()
+      )
+  }
   
-  ggplot(df_sub, aes(x = etco2, y = pred, color = n_factor, fill = n_factor, group = n_factor)) +
-    geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.08, color = NA) +
-    geom_line(linewidth = 1.0) +
-    scale_color_viridis_d(name = NULL) +
-    scale_fill_viridis_d(name = NULL) +
-    facet_wrap(~channel_f, ncol = 3, scales = "free_y") +
-    labs(
-      x = expression("ET-CO"[2]*" (mmHg)"),
-      y = "Predicted Oxygenation (%)",
-      title = NULL
-    ) +
-    theme_clean() +
-    theme(
-      legend.position = "right",
-      legend.background = element_rect(fill = NA, colour = NA),
-      legend.key = element_rect(fill = NA, colour = NA),
-      strip.background = element_blank(),
-      strip.text = element_text(size = 12, face = "bold", family = BASE_FAMILY)
-    )
+  p1 <- make_ch_plot("rSO2_Ch1", "Left SctO\u2082 (%)", show_y_label = TRUE)
+  p2 <- make_ch_plot("rSO2_Ch2", "Right SctO\u2082 (%)", show_y_label = FALSE)
+  p3 <- make_ch_plot("rSO2_Ch3", "SftO\u2082 (%)", show_y_label = FALSE)
+  
+  # 使用 patchwork 横向拼接三个子图
+  p1 + p2 + p3
 }
 
 # =============================================================================
