@@ -1,4 +1,0 @@
-sec,subgroup,subgroup_query,ycol,cache_hit,cache_written,cache_key,pool_rows,pool_patients
-1,All,,rSO2_Ch1,1,1,30596bdaa1dd,20021703,1792
-1,All,,rSO2_Ch2,1,1,0492995a5805,20075597,1792
-1,All,,rSO2_Ch3,1,1,3c3e76a71f05,20068759,1789

@@ -22,7 +22,7 @@ logs/
 code/analysis_bundle/result/
 code/analysis_bundle/output/
 code/lag_module_20260516/
-results/modelb_n_sweep_eval/
+results/
 
 # Keep directory placeholders if needed
 !.gitkeep
