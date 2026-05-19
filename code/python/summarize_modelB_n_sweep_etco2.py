@@ -25,21 +25,23 @@ except ImportError:
 CHANNELS = ["rSO2_Ch1", "rSO2_Ch2", "rSO2_Ch3"]
 
 def add_title(slide, text, size=24):
-    tb = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(9.0), Inches(0.8))
+    tb = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(12.33), Inches(0.8))
     tf = tb.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
     p.text = text
     p.font.bold = True
     p.font.size = Pt(size)
+    p.font.name = "Arial"
 
 def add_body(slide, text, top=1.5, size=14, height=4.5):
-    tb = slide.shapes.add_textbox(Inches(0.5), Inches(top), Inches(9.0), Inches(height))
+    tb = slide.shapes.add_textbox(Inches(0.5), Inches(top), Inches(12.33), Inches(height))
     tf = tb.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
     p.text = text
     p.font.size = Pt(size)
+    p.font.name = "Arial"
 
 
 
@@ -122,7 +124,7 @@ CHANNEL_COLORS = {
 
 
 def plot_delta(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
-    plt.figure(figsize=(8.0, 5.0))
+    plt.figure(figsize=(7.5, 4.2))
     ax = plt.gca()
     
     # Apply clean classic styles
@@ -154,7 +156,6 @@ def plot_delta(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
     
     plt.xlabel("Subsample Size N (log scale)", fontsize=11, color="black")
     plt.ylabel("Delta rSO₂ (%) for +5 mmHg ET-CO₂", fontsize=11, color="black")
-    plt.title("Sample Size Sensitivity: Stability of ET-CO₂ Effect", fontsize=12, fontweight="bold", pad=15)
     
     plt.legend(frameon=False, loc="upper right", fontsize=10)
     plt.tight_layout()
@@ -201,11 +202,10 @@ def plot_curve_overlay(df_ok: pd.DataFrame, out_png: Path, out_pdf: Path):
         ax.grid(alpha=0.15, linestyle=":")
         if i == 0:
             ax.set_ylabel("Predicted Oxygenation (%)", fontsize=11, color="black")
+            
+        # Place compact vertical legend on the upper left of EACH panel
+        ax.legend(frameon=False, loc="upper left", fontsize=9.0, labelspacing=0.18, handlelength=1.2)
 
-    handles, labels = axes[0].get_legend_handles_labels()
-    if handles:
-        fig.legend(handles, labels, loc="lower center", ncol=min(4, len(labels)), frameon=False, fontsize=10)
-    fig.suptitle("Estimated ET-CO₂ Response Curves across Subsample Sizes (Model B)", y=1.02, fontsize=13, fontweight="bold")
     plt.tight_layout()
     plt.savefig(out_png, dpi=220, bbox_inches="tight")
     plt.savefig(out_pdf, bbox_inches="tight")
@@ -248,6 +248,8 @@ def build_ppt(df_ok: pd.DataFrame, fig1_png: Path, fig2_png: Path, stab: pd.Data
         return
     from datetime import datetime
     prs = Presentation()
+    prs.slide_width = Inches(13.33)
+    prs.slide_height = Inches(7.5)
     
     # Title slide
     s0 = prs.slides.add_slide(prs.slide_layouts[6])
@@ -264,24 +266,42 @@ def build_ppt(df_ok: pd.DataFrame, fig1_png: Path, fig2_png: Path, stab: pd.Data
     # Slide 1: Delta effect size over different sample sizes
     if fig1_png.exists():
         s1 = prs.slides.add_slide(prs.slide_layouts[6])
-        add_title(s1, "ET_CO2 effect size stability (+5 mmHg delta) vs Sample Size N", size=20)
-        s1.shapes.add_picture(str(fig1_png), Inches(0.5), Inches(0.9), width=Inches(9.0))
+        add_title(s1, "ET-CO₂ Effect Size Stability vs Sample Size N", size=20)
+        s1.shapes.add_picture(str(fig1_png), Inches(2.91), Inches(1.8), width=Inches(7.5))
         
     # Slide 2: Curve overlays
     if fig2_png.exists():
         s2 = prs.slides.add_slide(prs.slide_layouts[6])
-        add_title(s2, "ET_CO2 response curves overlay across sample sizes", size=20)
-        s2.shapes.add_picture(str(fig2_png), Inches(0.5), Inches(0.9), width=Inches(9.0))
+        add_title(s2, "ET-CO₂ Response Curves across Subsample Sizes", size=20)
+        s2.shapes.add_picture(str(fig2_png), Inches(0.91), Inches(1.8), width=Inches(11.5))
 
     # Slide 3: Stability table
     s3 = prs.slides.add_slide(prs.slide_layouts[6])
-    add_title(s3, "Stability Comparison: N=10,000 vs Maximum Sample Size N_ref", size=18)
+    add_title(s3, "Stability Comparison: N=10,000 vs Maximum Sample Size N_ref", size=20)
     
-    txt_summary = ""
     if stab is not None and not stab.empty:
-        txt_summary += f"{'Channel':10s} | {'N_ref':8s} | {'Delta_ref':9s} | {'Delta_10k':9s} | {'Abs Diff':8s} | {'Rel Diff':8s} | {'Stable?':8s}\n"
-        txt_summary += "-" * 75 + "\n"
-        for _, row in stab.iterrows():
+        rows_cnt = len(stab) + 1
+        cols_cnt = 7
+        left = Inches(1.5)
+        top = Inches(2.0)
+        width = Inches(10.33)
+        height = Inches(0.4 * rows_cnt)
+        
+        table_shape = s3.shapes.add_table(rows_cnt, cols_cnt, left, top, width, height)
+        table = table_shape.table
+        
+        headers = ["Channel", "N_ref", "Delta_ref", "Delta_10k", "Abs Diff", "Rel Diff", "Stable?"]
+        for col_idx, text in enumerate(headers):
+            cell = table.cell(0, col_idx)
+            cell.text = text
+            # Format header font
+            for paragraph in cell.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+                    run.font.size = Pt(12)
+                    run.font.name = "Arial"
+                    
+        for row_idx, (_, row) in enumerate(stab.iterrows(), start=1):
             ch = row["ycol"]
             n_ref = int(row["n_ref"])
             d_ref = float(row["delta_ref"])
@@ -289,12 +309,30 @@ def build_ppt(df_ok: pd.DataFrame, fig1_png: Path, fig2_png: Path, stab: pd.Data
             abs_diff = float(row["abs_diff_n10000_vs_ref"])
             rel_diff = float(row["rel_diff_n10000_vs_ref"])
             stable = "Yes" if bool(row["n10000_in_stable_plateau"]) else "No"
-            txt_summary += f"{ch:10s} | {n_ref:8d} | {d_ref:9.4f} | {d_10k:9.4f} | {abs_diff:8.4f} | {rel_diff:7.2%} | {stable:8s}\n"
+            
+            # Map channel name to publication name
+            ch_pub = CHANNEL_MAP.get(ch, ch)
+            
+            vals = [
+                ch_pub,
+                f"{n_ref:,}",
+                f"{d_ref:.4f}",
+                f"{d_10k:.4f}",
+                f"{abs_diff:.4f}",
+                f"{rel_diff:.2%}",
+                stable
+            ]
+            
+            for col_idx, val in enumerate(vals):
+                cell = table.cell(row_idx, col_idx)
+                cell.text = val
+                for paragraph in cell.text_frame.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.size = Pt(11)
+                        run.font.name = "Arial"
     else:
-        txt_summary += "No stability comparison data available."
+        add_body(s3, "No stability comparison data available.", top=2.0, size=14)
         
-    add_body(s3, txt_summary, top=1.2, size=11, height=5.0)
-    
     prs.save(str(out_pptx))
     print(f"Generated summary slides PPTX: {out_pptx}")
 
