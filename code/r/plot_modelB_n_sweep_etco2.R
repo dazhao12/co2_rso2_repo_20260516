@@ -148,6 +148,7 @@ plot_curves_fn <- function() {
       geom_line(linewidth = 1.0) +
       scale_color_viridis_d(name = NULL) +
       scale_fill_viridis_d(name = NULL) +
+      scale_x_continuous(limits = c(20, 50), breaks = seq(20, 50, by = 5)) +
       labs(
         x = expression("ET-CO"[2]*" (mmHg)"),
         y = y_title,
