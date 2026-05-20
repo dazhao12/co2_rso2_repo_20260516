@@ -77,7 +77,62 @@ ch_colors <- c(
 # =============================================================================
 # 1. 绘制 Delta 效应折线图 (Fig 1) - 图例在图内，对齐用户参考图
 # =============================================================================
-plot_delta_fn <- function() {
+plot_delta_equidistant_fn <- function() {
+  df <- read.csv(DELTA_FILE, stringsAsFactors = FALSE)
+  df <- df[df$status == "ok", ]
+  df$channel_f <- factor(ch_map[df$ycol], levels = unname(ch_map))
+  
+  # Convert sample_size to factor for equidistant plotting
+  picks <- c(500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000)
+  df$n_factor <- factor(df$sample_size, levels = picks,
+                        labels = c("500", "1k", "5k", "10k", "50k", "100k", "500k", "1000k", "5000k"))
+  
+  legend_colors <- c(
+    "Main Study Baseline (N=10,000)" = "#7f7f7f",
+    "Left SctO\u2082 (%)" = "#1f77b4",
+    "Right SctO\u2082 (%)" = "#2ca02c",
+    "SftO\u2082 (%)" = "#d62728"
+  )
+  
+  # On factor x-axis, levels are at integer coordinates 1 to 9.
+  # N=10,000 ("10k") is the 4th level.
+  xintercept_val <- which(levels(df$n_factor) == "10k")
+  
+  ggplot(df, aes(x = n_factor, y = delta_rso2_plus5, color = channel_f, group = channel_f)) +
+    geom_vline(aes(xintercept = xintercept_val, color = "Main Study Baseline (N=10,000)"), linetype = "dashed", linewidth = 0.8) +
+    geom_errorbar(aes(ymin = delta_ci_lo, ymax = delta_ci_hi), width = 0.2, linewidth = 0.6) +
+    geom_line(linewidth = 1.0) +
+    geom_point(size = 2.0) +
+    scale_color_manual(
+      name = NULL,
+      values = legend_colors,
+      breaks = c("Main Study Baseline (N=10,000)", "Left SctO\u2082 (%)", "Right SctO\u2082 (%)", "SftO\u2082 (%)")
+    ) +
+    guides(
+      color = guide_legend(
+        override.aes = list(
+          linetype = c("dashed", "solid", "solid", "solid"),
+          shape = c(NA, 16, 16, 16)
+        )
+      )
+    ) +
+    labs(
+      x = "Subsample Size N (equidistant spacing)",
+      y = expression("Delta rSO"[2]*" (%) for +5 mmHg ET-CO"[2]),
+      title = NULL
+    ) +
+    theme_clean() +
+    theme(
+      legend.position = c(0.70, 0.80),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      legend.box.background = element_rect(fill = "transparent", colour = NA),
+      legend.key = element_rect(fill = "transparent", colour = NA),
+      legend.text = element_text(size = 9, family = BASE_FAMILY),
+      legend.spacing.y = unit(0.01, "cm")
+    )
+}
+
+plot_delta_logscale_fn <- function() {
   df <- read.csv(DELTA_FILE, stringsAsFactors = FALSE)
   df <- df[df$status == "ok", ]
   df$channel_f <- factor(ch_map[df$ycol], levels = unname(ch_map))
@@ -96,7 +151,7 @@ plot_delta_fn <- function() {
     geom_point(size = 2.0) +
     scale_x_log10(
       breaks = c(500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000),
-      labels = c("", expression(10^3), "", expression(10^4), "", expression(10^5), "", expression(10^6), ""),
+      labels = c("500", "1k", "5k", "10k", "50k", "100k", "500k", "1,000k", "5,000k"),
       limits = c(400, 8000000)
     ) +
     scale_color_manual(
@@ -119,6 +174,7 @@ plot_delta_fn <- function() {
     ) +
     theme_clean() +
     theme(
+      axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       legend.position = c(0.70, 0.80),
       legend.background = element_rect(fill = "transparent", colour = NA),
       legend.box.background = element_rect(fill = "transparent", colour = NA),
@@ -127,6 +183,7 @@ plot_delta_fn <- function() {
       legend.spacing.y = unit(0.01, "cm")
     )
 }
+
 
 # =============================================================================
 # 2. 绘制 Response Curves 重叠图 (Fig 2) - 独立子图 & 独立内部图例
@@ -208,10 +265,14 @@ save_slide_plot <- function(ppt, plot_obj, stem, w_in, h_in) {
   
   ppt <- add_blank(ppt)
   
-  title_txt <- if(stem == "modelB_n_sweep_delta_plus5_by_channel") {
-    "ET-CO₂ Effect Size Stability vs Sample Size N"
+  title_txt <- if(grepl("delta_plus5_by_channel", stem)) {
+    if(grepl("equidistant", stem)) {
+      "ET-CO\u2082 Effect Size Stability vs Sample Size N (Equidistant Spacing)"
+    } else {
+      "ET-CO\u2082 Effect Size Stability vs Sample Size N (Log Scale)"
+    }
   } else {
-    "ET-CO₂ Response Curves across Subsample Sizes"
+    "ET-CO\u2082 Response Curves across Subsample Sizes"
   }
   
   ppt <- ph_with(
@@ -231,13 +292,15 @@ save_slide_plot <- function(ppt, plot_obj, stem, w_in, h_in) {
 # =============================================================================
 # 执行
 # =============================================================================
-p_delta <- plot_delta_fn()
+p_delta_equidistant <- plot_delta_equidistant_fn()
+p_delta_logscale <- plot_delta_logscale_fn()
 p_curves <- plot_curves_fn()
 
 ppt <- read_pptx()
 ppt <- set_ppt_slide_size(ppt, SLIDE_W, SLIDE_H)
 
-ppt <- save_slide_plot(ppt, p_delta, "modelB_n_sweep_delta_plus5_by_channel", w_in = 8.0, h_in = 4.8)
+ppt <- save_slide_plot(ppt, p_delta_equidistant, "modelB_n_sweep_delta_plus5_by_channel_equidistant", w_in = 8.0, h_in = 4.8)
+ppt <- save_slide_plot(ppt, p_delta_logscale, "modelB_n_sweep_delta_plus5_by_channel", w_in = 8.0, h_in = 4.8)
 ppt <- save_slide_plot(ppt, p_curves, "modelB_n_sweep_curve_overlay_by_channel", w_in = 11.5, h_in = 4.8)
 
 # ── 添加 Slide 3: 原生表格 ────────────────────────────────────────────────────
