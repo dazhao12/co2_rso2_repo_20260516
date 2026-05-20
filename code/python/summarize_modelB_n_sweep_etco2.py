@@ -15,6 +15,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp1d
 
 CHANNELS = ["rSO2_Ch1", "rSO2_Ch2", "rSO2_Ch3"]
 
@@ -33,7 +34,15 @@ def load_curve(curve_fp: Path):
     good = np.isfinite(x) & np.isfinite(y) & np.isfinite(lo) & np.isfinite(hi)
     x, y, lo, hi = x[good], y[good], lo[good], hi[good]
     idx = np.argsort(x)
-    return x[idx], y[idx], lo[idx], hi[idx]
+    x_s, y_s, lo_s, hi_s = x[idx], y[idx], lo[idx], hi[idx]
+
+    # Standardize grid to exactly 21.0 to 49.0 with 180 points
+    x_grid = np.linspace(21.0, 49.0, 180)
+    y_grid = interp1d(x_s, y_s, kind="linear", fill_value="extrapolate")(x_grid)
+    lo_grid = interp1d(x_s, lo_s, kind="linear", fill_value="extrapolate")(x_grid)
+    hi_grid = interp1d(x_s, hi_s, kind="linear", fill_value="extrapolate")(x_grid)
+
+    return x_grid, y_grid, lo_grid, hi_grid
 
 
 def find_boot_matrix(curve_fp: Path):
