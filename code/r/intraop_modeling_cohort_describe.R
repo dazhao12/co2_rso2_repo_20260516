@@ -274,7 +274,7 @@ for (ycol in CHANNELS) {
   # 绘图
   message("Generating plots...")
   p_et   <- plot_histogram(dt_model, "ET_CO2", "End-Tidal CO\u2082 (mmHg)", COL_ETCO2, seq(20, 50, by = 5), c(20, 50))
-  p_rso2 <- plot_histogram(dt_model, ycol, paste0(ch_map[ycol], " (%)"), COL_RSO2[ycol], seq(25, 95, by = 10), c(25, 95))
+  p_rso2 <- plot_histogram(dt_model, ycol, paste0(ch_map[ycol], " (%)"), COL_RSO2[ycol], seq(45, 95, by = 10), c(45, 95))
   p_fio2 <- plot_histogram(dt_model, "FiO2_new", "Inspired Oxygen Fraction FiO\u2082 (%)", COL_FIO2, seq(30, 100, by = 10), c(30, 100))
   p_temp <- plot_histogram(dt_model, "TEMP", "Nasopharyngeal Temperature (\u00B0C)", COL_TEMP, seq(34, 37.5, by = 0.5), c(34.0, 37.5))
   

@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# v1.1 - 样本量敏感性绘图与 PPT 生成脚本（ggplot2 + PPT 可编辑版）
-# 基于：plot_subgroup_consistency_v1.2_ggplot.R 的设计规范
+# v1.2 - 样本量敏感性绘图与 PPT 生成脚本（ggplot2 + PPT 可编辑版）
 # =============================================================================
+
+options(scipen = 999)
 
 suppressPackageStartupMessages({
   library(ggplot2)
@@ -12,6 +13,7 @@ suppressPackageStartupMessages({
   library(xml2)
   library(patchwork)
 })
+
 
 # ── 字体与常规变量 ─────────────────────────────────────────────────────────────
 FONT_PRIMARY  <- "Aptos"
@@ -83,7 +85,7 @@ plot_delta_equidistant_fn <- function() {
   df$channel_f <- factor(ch_map[df$ycol], levels = unname(ch_map))
   
   # Convert sample_size to factor for equidistant plotting
-  picks <- c(500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000)
+  picks <- c(500L, 1000L, 5000L, 10000L, 50000L, 100000L, 500000L, 1000000L, 5000000L)
   df$n_factor <- factor(df$sample_size, levels = picks,
                         labels = c("500", "1k", "5k", "10k", "50k", "100k", "500k", "1000k", "5000k"))
   
@@ -234,6 +236,55 @@ plot_curves_fn <- function() {
 }
 
 # =============================================================================
+# 3. 绘制 Response Curves 重叠图 (Fig 2 - 9 样本量等间距版本)
+# =============================================================================
+plot_curves_all_fn <- function() {
+  df <- read.csv(CURVES_FILE, stringsAsFactors = FALSE)
+  
+  make_ch_plot <- function(ch_name, title_str, show_y_label = TRUE) {
+    df_ch <- df %>% filter(ycol == ch_name)
+    picks <- c(500L, 1000L, 5000L, 10000L, 50000L, 100000L, 500000L, 1000000L, 5000000L)
+    df_sub <- df_ch %>% filter(sample_size %in% picks)
+    df_sub$n_factor <- factor(df_sub$sample_size, levels = picks, 
+                              labels = c("N=500", "N=1,000", "N=5,000", "N=10,000", "N=50,000", "N=100,000", "N=500,000", "N=1,000,000", "N=5,000,000"))
+    
+    y_title <- if (show_y_label) "Predicted Oxygenation (%)" else NULL
+    
+    ggplot(df_sub, aes(x = etco2, y = pred, color = n_factor, fill = n_factor, group = n_factor)) +
+      geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.04, color = NA) +
+      geom_line(linewidth = 0.9) +
+      scale_color_viridis_d(name = NULL) +
+      scale_fill_viridis_d(name = NULL) +
+      scale_x_continuous(limits = c(20, 50), breaks = seq(20, 50, by = 5)) +
+      labs(
+        x = expression("ET-CO"[2]*" (mmHg)"),
+        y = y_title,
+        title = title_str
+      ) +
+      theme_clean() +
+      theme(
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5, family = BASE_FAMILY),
+        legend.position = c(0.28, 0.68),
+        legend.background = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.key = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 7.5, family = BASE_FAMILY),
+        legend.spacing.y = unit(0.005, "cm"),
+        panel.grid.major = element_line(linetype = "dashed", color = "#f3f3f3", linewidth = 0.5),
+        panel.grid.minor = element_blank()
+      )
+  }
+  
+  p1 <- make_ch_plot("rSO2_Ch1", "Left SctO\u2082 (%)", show_y_label = TRUE)
+  p2 <- make_ch_plot("rSO2_Ch2", "Right SctO\u2082 (%)", show_y_label = FALSE)
+  p3 <- make_ch_plot("rSO2_Ch3", "SftO\u2082 (%)", show_y_label = FALSE)
+  
+  # 使用 patchwork 横向拼接三个子图
+  p1 + p2 + p3
+}
+
+
+# =============================================================================
 # PPTX 导出设置 (13.333 x 7.5)
 # =============================================================================
 SLIDE_W <- 13.333
@@ -271,8 +322,10 @@ save_slide_plot <- function(ppt, plot_obj, stem, w_in, h_in) {
     } else {
       "ET-CO\u2082 Effect Size Stability vs Sample Size N (Log Scale)"
     }
+  } else if(grepl("curve_overlay_by_channel_all", stem)) {
+    "ET-CO\u2082 Response Curves across All Subsample Sizes (N=500 to 5,000k)"
   } else {
-    "ET-CO\u2082 Response Curves across Subsample Sizes"
+    "ET-CO\u2082 Response Curves across Select Subsample Sizes"
   }
   
   ppt <- ph_with(
@@ -295,6 +348,7 @@ save_slide_plot <- function(ppt, plot_obj, stem, w_in, h_in) {
 p_delta_equidistant <- plot_delta_equidistant_fn()
 p_delta_logscale <- plot_delta_logscale_fn()
 p_curves <- plot_curves_fn()
+p_curves_all <- plot_curves_all_fn()
 
 ppt <- read_pptx()
 ppt <- set_ppt_slide_size(ppt, SLIDE_W, SLIDE_H)
@@ -302,6 +356,7 @@ ppt <- set_ppt_slide_size(ppt, SLIDE_W, SLIDE_H)
 ppt <- save_slide_plot(ppt, p_delta_equidistant, "modelB_n_sweep_delta_plus5_by_channel_equidistant", w_in = 8.0, h_in = 4.8)
 ppt <- save_slide_plot(ppt, p_delta_logscale, "modelB_n_sweep_delta_plus5_by_channel", w_in = 8.0, h_in = 4.8)
 ppt <- save_slide_plot(ppt, p_curves, "modelB_n_sweep_curve_overlay_by_channel", w_in = 11.5, h_in = 4.8)
+ppt <- save_slide_plot(ppt, p_curves_all, "modelB_n_sweep_curve_overlay_by_channel_all", w_in = 11.5, h_in = 4.8)
 
 # ── 添加 Slide 3: 原生表格 ────────────────────────────────────────────────────
 stab <- read.csv(STAB_FILE, stringsAsFactors = FALSE)
