@@ -35,3 +35,12 @@ results/**/processed_pool_cache/
 
 # Generated analysis outputs (local only, do not track)
 results/modelb_n_sweep_eval/
+
+# Additional local result trees
+code/result/
+output/
+
+# Office-format result artifacts (local only)
+**/output/**/*.pptx
+**/output/**/*.xlsx
+**/output/**/*.docx
