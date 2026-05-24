@@ -23,6 +23,8 @@ code/analysis_bundle/result/
 code/lag_module_20260516/
 results/modelb_n_sweep_eval/
 results/modeling_data_description/
+results/fig_output/
+results/figure2_modelB_*/
 code/result/
 output/
 **/output/**/*.docx
