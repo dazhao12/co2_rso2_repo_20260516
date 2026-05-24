@@ -230,8 +230,9 @@ plot_histogram <- function(dt, col, xlab, fill_col, breaks_val = NULL, xlim_val 
   val <- dt[[col]]
   val <- val[is.finite(val)]
   
-  # 确定箱宽
+  # 确定箱宽（仅本副本：CO2 和组织氧都改为 2）
   bw <- 1
+  if (col == "ET_CO2" || startsWith(col, "rSO2_")) bw <- 2
   
   lo <- floor(min(val) / bw) * bw
   hi <- ceiling(max(val) / bw) * bw
