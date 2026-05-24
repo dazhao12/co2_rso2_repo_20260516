@@ -25,6 +25,7 @@ results/modelb_n_sweep_eval/
 results/modeling_data_description/
 results/fig_output/
 results/figure2_modelB_*/
+results/subgroup_compare_*/
 code/result/
 output/
 **/output/**/*.docx
