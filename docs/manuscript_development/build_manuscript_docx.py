@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import argparse
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -9,8 +10,8 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parent
-SOURCE = ROOT / "CO2_MANUSCRIPT_DRAFT_V1.md"
-OUTPUT = ROOT / "CO2_MANUSCRIPT_DRAFT_V1.docx"
+DEFAULT_SOURCE = ROOT / "CO2_MANUSCRIPT_DRAFT_V1.md"
+DEFAULT_OUTPUT = ROOT / "CO2_MANUSCRIPT_DRAFT_V1.docx"
 
 
 def set_cell_shading(cell, fill):
@@ -38,7 +39,10 @@ def set_cell_margins(cell, top=80, start=120, bottom=80, end=120):
 
 def set_table_width(table, width_dxa=9360):
     tbl_pr = table._tbl.tblPr
-    tbl_w = tbl_pr.tblW
+    tbl_w = getattr(tbl_pr, "tblW", None)
+    if tbl_w is None:
+        tbl_w = OxmlElement("w:tblW")
+        tbl_pr.append(tbl_w)
     tbl_w.set(qn("w:w"), str(width_dxa))
     tbl_w.set(qn("w:type"), "dxa")
     tbl_ind = OxmlElement("w:tblInd")
@@ -126,10 +130,10 @@ def add_table(doc, rows):
     doc.add_paragraph()
 
 
-def build():
+def build(source=DEFAULT_SOURCE, output=DEFAULT_OUTPUT):
     doc = Document()
     style_document(doc)
-    lines = SOURCE.read_text(encoding="utf-8").splitlines()
+    lines = source.read_text(encoding="utf-8").splitlines()
 
     title_done = False
     i = 0
@@ -174,9 +178,13 @@ def build():
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     footer.add_run("CO2-rSO2 manuscript draft V1")
 
-    doc.save(OUTPUT)
-    print(OUTPUT)
+    doc.save(output)
+    print(output)
 
 
 if __name__ == "__main__":
-    build()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    args = parser.parse_args()
+    build(args.source, args.output)

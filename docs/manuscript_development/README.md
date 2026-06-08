@@ -19,41 +19,50 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 5. `CO2_TABLE1_2_HPC_RUN_LOG.md`
    HPC run log for generated Table 1/2 outputs and verified preview values.
 
-6. `generated_assets/`
+6. `CO2_SUPPLEMENTARY_METHODS_DRAFT.md`
+   Draft supplementary methods adapted from the prior MAP/CI supplement and current CO2 scripts.
+
+7. `CO2_SUPPLEMENTARY_TABLES_INDEX.md`
+   Source-backed index for all main and supplementary tables.
+
+8. `generated_assets/`
    Manuscript-ready tables, source data, and clean figure files generated from current analysis outputs.
 
-7. `CO2_CHANNEL_NAMING_AUDIT.md`
+9. `CO2_CHANNEL_NAMING_AUDIT.md`
    Evidence and adjudication for the current `rSO2_Ch3` label conflict.
 
-8. `CO2_TABLE1_EXTRACTION_SPEC.md`
+10. `CO2_TABLE1_EXTRACTION_SPEC.md`
    HPC-oriented specification for generating CO2-specific Table 1 and intraoperative characteristics.
 
-9. `CO2_MANUSCRIPT_BLUEPRINT.md`
+11. `CO2_MANUSCRIPT_BLUEPRINT.md`
    Full article logic, old MAP/CI-to-CO2 adaptation plan, and recommended display-item layout.
 
-10. `CO2_PRIOR_MAPCI_FRAMEWORK_EXTRACT.md`
+12. `CO2_PRIOR_MAPCI_FRAMEWORK_EXTRACT.md`
    Extracted structure, terminology, and table layout from the prior MAP/CI manuscript files.
 
-11. `CO2_LITERATURE_AND_POSITIONING.md`
+13. `CO2_LITERATURE_AND_POSITIONING.md`
    Literature anchors and claim boundaries.
 
-12. `CO2_NATURE_STYLE_DRAFT_SKELETON.md`
+14. `CO2_NATURE_STYLE_DRAFT_SKELETON.md`
    Earlier prose skeleton retained for comparison.
+
+15. `CO2_10_ROUND_MANUSCRIPT_REVIEW_LOG.md`
+   Development log documenting the 10-round review and integration process.
 
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
 
-> EtCO2 is a major, nonlinear, and clinically interpretable correlate of intraoperative cerebral tissue oxygenation during off-pump coronary bypass surgery.
+> EtCO2 is a nonlinear, clinically available correlate of intraoperative cerebral tissue oxygenation during off-pump coronary bypass surgery, but the current analysis is observational and does not establish PaCO2-mediated causality or an EtCO2 treatment target.
 
 Avoid therapeutic or causal claims until sensitivity analyses and outcome analyses support them.
 
 ## Immediate next actions
 
-1. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
-2. Generate CO2-specific Table 1 and Table 2 using `CO2_TABLE1_EXTRACTION_SPEC.md`.
-3. Decide whether to complete or remove the planned 5-model sensitivity analysis.
-4. Remake the main figures without empty/missing all-intraop panels.
+1. Pull the generated Table 1/2 files from HPC into the local mirror when SSH stabilizes.
+2. Decide whether to complete or remove the planned 5-model sensitivity analysis before making any robustness claim.
+3. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
+4. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
 5. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
 
 ## Build the Word draft
@@ -92,4 +101,4 @@ source /N/project/waveform_mortality/ZhaoZhang/timesfm311/bin/activate
 python code/manuscript_tables/build_table1_2_co2_rso2.py
 ```
 
-Expected outputs are written under `results/manuscript_tables/`.
+Expected outputs are written under `results/manuscript_tables/`. A clean HPC run has already generated these files in `/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516_master_b5271a5/results/manuscript_tables`; local transfer is pending.
