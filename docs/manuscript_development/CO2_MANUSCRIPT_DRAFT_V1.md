@@ -86,11 +86,15 @@ The analysis used Python and generalized additive modeling scripts archived in t
 
 ## Results
 
-### Analytic cohorts and intraoperative EtCO2 distributions
+### Analytic cohorts and patient characteristics
 
-The analytic cohorts included 1,792 patients for left SctO2 and right SctO2 and 1,789 patients for SftO2. Before filtering, each channel contained more than 20 million timestamp-level observations. EtCO2 values were concentrated around 30 mmHg at the patient level, with a mean of approximately 30.0 mmHg and SD of 2.6. Patient-level mean tissue oxygenation was lower in the cerebral channels and higher in the forearm channel.
+The analytic cohorts included 1,792 patients for left SctO2 and right SctO2 and 1,789 patients for SftO2. The source time-series file contained 25,385,328 timestamp-level rows from 1,872 patients before outcome-specific filtering. After requiring nonmissing EtCO2 and the corresponding tissue oxygenation channel, applying the cohort-defining EtCO2 and tissue oxygenation screens, and excluding values outside the strict analytic ranges, the final usable timestamp counts were 20,021,703 for left SctO2, 20,075,597 for right SctO2, and 20,068,759 for SftO2.
 
-[Insert Table 1 after generating baseline and intraoperative characteristics.]
+The CO2-specific Table 1/2 generation script was run on the active `g24` compute node using the project Python environment. Baseline characteristics were similar across the three channel-specific cohorts. In the left SctO2 cohort, mean age was 68.7 years (SD, 5.3), mean BMI was 25.3 kg/m2 (SD, 3.2), mean baseline cardiac index was 2.5 L/min/m2 (SD, 0.8), mean baseline mean blood pressure was 90.0 mmHg (SD, 12.4), and mean hemoglobin was 132.1 g/L (SD, 15.5). Diabetes was present in 770 patients (43.0%), hypertension in 1,316 patients (73.4%), and drinking history in 458 patients (25.6%). Corresponding values were essentially unchanged in the right SctO2 cohort and differed only slightly in the SftO2 cohort because three fewer patients were included.
+
+Patient-level EtCO2 summaries showed mean EtCO2 near 30 mmHg across channels. Mean tissue oxygenation differed by site, with patient-level means of 71.1% for left SctO2, 71.5% for right SctO2, and 75.6% for SftO2 in the current output.
+
+[Insert Table 1/2 from `results/manuscript_tables/table1_2_co2_rso2.xlsx` after the generated files are pulled back into the local mirror.]
 
 ### EtCO2 showed the largest clinical-step association with cerebral oxygenation
 
