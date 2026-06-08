@@ -36,9 +36,9 @@ ET4_COVARS = ["TEMP", "FiO2_new", "MAP", "SV", "HR", "CI"]
 YLABEL = {
     "rSO2_Ch1": "Left SctO2 cohort",
     "rSO2_Ch2": "Right SctO2 cohort",
-    "rSO2_Ch3": "Frontal SctO2 cohort",
+    "rSO2_Ch3": "SftO2 cohort",
 }
-COHORTS = ["Left SctO2 cohort", "Right SctO2 cohort", "Frontal SctO2 cohort"]
+COHORTS = ["Left SctO2 cohort", "Right SctO2 cohort", "SftO2 cohort"]
 
 # eTable3 artifact display threshold aligned to primary analytic bounds:
 ET_ART_LO = 20.0

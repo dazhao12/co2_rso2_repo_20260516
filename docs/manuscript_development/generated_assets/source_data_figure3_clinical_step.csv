@@ -1,0 +1,10 @@
+﻿Outcome channel,Exposure,Clinical increment,"Adjusted rSO2 difference, percentage points",95% CI
+Left SctO2,EtCO2,+5 mmHg,2.89,2.41 to 3.33
+Left SctO2,FiO2,+10 percentage points,-0.18,-0.49 to 0.12
+Left SctO2,Temperature,+0.5 C,0.10,-0.16 to 0.35
+Right SctO2,EtCO2,+5 mmHg,2.98,2.64 to 3.28
+Right SctO2,FiO2,+10 percentage points,-0.05,-0.46 to 0.37
+Right SctO2,Temperature,+0.5 C,0.55,0.25 to 0.87
+SftO2,EtCO2,+5 mmHg,0.92,0.68 to 1.16
+SftO2,FiO2,+10 percentage points,0.30,0.11 to 0.46
+SftO2,Temperature,+0.5 C,0.15,-0.03 to 0.30

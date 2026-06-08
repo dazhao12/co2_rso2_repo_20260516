@@ -1,0 +1,4 @@
+﻿Outcome channel,Sampled observations,Model features,Effective DOF,Deviance explained,EtCO2 smooth EDF,EtCO2 smooth p value
+Left SctO2,100000,17,51.14,0.232,8.42,<0.001
+Right SctO2,100000,17,51.21,0.219,8.43,<0.001
+SftO2,100000,18,52.22,0.154,8.45,<0.001
