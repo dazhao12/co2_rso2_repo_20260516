@@ -4,37 +4,40 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 
 ## Start here
 
-1. `CO2_MANUSCRIPT_DRAFT_V1.docx`  
+1. `CO2_MANUSCRIPT_DRAFT_V1.docx`
    Word version of the current manuscript draft.
 
-2. `CO2_MANUSCRIPT_DRAFT_V1.md`  
+2. `CO2_MANUSCRIPT_DRAFT_V1.md`
    Editable Markdown source for the Word draft.
 
-3. `CO2_SUBMISSION_GAP_CHECKLIST.md`  
+3. `CO2_SUBMISSION_GAP_CHECKLIST.md`
    Hard-stop checklist before calling the manuscript submission-ready.
 
-4. `CO2_TABLES_AND_FIGURES_DRAFT.md`  
+4. `CO2_TABLES_AND_FIGURES_DRAFT.md`
    Draft main table, model diagnostics table, and figure plan using current result files.
 
-5. `generated_assets/`  
+5. `CO2_TABLE1_2_HPC_RUN_LOG.md`
+   HPC run log for generated Table 1/2 outputs and verified preview values.
+
+6. `generated_assets/`
    Manuscript-ready tables, source data, and clean figure files generated from current analysis outputs.
 
-6. `CO2_CHANNEL_NAMING_AUDIT.md`  
+7. `CO2_CHANNEL_NAMING_AUDIT.md`
    Evidence and adjudication for the current `rSO2_Ch3` label conflict.
 
-7. `CO2_TABLE1_EXTRACTION_SPEC.md`  
+8. `CO2_TABLE1_EXTRACTION_SPEC.md`
    HPC-oriented specification for generating CO2-specific Table 1 and intraoperative characteristics.
 
-8. `CO2_MANUSCRIPT_BLUEPRINT.md`  
+9. `CO2_MANUSCRIPT_BLUEPRINT.md`
    Full article logic, old MAP/CI-to-CO2 adaptation plan, and recommended display-item layout.
 
-9. `CO2_PRIOR_MAPCI_FRAMEWORK_EXTRACT.md`
+10. `CO2_PRIOR_MAPCI_FRAMEWORK_EXTRACT.md`
    Extracted structure, terminology, and table layout from the prior MAP/CI manuscript files.
 
-10. `CO2_LITERATURE_AND_POSITIONING.md`  
+11. `CO2_LITERATURE_AND_POSITIONING.md`
    Literature anchors and claim boundaries.
 
-11. `CO2_NATURE_STYLE_DRAFT_SKELETON.md`  
+12. `CO2_NATURE_STYLE_DRAFT_SKELETON.md`
    Earlier prose skeleton retained for comparison.
 
 ## Current manuscript stance
