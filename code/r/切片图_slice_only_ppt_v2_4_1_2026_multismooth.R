@@ -217,6 +217,13 @@ CLINICAL_STEP_COLORS <- c(
   "MAP" = "#C55A11",
   "CI" = "#2E75B6"
 )
+CLINICAL_STEP_FILL_COLORS <- c(
+  "ET_CO2" = "#FBE5D6",
+  "TEMP" = "#DEEBF7",
+  "FiO2_new" = "#FFF2CC",
+  "MAP" = "#FBE5D6",
+  "CI" = "#DEEBF7"
+)
 
 PROJECT_ROOT <- "/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025"
 OUT_FIG_BASE <- file.path(PROJECT_ROOT, "fig_output", "R_intraop5_slice_only_ppt_v2_4_1_2026_multismooth")
@@ -769,12 +776,13 @@ plot_clinical_compare_bar <- function(summary_df) {
     ) %>%
     filter(!is.na(.data$xvar), is.finite(.data$signed_effect_median))
 
-  ggplot(d, aes(x = .data$x_label, y = .data$signed_effect_median, colour = .data$xvar)) +
+  ggplot(d, aes(x = .data$x_label, y = .data$signed_effect_median, colour = .data$xvar, fill = .data$xvar)) +
     geom_hline(yintercept = 0, linewidth = 0.45, colour = "#4D4D4D") +
-    geom_col(width = 0.66, fill = "white", linewidth = 0.45) +
+    geom_col(width = 0.66, linewidth = 0.45) +
     geom_errorbar(aes(ymin = .data$signed_effect_q25, ymax = .data$signed_effect_q75), width = 0.18, linewidth = 0.45) +
     facet_wrap(~y_label, nrow = 1, scales = "fixed") +
     scale_colour_manual(values = CLINICAL_STEP_COLORS, drop = FALSE) +
+    scale_fill_manual(values = CLINICAL_STEP_FILL_COLORS, drop = FALSE) +
     labs(
       x = NULL,
       y = "Tissue O2 change (% per clinical increment)",
