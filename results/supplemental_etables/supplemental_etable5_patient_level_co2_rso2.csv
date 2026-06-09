@@ -1,4 +1,0 @@
-cohort,ycol,patients_with_recordings_n,median_data_points_per_patient_iqr_n,mean_of_patient_mean_EtCO2_sd_mmHg,mean_of_patient_sd_EtCO2_sd_mmHg,mean_of_patient_mean_tissue_oxygen_sd_pct,mean_of_patient_sd_tissue_oxygen_sd_pct,n_points_total
-Left SctO2 cohort,rSO2_Ch1,1792,11136 (9302 – 13009),30.0 (2.6),3.0 (1.0),71.1 (4.9),3.4 (1.5),20022179
-Right SctO2 cohort,rSO2_Ch2,1792,11172 (9336 – 13080),30.0 (2.6),3.0 (1.0),71.5 (4.6),3.3 (1.4),20075759
-SftO2 cohort,rSO2_Ch3,1789,11187 (9373 – 13097),30.1 (2.6),3.0 (1.0),75.6 (5.0),2.8 (1.4),20068989
