@@ -35,6 +35,7 @@ EXPECTED_ZIP_ENTRIES = [
     "supplement/CO2_SUPPLEMENTARY_METHODS_DRAFT.docx",
     "supplement/CO2_SUPPLEMENTARY_TABLES_INDEX.docx",
     "documentation/CO2_NATURE_STYLE_READINESS_AUDIT.md",
+    "documentation/CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md",
 ]
 
 
@@ -64,7 +65,7 @@ def inspect_docx(path: Path) -> dict[str, str]:
         "figures": str(len(doc.inline_shapes)),
         "words": str(len(text.split())),
         "bracket_placeholders": str(text.count("[")),
-        "display_placeholders": str(text.count("[Insert")),
+        "display_placeholders": str(len(re.findall(r"\[Insert (?:Table|Figure)", text))),
         "zip_status": zip_status,
     }
 
