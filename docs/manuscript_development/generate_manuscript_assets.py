@@ -81,6 +81,90 @@ def write_tables():
     return table2, diag
 
 
+def write_table1_assets():
+    table_dir = ROOT / "results" / "manuscript_tables"
+    wide_path = table_dir / "table1_2_co2_rso2_wide.csv"
+    long_path = table_dir / "table1_2_co2_rso2_long.csv"
+    flow_path = table_dir / "table1_2_co2_rso2_flow_counts.csv"
+    wide = pd.read_csv(wide_path)
+    long = pd.read_csv(long_path)
+    flow = pd.read_csv(flow_path)
+
+    flow_final = flow[flow["stage"] == "final_usable_points_strict_etco2_rso2"].copy()
+    flow_final["Outcome channel"] = flow_final["ycol"].map(CHANNEL_LABELS)
+    obs_map = dict(zip(flow_final["Outcome channel"], flow_final["n_rows"].map(lambda x: f"{int(x):,}")))
+
+    row_map = {
+        "Patients, n": "Patients, n",
+        "Age, mean (SD)": "Age, years, mean (s.d.)",
+        "BMI, mean (SD)": "Body mass index, kg/m2, mean (s.d.)",
+        "SEX, n (%)": "SEX=1, n (%)",
+        "Diabetes_status, n (%)": "Diabetes, n (%)",
+        "Hypertension, n (%)": "Hypertension, n (%)",
+        "Drinking_status, n (%)": "Drinking history, n (%)",
+        "Hb, mean (SD)": "Haemoglobin, g/L, mean (s.d.)",
+        "Cardiac_index, mean (SD)": "Baseline cardiac index, L/min/m2, mean (s.d.)",
+        "Mean_blood_pressure, mean (SD)": "Baseline mean blood pressure, mmHg, mean (s.d.)",
+        "ET_CO2, mean (SD)": "EtCO2, mmHg, mean (s.d.)",
+        "FiO2_new, mean (SD)": "FiO2, %, mean (s.d.)",
+        "TEMP, mean (SD)": "Temperature, C, mean (s.d.)",
+        "MAP, mean (SD)": "Intraoperative MAP, mmHg, mean (s.d.)",
+        "CI, mean (SD)": "Intraoperative cardiac index, L/min/m2, mean (s.d.)",
+        "rSO2_Ch1, mean (SD)": "Left SctO2, %, mean (s.d.)",
+        "rSO2_Ch2, mean (SD)": "Right SctO2, %, mean (s.d.)",
+        "rSO2_Ch3, mean (SD)": "SftO2, %, mean (s.d.)",
+    }
+    desired = [
+        "Patients, n",
+        "Timestamp-level observations, n",
+        "Age, mean (SD)",
+        "BMI, mean (SD)",
+        "SEX, n (%)",
+        "Diabetes_status, n (%)",
+        "Hypertension, n (%)",
+        "Drinking_status, n (%)",
+        "Hb, mean (SD)",
+        "Cardiac_index, mean (SD)",
+        "Mean_blood_pressure, mean (SD)",
+        "ET_CO2, mean (SD)",
+        "FiO2_new, mean (SD)",
+        "TEMP, mean (SD)",
+        "MAP, mean (SD)",
+        "CI, mean (SD)",
+        "rSO2_Ch1, mean (SD)",
+        "rSO2_Ch2, mean (SD)",
+        "rSO2_Ch3, mean (SD)",
+    ]
+
+    rows = []
+    for key in desired:
+        if key == "Timestamp-level observations, n":
+            row = {"Characteristic": "Timestamp-level observations, n"}
+            for label in CHANNEL_LABELS.values():
+                row[label] = obs_map.get(label, "")
+            rows.append(row)
+            continue
+        matches = wide[wide["characteristic"] == key]
+        if matches.empty:
+            continue
+        src = matches.iloc[0]
+        row = {"Characteristic": row_map[key]}
+        for label in CHANNEL_LABELS.values():
+            row[label] = src.get(label, "")
+        rows.append(row)
+    table1 = pd.DataFrame(rows)
+    table1.to_csv(OUT / "table1_cohort_characteristics.csv", index=False, encoding="utf-8-sig")
+    table1.to_excel(OUT / "table1_cohort_characteristics.xlsx", index=False)
+
+    with pd.ExcelWriter(OUT / "supplementary_etable1_2_cohort_characteristics.xlsx") as writer:
+        wide.to_excel(writer, sheet_name="wide", index=False)
+        long.to_excel(writer, sheet_name="long", index=False)
+        flow.to_excel(writer, sheet_name="flow_counts", index=False)
+
+    long.to_csv(OUT / "supplementary_etable1_2_cohort_characteristics_long.csv", index=False, encoding="utf-8-sig")
+    return table1
+
+
 def read_etco2_curves():
     dfs = []
     for ycol in CHANNEL_LABELS:
@@ -352,6 +436,7 @@ def make_figure3_png(table2):
 
 
 def main():
+    write_table1_assets()
     table2, diag = write_tables()
     curves = read_etco2_curves()
     make_figure2(curves)

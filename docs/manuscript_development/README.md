@@ -60,7 +60,7 @@ Avoid therapeutic or causal claims until sensitivity analyses and outcome analys
 ## Immediate next actions
 
 1. Decide whether to complete or remove the planned 5-model sensitivity analysis before making any robustness claim.
-2. Split the local Table 1/2 workbook into a concise main Table 1 and full supplementary eTable 1/2 if required by the target journal.
+2. Confirm the source-coded `SEX=1` table label against the data dictionary before final submission.
 3. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
 4. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
 5. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
@@ -85,6 +85,8 @@ Run from the repository root:
 
 Main generated outputs:
 
+- `generated_assets/table1_cohort_characteristics.xlsx`
+- `generated_assets/supplementary_etable1_2_cohort_characteristics.xlsx`
 - `generated_assets/table2_clinical_step_contrasts.xlsx`
 - `generated_assets/supplementary_model_diagnostics.xlsx`
 - `generated_assets/figure2_etco2_adjusted_curves.png`

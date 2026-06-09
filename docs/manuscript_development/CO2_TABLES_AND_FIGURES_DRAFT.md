@@ -2,22 +2,40 @@
 
 Date: 2026-06-08
 
-This file translates current repository outputs into manuscript display items. It should be revised after channel naming, Table 1 generation, and sensitivity analyses are finalized.
+This file translates current repository outputs into manuscript display items. It should be revised after sensitivity analyses and final journal formatting are finalized.
 
 Generated manuscript assets are stored under `generated_assets/`.
 
 ## Main Table 1: cohort characteristics
 
-Status: not yet generated in the current CO2 repository.
+Status: generated from the local CO2 Table 1/2 workbook.
 
-Recommended source and structure:
+Generated files:
 
-- Use the prior MAP/CI Table 1 and Supplemental Digital Content as the format template.
-- Generate from the final CO2 analytic cohort.
-- Include baseline demographics, comorbidities, operative variables, and intraoperative management variables.
-- Report missing counts in the rightmost column, following the prior manuscript style.
+- `generated_assets/table1_cohort_characteristics.csv`
+- `generated_assets/table1_cohort_characteristics.xlsx`
 
-Do not copy MAP/CI values into the CO2 paper unless the analytic cohort is confirmed identical.
+Source:
+
+- `results/manuscript_tables/table1_2_co2_rso2_wide.csv`
+- `results/manuscript_tables/table1_2_co2_rso2_flow_counts.csv`
+
+Content:
+
+- channel-specific patient counts;
+- final usable timestamp-level observations;
+- selected baseline demographics and comorbidities;
+- baseline hemoglobin, cardiac index, and mean blood pressure;
+- intraoperative EtCO2, FiO2, temperature, MAP, cardiac index, and tissue oxygenation summaries.
+
+Table note:
+
+- `SEX=1` is retained as a source-coded row and needs final data-dictionary confirmation before journal submission.
+
+Full supplementary eTable 1/2:
+
+- `generated_assets/supplementary_etable1_2_cohort_characteristics.xlsx`
+- `generated_assets/supplementary_etable1_2_cohort_characteristics_long.csv`
 
 ## Main Table 2: clinical-step adjusted contrasts
 
