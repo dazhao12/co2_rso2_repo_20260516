@@ -59,8 +59,8 @@ Avoid therapeutic or causal claims until sensitivity analyses and outcome analys
 
 ## Immediate next actions
 
-1. Pull the generated Table 1/2 files from HPC into the local mirror when SSH stabilizes.
-2. Decide whether to complete or remove the planned 5-model sensitivity analysis before making any robustness claim.
+1. Decide whether to complete or remove the planned 5-model sensitivity analysis before making any robustness claim.
+2. Split the local Table 1/2 workbook into a concise main Table 1 and full supplementary eTable 1/2 if required by the target journal.
 3. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
 4. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
 5. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
@@ -101,4 +101,4 @@ source /N/project/waveform_mortality/ZhaoZhang/timesfm311/bin/activate
 python code/manuscript_tables/build_table1_2_co2_rso2.py
 ```
 
-Expected outputs are written under `results/manuscript_tables/`. A clean HPC run has already generated these files in `/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516_master_b5271a5/results/manuscript_tables`; local transfer is pending.
+Expected outputs are written under `results/manuscript_tables/`. A clean HPC run generated these files in `/N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516_master_b5271a5/results/manuscript_tables`, and the output files are now available in the local mirror under `results/manuscript_tables/`.

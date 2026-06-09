@@ -1,6 +1,6 @@
 # CO2 Table 1/2 HPC Run Log
 
-Status: generated on HPC; full output files are pending local pull because IU SSH became intermittently unavailable during transfer.
+Status: generated on HPC and pulled into the local mirror.
 
 ## Run context
 
@@ -41,6 +41,22 @@ Observed file sizes on HPC:
 - `table1_2_co2_rso2_long.csv`: 12K
 - `table1_2_co2_rso2_wide.csv`: 5.7K
 
+## Local mirror
+
+The files were transferred to the local repository on 2026-06-08:
+
+```text
+results/manuscript_tables/
+```
+
+Local files:
+
+- `table1_2_co2_rso2.xlsx`
+- `table1_2_co2_rso2_available_columns.csv`
+- `table1_2_co2_rso2_flow_counts.csv`
+- `table1_2_co2_rso2_long.csv`
+- `table1_2_co2_rso2_wide.csv`
+
 ## Verified preview
 
 The generated flow-count file reported:
@@ -64,9 +80,9 @@ The generated wide Table 1/2 preview reported the following baseline values:
 | Hypertension, n (%) | 1,316 (73.4%) | 1,316 (73.4%) | 1,313 (73.4%) |
 | Drinking history, n (%) | 458 (25.6%) | 458 (25.6%) | 458 (25.6%) |
 
-## Pending action
+## Archived transfer commands
 
-When IU SSH is stable, pull the remote directory into the local mirror:
+The files are now available locally. The commands below are retained only as transfer provenance:
 
 ```powershell
 scp -F "C:\Users\12080\.ssh\config.backup" -r `
@@ -74,7 +90,7 @@ scp -F "C:\Users\12080\.ssh\config.backup" -r `
   E:\BaiduSyncdisk\desktop_5_15\01_科研项目\GAM_CO2_SctO2_4_19_2026\co2_rso2_repo_20260516\results\
 ```
 
-If `scp` remains unstable, use a single SSH tar stream:
+If `scp` is unstable in a future rerun, use a single SSH tar stream:
 
 ```powershell
 ssh -F "C:\Users\12080\.ssh\config.backup" iu-quartz `

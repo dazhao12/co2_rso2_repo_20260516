@@ -6,7 +6,7 @@ Draft status: source-backed index for the supplement. This is not a formatted jo
 
 | Table | Current source | Status | Notes |
 | --- | --- | --- | --- |
-| eTable 1/2. Baseline and intraoperative characteristics | HPC `results/manuscript_tables/table1_2_co2_rso2.xlsx`, `available_columns.csv`, `flow_counts.csv`, `long.csv`, and `wide.csv` | generated remotely, pending local pull | Generated on `g24`; see `CO2_TABLE1_2_HPC_RUN_LOG.md` |
+| eTable 1/2. Baseline and intraoperative characteristics | `results/manuscript_tables/table1_2_co2_rso2.xlsx`, `table1_2_co2_rso2_available_columns.csv`, `table1_2_co2_rso2_flow_counts.csv`, `table1_2_co2_rso2_long.csv`, and `table1_2_co2_rso2_wide.csv` | available locally | Generated on `g24` and pulled into the local mirror; see `CO2_TABLE1_2_HPC_RUN_LOG.md` |
 | eTable 3. Timestamp-level artifact/outlier summaries | `results/supplemental_etables/supplemental_etable3_artifact_co2_rso2.csv` and `Supplemental_eTables3_5_CO2_rSO2.xlsx` | available locally | `rSO2_Ch3` is adjudicated as SftO2 in manuscript-facing outputs |
 | eTable 4. Missingness and imputation of intraoperative covariates | `results/supplemental_etables/supplemental_etable4_missingness_imputation_other_intraop.csv` and `Supplemental_eTables3_5_CO2_rSO2.xlsx` | available locally | Covers TEMP, FiO2, MAP, SV, HR, and CI |
 | eTable 5. Patient-level EtCO2 and tissue oxygenation summary | `results/supplemental_etables/supplemental_etable5_patient_level_co2_rso2.csv` and `Supplemental_eTables3_5_CO2_rSO2.xlsx` | available locally | Reports patients, observations, mean EtCO2, and tissue oxygenation |
@@ -18,13 +18,12 @@ Draft status: source-backed index for the supplement. This is not a formatted jo
 
 | Display item | Source | Recommendation |
 | --- | --- | --- |
-| Main Table 1 | remote `table1_2_co2_rso2.xlsx` | Use concise patient/cohort characteristics in main manuscript; move full long table to supplement |
+| Main Table 1 | `results/manuscript_tables/table1_2_co2_rso2.xlsx` | Use concise patient/cohort characteristics in main manuscript; move full long table to supplement |
 | Main Table 2 | `docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.xlsx` | Use as a compact clinical-step contrast table |
 | Supplementary model diagnostics | `docs/manuscript_development/generated_assets/supplementary_model_diagnostics.xlsx` | Keep in supplement unless target journal wants model diagnostics in Methods |
 
 ## Formatting TODO
 
-- Pull the generated Table 1/2 files from HPC when SSH stabilizes.
 - Split the wide generated Table 1/2 into a concise main Table 1 and full supplementary eTable 1/2.
 - Format all abbreviations consistently: EtCO2, FiO2, SctO2, SftO2, MAP, CI, SV, HR.
 - Replace repository paths with journal-facing supplement captions before submission.

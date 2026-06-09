@@ -105,15 +105,13 @@ The current supplemental table package should include:
 - eTable 7: nonparametric smooth-term estimates
 - eTable 8: parametric covariate estimates
 
-The generated Table 1/2 files currently exist on HPC under:
+The generated Table 1/2 files were produced on HPC under:
 
 ```text
 /N/project/waveform_mortality/ZhaoZhang/co2_rso2_repo_20260516_master_b5271a5/results/manuscript_tables
 ```
 
-The remote output set includes `table1_2_co2_rso2.xlsx`, `table1_2_co2_rso2_available_columns.csv`, `table1_2_co2_rso2_flow_counts.csv`, `table1_2_co2_rso2_long.csv`, and `table1_2_co2_rso2_wide.csv`.
-
-Local pull of these files is pending because IU SSH became intermittently unavailable during transfer. The run log is saved in `CO2_TABLE1_2_HPC_RUN_LOG.md`.
+The output set includes `table1_2_co2_rso2.xlsx`, `table1_2_co2_rso2_available_columns.csv`, `table1_2_co2_rso2_flow_counts.csv`, `table1_2_co2_rso2_long.csv`, and `table1_2_co2_rso2_wide.csv`. These files have been pulled into the local mirror under `results/manuscript_tables/`. The run log is saved in `CO2_TABLE1_2_HPC_RUN_LOG.md`.
 
 ## Sensitivity Analyses
 

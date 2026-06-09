@@ -96,7 +96,7 @@ The CO2-specific Table 1/2 generation script was run on the active `g24` compute
 
 Patient-level EtCO2 summaries showed mean EtCO2 near 30 mmHg across channels. Mean tissue oxygenation differed by site, with patient-level means of 71.1% for left SctO2, 71.5% for right SctO2, and 75.6% for SftO2 in the current output.
 
-[Insert Table 1/2 from `results/manuscript_tables/table1_2_co2_rso2.xlsx` after the generated files are pulled back into the local mirror.]
+[Insert Table 1/2 from the local workbook `results/manuscript_tables/table1_2_co2_rso2.xlsx`. Supporting flow-count, long-format, wide-format, and available-column CSV files are in the same directory.]
 
 ### EtCO2 showed the largest clinical-step association with cerebral oxygenation
 
