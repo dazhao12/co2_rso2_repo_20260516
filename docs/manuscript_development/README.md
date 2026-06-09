@@ -64,6 +64,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 20. `CO2_SOURCE_DATA_PACKAGE_INDEX.md`
    Source-data manifest for the generated main figures, main tables, and key supplementary table assets.
 
+21. `CO2_MANUSCRIPT_PACKAGE_INDEX.md`
+   Index and build command for the manuscript-development zip package.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
@@ -89,6 +92,16 @@ Run from the repository root:
 ```
 
 The script reads `CO2_MANUSCRIPT_DRAFT_V1.md` and writes `CO2_MANUSCRIPT_DRAFT_V1.docx`.
+
+## Build the manuscript-development package
+
+Run from the repository root:
+
+```powershell
+& 'C:\Users\12080\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' docs\manuscript_development\build_manuscript_package.py
+```
+
+The script writes `docs/manuscript_development/package_outputs/CO2_rSO2_manuscript_development_package.zip` and includes an internal `PACKAGE_MANIFEST.md`.
 
 ## Generate manuscript tables and figures
 
