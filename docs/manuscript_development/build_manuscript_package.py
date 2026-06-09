@@ -99,6 +99,16 @@ def git_value(*args: str) -> str:
         return "unavailable"
 
 
+def working_tree_dirty() -> bool:
+    status = git_value("status", "--short")
+    ignored = {"docs/manuscript_development/package_outputs/CO2_rSO2_manuscript_development_package.zip"}
+    for line in status.splitlines():
+        path = line[3:].strip()
+        if path and path not in ignored:
+            return True
+    return False
+
+
 def sha256_prefix(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -110,7 +120,7 @@ def sha256_prefix(path: Path) -> str:
 def build_manifest(file_rows: list[dict[str, str]]) -> str:
     commit = git_value("rev-parse", "--short", "HEAD")
     branch = git_value("branch", "--show-current")
-    dirty = "yes" if git_value("status", "--short") else "no"
+    dirty = "yes" if working_tree_dirty() else "no"
     lines = [
         "# CO2-rSO2 Manuscript Development Package Manifest",
         "",
