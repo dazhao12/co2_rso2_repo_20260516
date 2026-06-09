@@ -60,7 +60,7 @@ This checklist separates what exists from what must be completed before a submis
 
 ## Recommended next work order
 
-1. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
+1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
 3. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.
 4. Complete optional rendered DOCX page-level visual QA.

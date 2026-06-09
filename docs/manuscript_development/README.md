@@ -55,6 +55,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 17. `CO2_SEX_LABEL_AUDIT.md`
    Evidence supporting the manuscript-facing `Male, n (%)` label for the source-coded `SEX=1` Table 1 row.
 
+18. `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md`
+   Fill-in template for author list, ethics, funding, competing interests, data availability, code availability, author contributions, and acknowledgements.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
@@ -65,7 +68,7 @@ Avoid therapeutic or causal claims. The current package also avoids robustness c
 
 ## Immediate next actions
 
-1. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
+1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
 3. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
 4. Complete optional rendered DOCX page-level visual QA.

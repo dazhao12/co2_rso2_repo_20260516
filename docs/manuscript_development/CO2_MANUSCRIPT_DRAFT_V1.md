@@ -146,13 +146,36 @@ In high-frequency intraoperative data from off-pump coronary bypass surgery, EtC
 6. Bhandari, C., Gandhi, H., Panwar, A., Haranal, M. & Pandya, H. Prospective Randomized Pilot Trial on the Effects of Mild Hypercapnia on Cerebral Oxygen Saturation in Patients Undergoing Off-Pump Coronary Artery Bypass Grafting. Journal of Cardiothoracic and Vascular Anesthesia 38, 1322-1327 (2024). https://doi.org/10.1053/j.jvca.2024.02.034
 7. Han, J. et al. Care guided by tissue oxygenation and haemodynamic monitoring in off-pump coronary artery bypass grafting (Bottomline-CS): assessor blind, single centre, randomised controlled trial. BMJ 388, e082104 (2025). https://doi.org/10.1136/bmj-2024-082104
 
-## Author-side items not filled
+## Author Information and Declarations
 
-- final author list and order;
-- corresponding author;
-- funding statement;
-- conflict of interest statement;
-- ethics approval details;
-- data availability statement;
-- code availability statement;
-- author contributions.
+### Author list and affiliations
+
+[Insert the confirmed CO2 manuscript author list, order, affiliations, and ORCID identifiers. Do not copy the prior MAP/CI author block unless the author group and order are confirmed.]
+
+### Ethics approval and consent to participate
+
+[Insert the institutional review board name, approval number, approval date, and consent/waiver wording for the CO2 analysis. The current draft uses parent-cohort language from the prior MAP/CI manuscript and Bottomline-CS trial registration (`NCT04896736`), but the exact ethics statement must be confirmed before submission.]
+
+### Funding
+
+[Insert the confirmed funding statement for the CO2 manuscript. The prior MAP/CI manuscript reported institutional/departmental support at Tianjin Chest Hospital, affiliated with Tianjin University and Indiana University School of Medicine, with no other funding sources; use that wording only if it applies to the CO2 analysis.]
+
+### Competing interests
+
+[Insert the confirmed competing-interests statement. Do not state that the authors have no competing interests until all authors have confirmed.]
+
+### Author contributions
+
+[Insert contribution roles after the author list is final. Suggested role categories: conceptualization, data curation, formal analysis, methodology, software, validation, visualization, writing-original draft, writing-review and editing, supervision, and project administration.]
+
+### Data availability
+
+[Insert the confirmed data availability statement. Patient-level intraoperative data are expected to be restricted because they derive from clinical records; state the access pathway, approval requirements, and contact point only after confirmation.]
+
+### Code availability
+
+[Insert the confirmed code availability statement. Archive the CO2-rSO2 repository at the final submission commit hash and state whether the repository is public, private, or available on reasonable request.]
+
+### Acknowledgements
+
+[Insert acknowledgements after author and funding confirmation.]
