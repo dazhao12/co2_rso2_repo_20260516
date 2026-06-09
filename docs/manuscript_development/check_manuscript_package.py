@@ -11,8 +11,9 @@ from docx import Document
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs" / "manuscript_development"
-ASSETS = DOCS / "generated_assets"
-PACKAGE = DOCS / "package_outputs" / "CO2_rSO2_manuscript_development_package.zip"
+OUTPUTS = ROOT / "outputs_local"
+ASSETS = OUTPUTS / "docs" / "manuscript_development" / "generated_assets"
+PACKAGE = OUTPUTS / "docs" / "manuscript_development" / "package_outputs" / "CO2_rSO2_manuscript_development_package.zip"
 REPORT = DOCS / "CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md"
 
 
@@ -80,7 +81,7 @@ def source_placeholder_counts() -> dict[str, int]:
 
 
 def render_counts() -> dict[str, int]:
-    qa_dir = DOCS / "render_qa"
+    qa_dir = OUTPUTS / "docs" / "manuscript_development" / "render_qa"
     return {
         "main_review_ready": len(list((qa_dir / "main_review_ready").glob("page-*.png"))),
         "supp_methods_review_ready": len(list((qa_dir / "supp_methods_review_ready").glob("page-*.png"))),

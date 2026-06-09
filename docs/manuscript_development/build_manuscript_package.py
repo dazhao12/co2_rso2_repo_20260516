@@ -8,7 +8,8 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE_DIR = ROOT / "docs" / "manuscript_development" / "package_outputs"
+OUTPUTS = ROOT / "outputs_local"
+PACKAGE_DIR = OUTPUTS / "docs" / "manuscript_development" / "package_outputs"
 PACKAGE_PATH = PACKAGE_DIR / "CO2_rSO2_manuscript_development_package.zip"
 
 
@@ -31,45 +32,45 @@ PACKAGE_FILES = [
         "supplement/CO2_SUPPLEMENTARY_TABLES_INDEX.md",
         "docs/manuscript_development/CO2_SUPPLEMENTARY_TABLES_INDEX.md",
     ),
-    ("tables/table1_cohort_characteristics.csv", "docs/manuscript_development/generated_assets/table1_cohort_characteristics.csv"),
-    ("tables/table1_cohort_characteristics.xlsx", "docs/manuscript_development/generated_assets/table1_cohort_characteristics.xlsx"),
-    ("tables/table2_clinical_step_contrasts.csv", "docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.csv"),
-    ("tables/table2_clinical_step_contrasts.xlsx", "docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.xlsx"),
+    ("tables/table1_cohort_characteristics.csv", "outputs_local/docs/manuscript_development/generated_assets/table1_cohort_characteristics.csv"),
+    ("tables/table1_cohort_characteristics.xlsx", "outputs_local/docs/manuscript_development/generated_assets/table1_cohort_characteristics.xlsx"),
+    ("tables/table2_clinical_step_contrasts.csv", "outputs_local/docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.csv"),
+    ("tables/table2_clinical_step_contrasts.xlsx", "outputs_local/docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.xlsx"),
     (
         "tables/supplementary_etable1_2_cohort_characteristics.xlsx",
-        "docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics.xlsx",
+        "outputs_local/docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics.xlsx",
     ),
     (
         "tables/supplementary_etable1_2_cohort_characteristics_long.csv",
-        "docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics_long.csv",
+        "outputs_local/docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics_long.csv",
     ),
-    ("tables/supplementary_model_diagnostics.csv", "docs/manuscript_development/generated_assets/supplementary_model_diagnostics.csv"),
-    ("tables/supplementary_model_diagnostics.xlsx", "docs/manuscript_development/generated_assets/supplementary_model_diagnostics.xlsx"),
-    ("tables/table1_2_co2_rso2.xlsx", "results/manuscript_tables/table1_2_co2_rso2.xlsx"),
-    ("tables/table1_2_co2_rso2_flow_counts.csv", "results/manuscript_tables/table1_2_co2_rso2_flow_counts.csv"),
-    ("tables/table1_2_co2_rso2_long.csv", "results/manuscript_tables/table1_2_co2_rso2_long.csv"),
-    ("tables/table1_2_co2_rso2_wide.csv", "results/manuscript_tables/table1_2_co2_rso2_wide.csv"),
-    ("tables/supplemental_etable3_artifact_co2_rso2.csv", "results/supplemental_etables/supplemental_etable3_artifact_co2_rso2.csv"),
+    ("tables/supplementary_model_diagnostics.csv", "outputs_local/docs/manuscript_development/generated_assets/supplementary_model_diagnostics.csv"),
+    ("tables/supplementary_model_diagnostics.xlsx", "outputs_local/docs/manuscript_development/generated_assets/supplementary_model_diagnostics.xlsx"),
+    ("tables/table1_2_co2_rso2.xlsx", "outputs_local/results/manuscript_tables/table1_2_co2_rso2.xlsx"),
+    ("tables/table1_2_co2_rso2_flow_counts.csv", "outputs_local/results/manuscript_tables/table1_2_co2_rso2_flow_counts.csv"),
+    ("tables/table1_2_co2_rso2_long.csv", "outputs_local/results/manuscript_tables/table1_2_co2_rso2_long.csv"),
+    ("tables/table1_2_co2_rso2_wide.csv", "outputs_local/results/manuscript_tables/table1_2_co2_rso2_wide.csv"),
+    ("tables/supplemental_etable3_artifact_co2_rso2.csv", "outputs_local/results/supplemental_etables/supplemental_etable3_artifact_co2_rso2.csv"),
     (
         "tables/supplemental_etable4_missingness_imputation_other_intraop.csv",
-        "results/supplemental_etables/supplemental_etable4_missingness_imputation_other_intraop.csv",
+        "outputs_local/results/supplemental_etables/supplemental_etable4_missingness_imputation_other_intraop.csv",
     ),
-    ("tables/supplemental_etable5_patient_level_co2_rso2.csv", "results/supplemental_etables/supplemental_etable5_patient_level_co2_rso2.csv"),
-    ("tables/supplemental_etable6_model_performance_co2_rso2.csv", "results/supplemental_etables/supplemental_etable6_model_performance_co2_rso2.csv"),
-    ("tables/supplemental_etable7_nonparametric_terms_co2_rso2.csv", "results/supplemental_etables/supplemental_etable7_nonparametric_terms_co2_rso2.csv"),
-    ("tables/supplemental_etable8_parametric_terms_co2_rso2.csv", "results/supplemental_etables/supplemental_etable8_parametric_terms_co2_rso2.csv"),
-    ("tables/Supplemental_eTables3_5_CO2_rSO2.xlsx", "results/supplemental_etables/Supplemental_eTables3_5_CO2_rSO2.xlsx"),
-    ("tables/Supplemental_eTables6_8_CO2_rSO2.xlsx", "results/supplemental_etables/Supplemental_eTables6_8_CO2_rSO2.xlsx"),
-    ("figures/figure1_cohort_flow.png", "docs/manuscript_development/generated_assets/figure1_cohort_flow.png"),
-    ("figures/figure2_etco2_adjusted_curves.png", "docs/manuscript_development/generated_assets/figure2_etco2_adjusted_curves.png"),
-    ("figures/figure2_etco2_adjusted_curves.svg", "docs/manuscript_development/generated_assets/figure2_etco2_adjusted_curves.svg"),
-    ("figures/figure3_clinical_step_contrasts.png", "docs/manuscript_development/generated_assets/figure3_clinical_step_contrasts.png"),
-    ("figures/figure3_clinical_step_contrasts.svg", "docs/manuscript_development/generated_assets/figure3_clinical_step_contrasts.svg"),
-    ("figures/figure4_etco2_local_slopes.png", "docs/manuscript_development/generated_assets/figure4_etco2_local_slopes.png"),
-    ("source_data/source_data_figure1_cohort_flow.csv", "docs/manuscript_development/generated_assets/source_data_figure1_cohort_flow.csv"),
-    ("source_data/source_data_figure2_etco2_curves.csv", "docs/manuscript_development/generated_assets/source_data_figure2_etco2_curves.csv"),
-    ("source_data/source_data_figure3_clinical_step.csv", "docs/manuscript_development/generated_assets/source_data_figure3_clinical_step.csv"),
-    ("source_data/source_data_figure4_etco2_local_slopes.csv", "docs/manuscript_development/generated_assets/source_data_figure4_etco2_local_slopes.csv"),
+    ("tables/supplemental_etable5_patient_level_co2_rso2.csv", "outputs_local/results/supplemental_etables/supplemental_etable5_patient_level_co2_rso2.csv"),
+    ("tables/supplemental_etable6_model_performance_co2_rso2.csv", "outputs_local/results/supplemental_etables/supplemental_etable6_model_performance_co2_rso2.csv"),
+    ("tables/supplemental_etable7_nonparametric_terms_co2_rso2.csv", "outputs_local/results/supplemental_etables/supplemental_etable7_nonparametric_terms_co2_rso2.csv"),
+    ("tables/supplemental_etable8_parametric_terms_co2_rso2.csv", "outputs_local/results/supplemental_etables/supplemental_etable8_parametric_terms_co2_rso2.csv"),
+    ("tables/Supplemental_eTables3_5_CO2_rSO2.xlsx", "outputs_local/results/supplemental_etables/Supplemental_eTables3_5_CO2_rSO2.xlsx"),
+    ("tables/Supplemental_eTables6_8_CO2_rSO2.xlsx", "outputs_local/results/supplemental_etables/Supplemental_eTables6_8_CO2_rSO2.xlsx"),
+    ("figures/figure1_cohort_flow.png", "outputs_local/docs/manuscript_development/generated_assets/figure1_cohort_flow.png"),
+    ("figures/figure2_etco2_adjusted_curves.png", "outputs_local/docs/manuscript_development/generated_assets/figure2_etco2_adjusted_curves.png"),
+    ("figures/figure2_etco2_adjusted_curves.svg", "outputs_local/docs/manuscript_development/generated_assets/figure2_etco2_adjusted_curves.svg"),
+    ("figures/figure3_clinical_step_contrasts.png", "outputs_local/docs/manuscript_development/generated_assets/figure3_clinical_step_contrasts.png"),
+    ("figures/figure3_clinical_step_contrasts.svg", "outputs_local/docs/manuscript_development/generated_assets/figure3_clinical_step_contrasts.svg"),
+    ("figures/figure4_etco2_local_slopes.png", "outputs_local/docs/manuscript_development/generated_assets/figure4_etco2_local_slopes.png"),
+    ("source_data/source_data_figure1_cohort_flow.csv", "outputs_local/docs/manuscript_development/generated_assets/source_data_figure1_cohort_flow.csv"),
+    ("source_data/source_data_figure2_etco2_curves.csv", "outputs_local/docs/manuscript_development/generated_assets/source_data_figure2_etco2_curves.csv"),
+    ("source_data/source_data_figure3_clinical_step.csv", "outputs_local/docs/manuscript_development/generated_assets/source_data_figure3_clinical_step.csv"),
+    ("source_data/source_data_figure4_etco2_local_slopes.csv", "outputs_local/docs/manuscript_development/generated_assets/source_data_figure4_etco2_local_slopes.csv"),
     ("documentation/README.md", "docs/manuscript_development/README.md"),
     ("documentation/CO2_SUBMISSION_GAP_CHECKLIST.md", "docs/manuscript_development/CO2_SUBMISSION_GAP_CHECKLIST.md"),
     ("documentation/CO2_TABLES_AND_FIGURES_DRAFT.md", "docs/manuscript_development/CO2_TABLES_AND_FIGURES_DRAFT.md"),
@@ -101,7 +102,7 @@ def git_value(*args: str) -> str:
 
 def working_tree_dirty() -> bool:
     status = git_value("status", "--short")
-    ignored = {"docs/manuscript_development/package_outputs/CO2_rSO2_manuscript_development_package.zip"}
+    ignored = {"outputs_local/docs/manuscript_development/package_outputs/CO2_rSO2_manuscript_development_package.zip"}
     for line in status.splitlines():
         path = line[2:].strip()
         if path and path not in ignored:

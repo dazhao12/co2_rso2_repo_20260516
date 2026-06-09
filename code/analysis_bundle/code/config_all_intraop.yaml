@@ -4,17 +4,17 @@ output_tag: all_intraop_n10000_mapci_te
 plot_mode: slice_median
 figure_formats: [png, pdf]
 output:
-  figures_dir: output/figures
-  tables_dir: output/tables
-  ppt_dir: output/ppt
-  logs_dir: output/logs
+  figures_dir: ../../outputs_local/analysis_bundle/output/figures
+  tables_dir: ../../outputs_local/analysis_bundle/output/tables
+  ppt_dir: ../../outputs_local/analysis_bundle/output/ppt
+  logs_dir: ../../outputs_local/analysis_bundle/output/logs
 clinical_steps:
   ET_CO2: 5.0
   FiO2_new: 5.0
   TEMP: 0.5
   MAP: 5.0
   CI: 0.05
-model_input_quantiles: input_links/model_input_quantiles_n10000_overall_mapci_te.csv
+model_input_quantiles: ../../outputs_local/analysis_bundle/input_links/model_input_quantiles_n10000_overall_mapci_te.csv
 axis_labels:
   ET_CO2: "End-Tidal CO2 (mmHg)"
   FiO2_new: "FiO2 (%)"
@@ -39,4 +39,4 @@ ppt:
   filename: crossvar_summary_all_intraop.pptx
   title: "Cross-variable Summary (All Intraop Variables)"
   subtitle: "Primary n=10000 run with requested intraoperative variable comparison"
-run_catalog: input_links/run_catalog.csv
+run_catalog: ../../outputs_local/analysis_bundle/input_links/run_catalog.csv

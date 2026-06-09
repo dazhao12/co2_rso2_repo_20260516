@@ -3,15 +3,15 @@ primary_run_id: n10000_overall_mapci_te_boot200
 plot_mode: slice_median
 figure_formats: [png, pdf]
 output:
-  figures_dir: output/figures
-  tables_dir: output/tables
-  ppt_dir: output/ppt
-  logs_dir: output/logs
+  figures_dir: ../../outputs_local/analysis_bundle/output/figures
+  tables_dir: ../../outputs_local/analysis_bundle/output/tables
+  ppt_dir: ../../outputs_local/analysis_bundle/output/ppt
+  logs_dir: ../../outputs_local/analysis_bundle/output/logs
 clinical_steps:
   ET_CO2: 5.0
   FiO2_new: 5.0
   TEMP: 0.5
-model_input_quantiles: input_links/model_input_quantiles_n10000_overall_mapci_te.csv
+model_input_quantiles: ../../outputs_local/analysis_bundle/input_links/model_input_quantiles_n10000_overall_mapci_te.csv
 axis_labels:
   ET_CO2: "End-Tidal CO2 (mmHg)"
   FiO2_new: "FiO2 (%)"
@@ -32,4 +32,4 @@ ppt:
   filename: crossvar_summary_n10000.pptx
   title: "Cross-variable Summary (n=10000)"
   subtitle: "CO2 / FiO2 / TEMP vs rSO2 (clinical-step comparable effects)"
-run_catalog: input_links/run_catalog.csv
+run_catalog: ../../outputs_local/analysis_bundle/input_links/run_catalog.csv

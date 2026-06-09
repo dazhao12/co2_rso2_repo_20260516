@@ -18,14 +18,8 @@ logs/
 *.out
 *.err
 
-# Generated analysis artifacts
-code/analysis_bundle/input_links/
-code/analysis_bundle/output/
-docs/manuscript_development/generated_assets/
-results/
-
-# Generated document QA renders
-docs/manuscript_development/render_qa/
+# Generated local outputs: data, tables, figures, PPT/DOCX exports, QA renders
+outputs_local/
 
 # Keep directory placeholders if needed
 !.gitkeep

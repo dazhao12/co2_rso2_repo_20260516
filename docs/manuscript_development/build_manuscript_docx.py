@@ -11,9 +11,10 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parent
+REPO_ROOT = ROOT.parents[1]
 DEFAULT_SOURCE = ROOT / "CO2_MANUSCRIPT_DRAFT_V1.md"
 DEFAULT_OUTPUT = ROOT / "CO2_MANUSCRIPT_DRAFT_V1.docx"
-ASSET_DIR = ROOT / "generated_assets"
+ASSET_DIR = REPO_ROOT / "outputs_local" / "docs" / "manuscript_development" / "generated_assets"
 
 
 def set_cell_shading(cell, fill):

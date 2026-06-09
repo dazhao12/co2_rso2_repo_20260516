@@ -9,13 +9,10 @@ This repository is a clean, standalone workspace split from:
 - Maintain a clean Git history for cloud sync.
 
 ## Structure
-- `code/python/`: upstream modeling and submission scripts.
-- `code/r/`: PPT/plot R scripts.
-- `code/analysis_bundle/`: cross-variable analysis and sensitivity/mediation scripts.
-- `results/model_runs/`: key run outputs (overall/subgroup/modelB n10000).
-- `results/fig_output/`: key figure/PPT output folders.
-- `docs/`: metadata and migration notes.
-- `scripts/`: sync/maintenance scripts.
+- `code/`: analysis, modeling, plotting, and table-building code only.
+- `docs/`: documentation, manuscript drafts, and project notes.
+- `scripts/`: sync and maintenance scripts.
+- `outputs_local/`: local generated outputs, including data extracts, tables, figures, PPT/DOCX exports, and QA renders. This directory is ignored by Git.
 
 ## Git Workflow
 - Main branch: `master`
@@ -28,4 +25,4 @@ This repository is a clean, standalone workspace split from:
 
 ## Notes
 - Legacy data remains in the original folder.
-- This repo only includes selected key outputs to keep versioning manageable.
+- Generated tables, data, figures, presentations, and document exports should stay under `outputs_local/` unless explicitly selected for submission or sharing.

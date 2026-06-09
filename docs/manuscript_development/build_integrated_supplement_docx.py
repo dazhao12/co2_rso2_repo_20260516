@@ -13,12 +13,13 @@ import openpyxl
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = ROOT.parent
+OUTPUTS = ROOT / "outputs_local"
 
 TEMPLATE_DOCX = PROJECT_ROOT / "CO2_Tissue O2_Supplemental Digital Content_R1_4_19_2026.docx"
-ETABLE_1_2 = ROOT / "docs" / "manuscript_development" / "generated_assets" / "supplementary_etable1_2_cohort_characteristics.xlsx"
-ETABLE_3_5 = ROOT / "results" / "supplemental_etables" / "Supplemental_eTables3_5_CO2_rSO2.xlsx"
-ETABLE_6_8 = ROOT / "results" / "supplemental_etables" / "Supplemental_eTables6_8_CO2_rSO2.xlsx"
-OUT_DOCX = ROOT / "docs" / "manuscript_development" / "generated_assets" / "CO2_Tissue_O2_Supplemental_Digital_Content_integrated_eTables1_8_20260609.docx"
+ETABLE_1_2 = OUTPUTS / "docs" / "manuscript_development" / "generated_assets" / "supplementary_etable1_2_cohort_characteristics.xlsx"
+ETABLE_3_5 = OUTPUTS / "results" / "supplemental_etables" / "Supplemental_eTables3_5_CO2_rSO2.xlsx"
+ETABLE_6_8 = OUTPUTS / "results" / "supplemental_etables" / "Supplemental_eTables6_8_CO2_rSO2.xlsx"
+OUT_DOCX = OUTPUTS / "docs" / "manuscript_development" / "generated_assets" / "CO2_Tissue_O2_Supplemental_Digital_Content_integrated_eTables1_8_20260609.docx"
 
 
 TITLE = "End-tidal carbon dioxide is associated with cerebral tissue oxygenation during off-pump coronary bypass"

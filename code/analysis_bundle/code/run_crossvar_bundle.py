@@ -524,7 +524,7 @@ def main():
     result_dir = Path(run_row["result_dir"])
     if not result_dir.exists():
         repo_root = workspace.parents[1]
-        local_result_dir = repo_root / "results" / "model_runs" / result_dir.name
+        local_result_dir = repo_root / "outputs_local" / "results" / "model_runs" / result_dir.name
         if local_result_dir.exists():
             result_dir = local_result_dir
         else:

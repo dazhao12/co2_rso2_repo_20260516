@@ -7,11 +7,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "docs" / "manuscript_development" / "generated_assets"
+OUTPUTS = ROOT / "outputs_local"
+OUT = OUTPUTS / "docs" / "manuscript_development" / "generated_assets"
 OUT.mkdir(parents=True, exist_ok=True)
 
 RUN_DIR = (
-    ROOT
+    OUTPUTS
     / "results"
     / "model_runs"
     / "v5_6_2026_rev2_20260506_co2tempfio2_hemo_adj_boot20_rso2_25_95_full_20260512_152154_overall_mapci_te_n10000_boot200"
@@ -35,9 +36,9 @@ def fmt(x, digits=2):
 
 
 def write_tables():
-    effects_path = ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary_n10000_overall_mapci_te_boot200.csv"
+    effects_path = OUTPUTS / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary_n10000_overall_mapci_te_boot200.csv"
     if not effects_path.exists():
-        effects_path = ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary.csv"
+        effects_path = OUTPUTS / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary.csv"
     effects = pd.read_csv(effects_path)
     effects = effects[effects["xvar"].isin(["ET_CO2", "FiO2_new", "TEMP"])].copy()
     effects["Outcome channel"] = effects["ycol"].map(CHANNEL_LABELS)
@@ -61,8 +62,8 @@ def write_tables():
     table2.to_csv(OUT / "table2_clinical_step_contrasts.csv", index=False, encoding="utf-8-sig")
     table2.to_excel(OUT / "table2_clinical_step_contrasts.xlsx", index=False)
 
-    perf = pd.read_csv(ROOT / "results" / "supplemental_etables" / "supplemental_etable6_model_performance_co2_rso2.csv")
-    terms = pd.read_csv(ROOT / "results" / "supplemental_etables" / "supplemental_etable7_nonparametric_terms_co2_rso2.csv")
+    perf = pd.read_csv(OUTPUTS / "results" / "supplemental_etables" / "supplemental_etable6_model_performance_co2_rso2.csv")
+    terms = pd.read_csv(OUTPUTS / "results" / "supplemental_etables" / "supplemental_etable7_nonparametric_terms_co2_rso2.csv")
     rows = []
     for ycol, label in CHANNEL_LABELS.items():
         p = perf[perf["ycol"] == ycol].set_index("metric")["value"]
@@ -85,7 +86,7 @@ def write_tables():
 
 
 def write_table1_assets():
-    table_dir = ROOT / "results" / "manuscript_tables"
+    table_dir = OUTPUTS / "results" / "manuscript_tables"
     wide_path = table_dir / "table1_2_co2_rso2_wide.csv"
     long_path = table_dir / "table1_2_co2_rso2_long.csv"
     flow_path = table_dir / "table1_2_co2_rso2_flow_counts.csv"
@@ -215,7 +216,7 @@ def text(draw, xy, value, size=12, anchor="mm", bold=False, fill=(17, 17, 17)):
 
 
 def write_figure1_source():
-    flow = pd.read_csv(ROOT / "results" / "manuscript_tables" / "table1_2_co2_rso2_flow_counts.csv")
+    flow = pd.read_csv(OUTPUTS / "results" / "manuscript_tables" / "table1_2_co2_rso2_flow_counts.csv")
     flow["Outcome channel"] = flow["ycol"].map(CHANNEL_LABELS)
     stage_labels = {
         "raw_timeseries_rows": "Raw time series",

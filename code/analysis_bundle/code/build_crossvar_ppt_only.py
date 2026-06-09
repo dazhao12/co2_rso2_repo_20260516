@@ -9,7 +9,8 @@ from xml.etree import ElementTree as ET
 
 
 WORKSPACE = Path(__file__).resolve().parents[1]
-OUT = WORKSPACE / "output"
+REPO_ROOT = WORKSPACE.parents[1]
+OUT = REPO_ROOT / "outputs_local" / "analysis_bundle" / "output"
 TABLES = OUT / "tables"
 PPT = OUT / "ppt"
 TEMPLATE = PPT / "crossvar_summary_n10000.pptx"
