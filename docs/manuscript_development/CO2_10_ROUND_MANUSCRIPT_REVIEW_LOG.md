@@ -30,7 +30,7 @@ The supplementary methods now describe cohort construction, channel mapping, exp
 
 ## Round 7. Literature integration
 
-The reference list includes traceable sources supporting cardiac-surgery NIRS monitoring, graded carbon dioxide responses, EtCO2-rSO2 modeling in carotid endarterectomy, cardiac-surgery PaCO2/NIRS work, mild hypercapnia trials, the 2024 off-pump CABG pilot trial, and the Bottomline-CS parent trial. References still require final journal formatting and author confirmation.
+The reference list includes traceable sources supporting cardiac-surgery NIRS monitoring, graded carbon dioxide responses, EtCO2-rSO2 modeling in carotid endarterectomy, cardiac-surgery PaCO2/NIRS work, mild hypercapnia trials, the 2024 off-pump CABG pilot trial, and the Bottomline-CS parent trial. `CO2_REFERENCE_AUDIT.md` documents the verification source and manuscript role for each current reference. References still require final target-journal styling and author confirmation.
 
 ## Round 8. Nature-style language pass
 
@@ -42,4 +42,4 @@ The manuscript and supplement now state that clinical-step contrasts come from t
 
 ## Round 10. Remaining submission gates
 
-The package is close to a manuscript-development draft but not submission-ready. Remaining gates are: confirmed author list and affiliations, ethics and consent wording, funding and competing interests, author contributions, data/code availability, optional sensitivity rerun before journal submission, target-journal figure formatting and source-data packaging, journal-specific reference formatting, and optional rendered DOCX page-level visual QA. `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` now centralizes the author-side fields that must be filled from confirmed project information. The source-coded `SEX=1` row is supported as male in manuscript-facing tables by `CO2_SEX_LABEL_AUDIT.md`.
+The package is close to a manuscript-development draft but not submission-ready. Remaining gates are: confirmed author list and affiliations, ethics and consent wording, funding and competing interests, author contributions, data/code availability, optional sensitivity rerun before journal submission, target-journal figure/reference formatting and source-data packaging, and optional rendered DOCX page-level visual QA. `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` now centralizes the author-side fields that must be filled from confirmed project information. The source-coded `SEX=1` row is supported as male in manuscript-facing tables by `CO2_SEX_LABEL_AUDIT.md`.

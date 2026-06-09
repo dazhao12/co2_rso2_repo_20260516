@@ -2,6 +2,8 @@
 
 Date searched: 2026-06-08
 
+Reference verification update: the seven references used in the current manuscript draft were checked on 2026-06-09 and are documented in `CO2_REFERENCE_AUDIT.md`.
+
 This memo uses current web searches plus the local CO2 analysis package. It is meant to guide manuscript framing, not to replace a formal systematic review.
 
 ## Literature anchors
@@ -52,4 +54,3 @@ Practical recommendation:
 
 - Draft in Nature-style first for clarity and argument strength.
 - Decide target journal after sensitivity runs and figure cleanup.
-

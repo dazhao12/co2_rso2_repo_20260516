@@ -50,11 +50,15 @@ This checklist separates what exists from what must be completed before a submis
    - Generated assets are under `docs/manuscript_development/generated_assets/`.
    - Final submission figures still need target-journal sizing, panel labels, font checks, and journal-specific source-data packaging.
 
-7. Methods provenance
+7. Reference verification and formatting
+   - The current seven-reference list is traceable and documented in `CO2_REFERENCE_AUDIT.md`.
+   - Final submission still needs exact target-journal reference styling and author approval.
+
+8. Methods provenance
    - The manuscript must cite current scripts and output paths.
    - The final methods should state bootstrap design, sampling unit, sample size per bootstrap, number of repeats, smoothing parameters, and covariate set.
 
-8. Outcome scope
+9. Outcome scope
    - If no postoperative outcome is added, the paper is a physiology/methods manuscript.
    - If outcome is added, define endpoint, missingness, model, and causal limits before drafting claims.
 
@@ -62,5 +66,6 @@ This checklist separates what exists from what must be completed before a submis
 
 1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
-3. Complete target-journal figure formatting and source-data packaging.
-4. Complete optional rendered DOCX page-level visual QA.
+3. Complete target-journal figure and reference formatting.
+4. Complete source-data packaging.
+5. Complete optional rendered DOCX page-level visual QA.

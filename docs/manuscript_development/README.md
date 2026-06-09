@@ -58,6 +58,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 18. `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md`
    Fill-in template for author list, ethics, funding, competing interests, data availability, code availability, author contributions, and acknowledgements.
 
+19. `CO2_REFERENCE_AUDIT.md`
+   Verification source and manuscript role for each reference in the current draft.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
@@ -70,8 +73,9 @@ Avoid therapeutic or causal claims. The current package also avoids robustness c
 
 1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
-3. Complete target-journal figure formatting and source-data packaging.
-4. Complete optional rendered DOCX page-level visual QA.
+3. Complete target-journal figure and reference formatting.
+4. Complete source-data packaging.
+5. Complete optional rendered DOCX page-level visual QA.
 
 ## Build the Word draft
 

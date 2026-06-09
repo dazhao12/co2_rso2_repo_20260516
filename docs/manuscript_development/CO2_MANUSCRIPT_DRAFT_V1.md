@@ -140,7 +140,7 @@ EtCO2 provides clinically available context for interpreting intraoperative cere
 
 In high-frequency intraoperative data from off-pump coronary bypass surgery, EtCO2 showed a nonlinear and clinically interpretable association with regional tissue oxygenation. A 5 mmHg higher EtCO2 was associated with nearly 3 percentage points higher left and right SctO2, exceeding the comparable associations observed for FiO2 and temperature in the current analysis. SftO2 showed a smaller but positive association. These results support EtCO2 as context for interpreting intraoperative cerebral oximetry, while leaving causal targets and patient-outcome effects to future prospective studies.
 
-## References to verify and format
+## References
 
 1. Chan, M. J., Chung, T., Glassford, N. J. & Bellomo, R. Near-Infrared Spectroscopy in Adult Cardiac Surgery Patients: A Systematic Review and Meta-Analysis. Journal of Cardiothoracic and Vascular Anesthesia 31, 1155-1165 (2017). https://doi.org/10.1053/j.jvca.2017.02.187
 2. Mutch, W. A. C. et al. Cerebral oxygen saturation: graded response to carbon dioxide with isoxia and graded response to oxygen with isocapnia. PLoS ONE 8, e57881 (2013). https://doi.org/10.1371/journal.pone.0057881
@@ -149,6 +149,8 @@ In high-frequency intraoperative data from off-pump coronary bypass surgery, EtC
 5. Chan, M. J. et al. A Pilot Randomized Controlled Study of Mild Hypercapnia During Cardiac Surgery With Cardiopulmonary Bypass. Journal of Cardiothoracic and Vascular Anesthesia 33, 2968-2978 (2019). https://doi.org/10.1053/j.jvca.2019.03.012
 6. Bhandari, C., Gandhi, H., Panwar, A., Haranal, M. & Pandya, H. Prospective Randomized Pilot Trial on the Effects of Mild Hypercapnia on Cerebral Oxygen Saturation in Patients Undergoing Off-Pump Coronary Artery Bypass Grafting. Journal of Cardiothoracic and Vascular Anesthesia 38, 1322-1327 (2024). https://doi.org/10.1053/j.jvca.2024.02.034
 7. Han, J. et al. Care guided by tissue oxygenation and haemodynamic monitoring in off-pump coronary artery bypass grafting (Bottomline-CS): assessor blind, single centre, randomised controlled trial. BMJ 388, e082104 (2025). https://doi.org/10.1136/bmj-2024-082104
+
+Reference verification status is documented in `docs/manuscript_development/CO2_REFERENCE_AUDIT.md`.
 
 ## Author Information and Declarations
 
