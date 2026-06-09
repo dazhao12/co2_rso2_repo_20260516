@@ -27,7 +27,7 @@ No model fitting or large-data training is performed by this packaging script.
 | Figure 1. Cohort assembly by tissue oxygenation channel | `source_data_figure1_cohort_flow.csv` | 12 | `results/manuscript_tables/table1_2_co2_rso2_flow_counts.csv` | Channel-specific row and patient counts across filtering stages |
 | Figure 2. Adjusted EtCO2-rSO2 response curves | `source_data_figure2_etco2_curves.csv` | 540 | `results/model_runs/.../ET_CO2/*_slice_median_curve_boot.csv` | Adjusted mean and bootstrap interval curves for left SctO2, right SctO2, and SftO2 |
 | Figure 3. Clinical-step contrasts | `source_data_figure3_clinical_step.csv` | 9 | `code/analysis_bundle/output/tables/crossvar_effect_summary.csv` | EtCO2, FiO2, and temperature clinical-step contrasts with 95% CI |
-| Figure 4. EtCO2 local slopes | `source_data_figure4_etco2_local_slopes.csv` | 30 | `code/analysis_bundle/output/tables/crossvar_slope_bins.csv` | EtCO2-only descriptive local slopes by decile bin and channel |
+| Supplementary Figure 1. EtCO2 local slopes | `source_data_figure4_etco2_local_slopes.csv` | 18 | `docs/manuscript_development/generated_assets/source_data_figure2_etco2_curves.csv` | EtCO2-only descriptive local slopes by 20-50 mmHg bins and channel |
 
 ## Main Table and Supplement Source Data
 
@@ -45,7 +45,7 @@ No model fitting or large-data training is performed by this packaging script.
 | `source_data_figure1_cohort_flow.csv` | 12 | 592 | `4bc1308b5272` |
 | `source_data_figure2_etco2_curves.csv` | 540 | 67,756 | `735befbfe5f7` |
 | `source_data_figure3_clinical_step.csv` | 9 | 545 | `e40da8fce52f` |
-| `source_data_figure4_etco2_local_slopes.csv` | 30 | 816 | `1b996220fe20` |
+| `source_data_figure4_etco2_local_slopes.csv` | 18 | 853 | `e29247ab28b9` |
 | `table1_cohort_characteristics.csv` | 19 | 1,228 | `67006d7521aa` |
 | `table2_clinical_step_contrasts.csv` | 9 | 545 | `e40da8fce52f` |
 | `supplementary_etable1_2_cohort_characteristics_long.csv` | 159 | 12,238 | `281b24e6e590` |

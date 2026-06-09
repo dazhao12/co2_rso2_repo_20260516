@@ -119,6 +119,7 @@ Recommended panels:
 - Y-axis: adjusted rSO2, percentage.
 - Show bootstrap 95% CI bands.
 - Mark clinically relevant EtCO2 values, for example 35 and 40 mmHg, if justified.
+- Add observed EtCO2 density or bin counts when available from the analytic dataset. The current generated figure only shows modeled curve support ticks and should not be described as a histogram.
 
 Current source:
 
@@ -161,11 +162,11 @@ Required cleanup:
 - Use human-readable labels: EtCO2, FiO2, Temperature.
 - Make uncertainty intervals visible at publication scale.
 
-## Figure 4: local slope or threshold interpretation
+## Supplementary Figure 1: local slope interpretation
 
-Status: generated as an optional EtCO2-focused slope figure.
+Status: generated as an optional EtCO2-focused supplementary figure.
 
-The local slope heatmap is avoided in the main package because it is too abstract for a clinical journal. The generated Figure 4 is a simple EtCO2-only local-slope plot by decile bin.
+The local slope heatmap is avoided in the main package because it is too abstract for a clinical journal. The generated supplementary figure is a simple EtCO2-only local-slope plot by actual EtCO2 mmHg bins from 20 to 50 mmHg.
 
 Generated clean figure:
 
@@ -174,11 +175,11 @@ Generated clean figure:
 
 Source:
 
-- `code/analysis_bundle/output/tables/crossvar_slope_bins.csv`
+- `generated_assets/source_data_figure2_etco2_curves.csv`; local slopes are finite-difference summaries of the adjusted EtCO2 response curves
 
 Legend draft:
 
-Figure 4. Local EtCO2-rSO2 slopes across the EtCO2 distribution. Lines show descriptive mean local slopes from EtCO2 decile bins for each tissue oxygenation channel. Left and right SctO2 showed the largest slopes in the mid-distribution bins, whereas SftO2 showed a smaller and gradually declining slope. These slopes are model summaries and should not be interpreted as causal effects of changing EtCO2.
+Supplementary Figure 1. Local EtCO2-rSO2 slopes across the analytic EtCO2 range. Lines show descriptive mean local slopes from EtCO2 mmHg bins for each tissue oxygenation channel. Left and right SctO2 showed the largest slopes in the mid-range bins, whereas SftO2 showed a smaller and gradually declining slope. These slopes are model-shape summaries and should not be interpreted as causal effects of changing EtCO2 or as treatment thresholds.
 
 ## Figure legend draft for Figure 2
 

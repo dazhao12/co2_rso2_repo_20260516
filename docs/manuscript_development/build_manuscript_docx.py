@@ -261,16 +261,16 @@ def handle_display_placeholder(doc, line):
             "Figure 2",
             "Adjusted EtCO2-rSO2 response curves.",
             "figure2_etco2_adjusted_curves.png",
-            "Curves show adjusted tissue oxygenation across the observed EtCO2 range by channel. Bands show uncertainty intervals derived from archived prediction matrices.",
+            "Curves show adjusted tissue oxygenation across the observed EtCO2 range by channel. Bands show uncertainty intervals derived from archived prediction matrices. Bottom ticks show modeled curve support, not the observed EtCO2 histogram.",
         )
         return True
-    if line.startswith("[Insert Figure 4"):
+    if line.startswith("[Insert Supplementary Figure 1"):
         add_figure(
             doc,
-            "Figure 4",
+            "Supplementary Figure 1",
             "Local slopes of the adjusted EtCO2-rSO2 relationship.",
             "figure4_etco2_local_slopes.png",
-            "Local slopes summarize descriptive model gradients across EtCO2 decile bins. These summaries are descriptive and do not define treatment thresholds.",
+            "Local slopes summarize descriptive model gradients across EtCO2 mmHg bins from 20 to 50 mmHg. These summaries are descriptive and do not define treatment thresholds.",
         )
         return True
     return False

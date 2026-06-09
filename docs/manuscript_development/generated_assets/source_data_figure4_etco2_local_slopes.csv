@@ -1,31 +1,19 @@
-﻿Outcome channel,EtCO2 decile,"Mean local slope, percentage points per mmHg"
-Left SctO2,Q0-10,0.3577
-Left SctO2,Q10-20,0.4113
-Left SctO2,Q20-30,0.4446
-Left SctO2,Q30-40,0.5108
-Left SctO2,Q40-50,0.5952
-Left SctO2,Q50-60,0.6097
-Left SctO2,Q60-70,0.5218
-Left SctO2,Q70-80,0.3706
-Left SctO2,Q80-90,0.2151
-Left SctO2,Q90-100,0.1103
-Right SctO2,Q0-10,0.1555
-Right SctO2,Q10-20,0.324
-Right SctO2,Q20-30,0.4153
-Right SctO2,Q30-40,0.482
-Right SctO2,Q40-50,0.5676
-Right SctO2,Q50-60,0.6154
-Right SctO2,Q60-70,0.5539
-Right SctO2,Q70-80,0.4105
-Right SctO2,Q80-90,0.299
-Right SctO2,Q90-100,0.2525
-SftO2,Q0-10,0.2917
-SftO2,Q10-20,0.2875
-SftO2,Q20-30,0.274
-SftO2,Q30-40,0.2515
-SftO2,Q40-50,0.2244
-SftO2,Q50-60,0.1957
-SftO2,Q60-70,0.1654
-SftO2,Q70-80,0.1373
-SftO2,Q80-90,0.1172
-SftO2,Q90-100,0.1056
+﻿Outcome channel,"EtCO2 range, mmHg","Observed curve x min, mmHg","Observed curve x max, mmHg","Curve points, n","Mean local slope, percentage points per mmHg"
+Left SctO2,20-25,21.16,24.91,25,0.3729
+Left SctO2,25-30,25.07,29.92,32,0.4389
+Left SctO2,30-35,30.07,34.92,32,0.56
+Left SctO2,35-40,35.08,39.93,32,0.5798
+Left SctO2,40-45,40.08,44.93,32,0.3488
+Left SctO2,45-50,45.09,49.0,26,0.1325
+Right SctO2,20-25,21.16,24.91,25,0.1928
+Right SctO2,25-30,25.07,29.92,32,0.4002
+Right SctO2,30-35,30.07,34.92,32,0.5318
+Right SctO2,35-40,35.08,39.93,32,0.5967
+Right SctO2,40-45,40.08,44.93,32,0.3955
+Right SctO2,45-50,45.09,49.0,26,0.2613
+SftO2,20-25,21.16,24.91,25,0.2912
+SftO2,25-30,25.07,29.92,32,0.2765
+SftO2,30-35,30.07,34.92,32,0.2358
+SftO2,35-40,35.08,39.93,32,0.1848
+SftO2,40-45,40.08,44.93,32,0.1347
+SftO2,45-50,45.09,49.0,26,0.108

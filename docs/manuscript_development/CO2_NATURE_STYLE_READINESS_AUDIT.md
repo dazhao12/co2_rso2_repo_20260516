@@ -29,7 +29,7 @@ Target-journal assumption: generic Nature Portfolio clinical observational manus
 | Supplementary tables index | Journal-facing review index with eTable purpose, key contents, status, main-display linkage, and source traceability | ready for coauthor review |
 | Rendered visual QA | Windows-compatible DOCX renderer produced 12 main-manuscript pages, 5 supplementary-methods pages, and 3 supplementary-table-index pages under local `docs/manuscript_development/render_qa/*_review_ready/`; all rendered pages were nonblank by pixel check | passed for review-ready artifacts |
 
-The DOCX files are structurally readable and visually renderable in the current Windows Codex session through the compatibility renderer. Manual inspection of representative main-manuscript pages found the title page, Table 1, Figure 1, Table 2 continuation, Figure 3, Figure 2, Figure 4, and declarations pages readable without obvious clipping or overlap. Rendered PNG/PDF files are treated as local QA intermediates and are intentionally not versioned. The supplementary tables index now uses short journal-facing table descriptions, with exact repository paths moved to a traceability section.
+The DOCX files are structurally readable and visually renderable in the current Windows Codex session through the compatibility renderer. Manual inspection of representative main-manuscript pages found the title page, Table 1, Figure 1, Table 2 continuation, Figure 3, Figure 2, and declarations pages readable without obvious clipping or overlap. Rendered PNG/PDF files are treated as local QA intermediates and are intentionally not versioned. The local-slope plot is now treated as a supplementary model-shape display rather than a main-text figure. The supplementary tables index now uses short journal-facing table descriptions, with exact repository paths moved to a traceability section.
 
 ## Manuscript Completeness
 
@@ -44,7 +44,7 @@ The DOCX files are structurally readable and visually renderable in the current 
 | Supplementary methods | Cohort construction, variables, artifact ranges, missing-data handling, GAM description, contrasts, and sensitivity status are described | framework ready |
 | Supplementary table index | eTables 1/2 and 3-8 are indexed with source files and status | framework ready |
 | Author and regulatory statements | Main draft still has placeholders for authors, correspondence, ethics, funding, competing interests, contributions, data availability, code availability, and acknowledgements | not ready |
-| Display item insertion | Main manuscript DOCX now embeds Table 1, Figure 1, Table 2, Figure 3, Figure 2, and Figure 4 from generated assets | ready for coauthor review |
+| Display item insertion | Main manuscript DOCX now embeds Table 1, Figure 1, Table 2, Figure 3, and Figure 2 from generated assets; the local-slope plot is retained as a supplementary display | ready for coauthor review |
 | Bootstrap/inference wording | Draft states model-based uncertainty and flags patient-clustered bootstrap details as pending | scientifically cautious but incomplete |
 | Sensitivity analyses | Current package explicitly excludes sensitivity analyses because planned result directories are missing | acceptable only if the target journal accepts a narrower physiology paper |
 

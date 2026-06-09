@@ -33,7 +33,7 @@ This checklist separates what exists from what must be completed before a submis
    - Complete as a manuscript-development asset.
    - Current file: `docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.xlsx`.
    - It reports the 5 mmHg EtCO2 clinical-step contrast by channel with model-based uncertainty intervals from archived prediction matrices.
-   - Optional: quantile-zone slopes from `crossvar_slope_bins.csv`.
+   - Optional: EtCO2-zone slopes across 20-50 mmHg as a supplementary model-shape check.
 
 4. Sensitivity analysis decision
    - `code/analysis_bundle/output/tables/etco2_sensitivity_5model_summary.csv` currently marks all planned sensitivity result directories as `missing_result_dir`.

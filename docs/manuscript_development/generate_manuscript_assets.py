@@ -271,13 +271,31 @@ def make_figure1(flow):
     img.save(OUT / "figure1_cohort_flow.png")
 
 
-def write_figure4_source():
-    slopes = pd.read_csv(ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_slope_bins.csv")
-    slopes = slopes[slopes["xvar"] == "ET_CO2"].copy()
-    slopes["Outcome channel"] = slopes["ycol"].map(CHANNEL_LABELS)
-    slopes["EtCO2 decile"] = slopes["bin_label"]
-    slopes["Mean local slope, percentage points per mmHg"] = slopes["mean_slope"].map(lambda x: round(float(x), 4))
-    out = slopes[["Outcome channel", "EtCO2 decile", "Mean local slope, percentage points per mmHg"]]
+def write_figure4_source(curves):
+    rows = []
+    bins = [(20, 25), (25, 30), (30, 35), (35, 40), (40, 45), (45, 50)]
+    for ycol, label in CHANNEL_LABELS.items():
+        sub = curves[curves["ycol"] == ycol].sort_values("x").copy()
+        sub["local_slope"] = sub["pred_mean"].diff() / sub["x"].diff()
+        for lo, hi in bins:
+            if hi == 50:
+                in_bin = sub[(sub["x"] >= lo) & (sub["x"] <= hi)]
+            else:
+                in_bin = sub[(sub["x"] >= lo) & (sub["x"] < hi)]
+            in_bin = in_bin.dropna(subset=["local_slope"])
+            rows.append(
+                {
+                    "Outcome channel": label,
+                    "EtCO2 range, mmHg": f"{lo}-{hi}",
+                    "Observed curve x min, mmHg": round(float(in_bin["x"].min()), 2) if not in_bin.empty else "",
+                    "Observed curve x max, mmHg": round(float(in_bin["x"].max()), 2) if not in_bin.empty else "",
+                    "Curve points, n": int(len(in_bin)),
+                    "Mean local slope, percentage points per mmHg": round(float(in_bin["local_slope"].mean()), 4)
+                    if not in_bin.empty
+                    else "",
+                }
+            )
+    out = pd.DataFrame(rows)
     out.to_csv(OUT / "source_data_figure4_etco2_local_slopes.csv", index=False, encoding="utf-8-sig")
     return out
 
@@ -293,25 +311,25 @@ def make_figure4(slopes):
     left, right, top, bottom = 105, 1170, 120, 510
     colors = {"Left SctO2": (37, 99, 235), "Right SctO2": (5, 150, 105), "SftO2": (217, 119, 6)}
     y_min, y_max = 0.0, max(0.7, float(slopes["Mean local slope, percentage points per mmHg"].max()) + 0.05)
-    deciles = list(dict.fromkeys(slopes["EtCO2 decile"]))
+    ranges = list(dict.fromkeys(slopes["EtCO2 range, mmHg"]))
 
     def sx(idx):
-        return left + idx / (len(deciles) - 1) * (right - left)
+        return left + idx / (len(ranges) - 1) * (right - left)
 
     def sy(value):
         return bottom - (float(value) - y_min) / (y_max - y_min) * (bottom - top)
 
-    text(draw, (S(width / 2), S(42)), "Local EtCO2-rSO2 slope across the EtCO2 distribution", 21 * scale, bold=True)
-    text(draw, (S(width / 2), S(75)), "Mean local slopes are descriptive model summaries from EtCO2 decile bins", 12 * scale, fill=(68, 68, 68))
+    text(draw, (S(width / 2), S(42)), "Local EtCO2-rSO2 slope across the analytic EtCO2 range", 21 * scale, bold=True)
+    text(draw, (S(width / 2), S(75)), "Mean local slopes are descriptive summaries across EtCO2 mmHg bins", 12 * scale, fill=(68, 68, 68))
     draw.rectangle([S(left), S(top), S(right), S(bottom)], outline=(34, 34, 34), width=2)
     for tick in [0, 0.2, 0.4, 0.6]:
         y = sy(tick)
         draw.line([S(left), S(y), S(right), S(y)], fill=(229, 231, 235), width=1)
         text(draw, (S(left - 10), S(y)), f"{tick:.1f}", 11 * scale, anchor="rm", fill=(68, 68, 68))
-    for idx, label in enumerate(deciles):
+    for idx, label in enumerate(ranges):
         x = sx(idx)
         draw.line([S(x), S(bottom), S(x), S(bottom + 6)], fill=(34, 34, 34), width=1)
-        text(draw, (S(x), S(bottom + 25)), label.replace("Q", ""), 10 * scale, fill=(68, 68, 68))
+        text(draw, (S(x), S(bottom + 25)), label, 10 * scale, fill=(68, 68, 68))
 
     for channel in CHANNEL_LABELS.values():
         sub = slopes[slopes["Outcome channel"] == channel].reset_index(drop=True)
@@ -328,14 +346,14 @@ def make_figure4(slopes):
         text(draw, (S(legend_x + 45), S(y)), channel, 12 * scale, anchor="lm")
 
     text(draw, (S(left), S(top - 24)), "Slope, percentage points per mmHg", 12 * scale, anchor="lm", fill=(68, 68, 68))
-    text(draw, (S((left + right) / 2), S(bottom + 58)), "EtCO2 decile bin", 12 * scale, fill=(68, 68, 68))
+    text(draw, (S((left + right) / 2), S(bottom + 58)), "EtCO2 range (mmHg)", 12 * scale, fill=(68, 68, 68))
     img = img.resize((width, height), Image.Resampling.LANCZOS)
     img.save(OUT / "figure4_etco2_local_slopes.png")
 
 
 def make_figure2(curves):
-    width, height = 1500, 520
-    margin_left, margin_right, margin_top, margin_bottom = 70, 30, 95, 70
+    width, height = 1500, 560
+    margin_left, margin_right, margin_top, margin_bottom = 70, 30, 95, 105
     gap = 45
     panel_w = (width - margin_left - margin_right - 2 * gap) / 3
     panel_h = height - margin_top - margin_bottom
@@ -382,6 +400,11 @@ def make_figure2(curves):
         mean = [(sx(r.x, idx), sy(r.pred_mean)) for _, r in sub.iterrows()]
         parts.append(f'<polygon points="{path_poly(upper + lower)}" fill="#93C5FD" opacity="0.35" stroke="none"/>')
         parts.append(f'<polyline points="{path_poly(mean)}" fill="none" stroke="#1D4ED8" stroke-width="3"/>')
+        support_y = bottom + 34
+        for _, r in sub.iloc[::8].iterrows():
+            x = sx(r.x, idx)
+            parts.append(f'<line x1="{x:.1f}" x2="{x:.1f}" y1="{support_y:.1f}" y2="{support_y + 8:.1f}" stroke="#6B7280" stroke-width="1"/>')
+        parts.append(svg_text((left + right) / 2, support_y + 24, "modeled support", 9, fill="#6B7280"))
         parts.append(svg_text((left + right) / 2, top - 18, label, 14, weight="bold"))
         parts.append(svg_text((left + right) / 2, height - 18, "EtCO2 (mmHg)", 12))
     parts.append(svg_text(margin_left, margin_top - 20, "Adjusted rSO2 (%)", 12, anchor="start"))
@@ -392,14 +415,14 @@ def make_figure2(curves):
 
 def make_figure2_png(curves):
     scale = 2
-    width, height = 1500, 520
+    width, height = 1500, 560
     img = Image.new("RGB", (width * scale, height * scale), "white")
     draw = ImageDraw.Draw(img, "RGBA")
 
     def S(v):
         return float(v) * scale
 
-    margin_left, margin_right, margin_top, margin_bottom = 70, 30, 95, 70
+    margin_left, margin_right, margin_top, margin_bottom = 70, 30, 95, 105
     gap = 45
     panel_w = (width - margin_left - margin_right - 2 * gap) / 3
     panel_h = height - margin_top - margin_bottom
@@ -444,6 +467,11 @@ def make_figure2_png(curves):
         mean = [(S(sx(r["x"], idx)), S(sy(r["pred_mean"]))) for _, r in sub.iterrows()]
         draw.polygon(upper + lower, fill=(147, 197, 253, 90))
         draw.line(mean, fill=(29, 78, 216), width=6, joint="curve")
+        support_y = bottom + 34
+        for _, r in sub.iloc[::8].iterrows():
+            x = sx(r["x"], idx)
+            draw.line([S(x), S(support_y), S(x), S(support_y + 8)], fill=(107, 114, 128), width=2)
+        text(draw, (S((left + right) / 2), S(support_y + 24)), "modeled support", 9 * scale, fill=(107, 114, 128))
         text(draw, (S((left + right) / 2), S(top - 18)), label, 14 * scale, bold=True)
         text(draw, (S((left + right) / 2), S(height - 18)), "EtCO2 (mmHg)", 12 * scale)
 
@@ -570,7 +598,7 @@ def main():
     curves = read_etco2_curves()
     make_figure2(curves)
     make_figure3(table2)
-    slopes = write_figure4_source()
+    slopes = write_figure4_source(curves)
     make_figure4(slopes)
     print(OUT)
 

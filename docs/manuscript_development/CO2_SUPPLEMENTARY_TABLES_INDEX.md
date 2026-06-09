@@ -25,7 +25,7 @@ Draft status: journal-facing supplement index for coauthor review. The table con
 | Figure 1. Cohort assembly | eTable 1 | Figure 1 source CSV |
 | Figure 2. Adjusted EtCO2-rSO2 curves | eTables 6 and 7 | Figure 2 source CSV |
 | Figure 3. Clinical-step contrasts | Table 2 | Figure 3 source CSV |
-| Figure 4. EtCO2 local slopes | eTable 7 | Figure 4 source CSV |
+| Supplementary Figure 1. EtCO2 local slopes | eTable 7 | Local-slope source CSV |
 
 ## Source Traceability
 

@@ -194,7 +194,7 @@ def build_report() -> str:
             "",
             "## QA Judgment",
             "",
-            "The package is review-ready if DOCX ZIP tests are ok, the main DOCX has 2 tables and 4 figures, display placeholders are absent from the DOCX, and the package ZIP contains the expected manuscript, supplement, audit, and manifest entries.",
+            "The package is review-ready if DOCX ZIP tests are ok, the main DOCX has 2 tables and 3 main figures, display placeholders are absent from the DOCX, and the package ZIP contains the expected manuscript, supplement, audit, and manifest entries.",
             "",
             "The package is not final submission-ready while author-side statements, ethics/funding declarations, sensitivity-analysis choice, and target-journal formatting remain unresolved.",
             "",

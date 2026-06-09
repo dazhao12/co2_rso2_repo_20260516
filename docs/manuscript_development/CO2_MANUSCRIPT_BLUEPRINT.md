@@ -113,7 +113,7 @@ Main display items:
 - Figure 1: study cohort, timestamp filtering, and EtCO2/rSO2 distributions.
 - Figure 2: adjusted EtCO2-rSO2 curves by channel with uncertainty bands.
 - Figure 3: clinical-step effect bar plot comparing EtCO2, FiO2, and temperature.
-- Figure 4: slope heatmap or threshold/turning-point view, if visually cleaned and restricted to variables with complete data.
+- Supplementary Figure 1: descriptive local-slope view across EtCO2 20-50 mmHg bins, if retained as a model-shape check.
 
 Supplementary display items:
 

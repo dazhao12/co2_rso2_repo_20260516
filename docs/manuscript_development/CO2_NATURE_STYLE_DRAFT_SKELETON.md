@@ -96,7 +96,7 @@ Must be rewritten:
 - primary exposure is EtCO2, not MAP/CI;
 - MAP and CI/hemodynamic variables become covariates or comparison variables;
 - response surfaces should become EtCO2 response curves and clinical-step contrasts;
-- slope tables should be EtCO2-zone or quantile-specific rather than MAP/CI-zone specific.
+- slope tables should be EtCO2-zone specific rather than MAP/CI-zone specific, and should remain supplementary unless they add a clear clinical message.
 
 ## Nature-style language rules for this manuscript
 
@@ -114,4 +114,3 @@ Avoid:
 - "causal effect"
 - "novel and comprehensive"
 - "significantly important"
-
