@@ -67,6 +67,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 21. `CO2_MANUSCRIPT_PACKAGE_INDEX.md`
    Index and build command for the manuscript-development zip package.
 
+22. `CO2_NATURE_STYLE_READINESS_AUDIT.md`
+   Nature-style manuscript readiness audit covering structural QA, remaining hard stops, and table/readiness status.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
