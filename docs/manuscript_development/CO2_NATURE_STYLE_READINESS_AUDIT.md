@@ -26,10 +26,10 @@ Target-journal assumption: generic Nature Portfolio clinical observational manus
 | Main manuscript display items | Review-ready DOCX contains 2 embedded tables and 4 embedded figures; no Table/Figure insertion placeholders remain in the DOCX | passed for coauthor review |
 | Main manuscript size | 116 paragraphs, 2 embedded tables, 4 embedded figures | adequate for draft review |
 | Supplementary methods size | 70 paragraphs, 2 tables, approximately 1,130 whitespace-delimited words | adequate framework |
-| Supplementary tables index size | 11 paragraphs, 2 tables, approximately 82 whitespace-delimited words | concise source index |
+| Supplementary tables index | Journal-facing review index with eTable purpose, key contents, status, main-display linkage, and source traceability | ready for coauthor review |
 | Rendered visual QA | Windows-compatible DOCX renderer produced 12 main-manuscript pages, 5 supplementary-methods pages, and 3 supplementary-table-index pages under local `docs/manuscript_development/render_qa/*_review_ready/`; all rendered pages were nonblank by pixel check | passed for review-ready artifacts |
 
-The DOCX files are structurally readable and visually renderable in the current Windows Codex session through the compatibility renderer. Manual inspection of representative main-manuscript pages found the title page, Table 1, Figure 1, Table 2 continuation, Figure 3, Figure 2, Figure 4, and declarations pages readable without obvious clipping or overlap. Rendered PNG/PDF files are treated as local QA intermediates and are intentionally not versioned. The supplementary tables index remains a source index rather than final journal-formatted supplementary material.
+The DOCX files are structurally readable and visually renderable in the current Windows Codex session through the compatibility renderer. Manual inspection of representative main-manuscript pages found the title page, Table 1, Figure 1, Table 2 continuation, Figure 3, Figure 2, Figure 4, and declarations pages readable without obvious clipping or overlap. Rendered PNG/PDF files are treated as local QA intermediates and are intentionally not versioned. The supplementary tables index now uses short journal-facing table descriptions, with exact repository paths moved to a traceability section.
 
 ## Manuscript Completeness
 
@@ -66,7 +66,7 @@ Nature-style table formatting still needs final layout work if the tables are em
 3. Confirm funding, competing interests, author contributions, acknowledgements, data availability, and code availability.
 4. Decide whether to complete the planned 5-model sensitivity analyses before submission.
 5. Complete target-journal reference styling and figure/source-data naming.
-6. Convert the supplementary tables source index into journal-facing captions or workbook tabs if the target journal requires a polished supplement rather than a source manifest.
+6. Convert the supplementary table plan into final target-journal captions or workbook tab names after the journal is chosen.
 
 ## Editorial Judgment
 
