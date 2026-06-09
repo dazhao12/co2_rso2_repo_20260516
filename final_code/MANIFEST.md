@@ -24,3 +24,8 @@ copies remain under `code/` and `docs/`.
   - Builds the main manuscript DOCX.
 - `09_build_supplement_docx.py`
   - Builds the integrated supplemental DOCX.
+- `10_reference_mapci_tissue_o2_figures.R`
+  - Reference MAP/CI tissue-oxygen figure script from the prior analysis.
+  - Kept only to inspect styling, especially the transparent slope bars:
+    `SLOPE_BIN_ALPHA <- 0.7` and
+    `geom_col(..., alpha = SLOPE_BIN_ALPHA)`.
