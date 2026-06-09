@@ -23,12 +23,13 @@ Target-journal assumption: generic Nature Portfolio clinical observational manus
 | Main manuscript DOCX opens as valid OOXML | `zipfile.testzip()` returned ok; 18 OOXML entries | passed structurally |
 | Supplementary methods DOCX opens as valid OOXML | `zipfile.testzip()` returned ok; 18 OOXML entries | passed structurally |
 | Supplementary tables index DOCX opens as valid OOXML | `zipfile.testzip()` returned ok; 18 OOXML entries | passed structurally |
-| Main manuscript size | 99 paragraphs, 0 embedded tables, approximately 3,168 whitespace-delimited words | adequate for draft review |
+| Main manuscript display items | Review-ready DOCX contains 2 embedded tables and 4 embedded figures; no Table/Figure insertion placeholders remain in the DOCX | passed for coauthor review |
+| Main manuscript size | 116 paragraphs, 2 embedded tables, 4 embedded figures | adequate for draft review |
 | Supplementary methods size | 70 paragraphs, 2 tables, approximately 1,130 whitespace-delimited words | adequate framework |
 | Supplementary tables index size | 11 paragraphs, 2 tables, approximately 82 whitespace-delimited words | concise source index |
-| Rendered visual QA | LibreOffice DOCX-to-PDF conversion timed out for the main manuscript; no PDF/PNG output was produced | not passed |
+| Rendered visual QA | Windows-compatible DOCX renderer produced 12 main-manuscript pages, 5 supplementary-methods pages, and 3 supplementary-table-index pages under local `docs/manuscript_development/render_qa/*_review_ready/`; all rendered pages were nonblank by pixel check | passed for review-ready artifacts |
 
-The DOCX files are structurally readable, but the required page-level visual review is still incomplete because LibreOffice conversion did not finish in the current Windows Codex session. Do not describe the DOCX package as visually QA-passed until conversion succeeds and page images are inspected.
+The DOCX files are structurally readable and visually renderable in the current Windows Codex session through the compatibility renderer. Manual inspection of representative main-manuscript pages found the title page, Table 1, Figure 1, Table 2 continuation, Figure 3, Figure 2, Figure 4, and declarations pages readable without obvious clipping or overlap. Rendered PNG/PDF files are treated as local QA intermediates and are intentionally not versioned. The supplementary tables index remains a source index rather than final journal-formatted supplementary material.
 
 ## Manuscript Completeness
 
@@ -43,7 +44,7 @@ The DOCX files are structurally readable, but the required page-level visual rev
 | Supplementary methods | Cohort construction, variables, artifact ranges, missing-data handling, GAM description, contrasts, and sensitivity status are described | framework ready |
 | Supplementary table index | eTables 1/2 and 3-8 are indexed with source files and status | framework ready |
 | Author and regulatory statements | Main draft still has placeholders for authors, correspondence, ethics, funding, competing interests, contributions, data availability, code availability, and acknowledgements | not ready |
-| Display item insertion | Main manuscript still has bracketed insertion notes for Table 1, Figures 1-4, and Table 2 | not ready as a final Word submission |
+| Display item insertion | Main manuscript DOCX now embeds Table 1, Figure 1, Table 2, Figure 3, Figure 2, and Figure 4 from generated assets | ready for coauthor review |
 | Bootstrap/inference wording | Draft states model-based uncertainty and flags patient-clustered bootstrap details as pending | scientifically cautious but incomplete |
 | Sensitivity analyses | Current package explicitly excludes sensitivity analyses because planned result directories are missing | acceptable only if the target journal accepts a narrower physiology paper |
 
@@ -64,9 +65,8 @@ Nature-style table formatting still needs final layout work if the tables are em
 2. Confirm ethics approval, consent or waiver wording, study dates, and whether the Bottomline-CS parent-cohort language applies exactly to the CO2 analysis.
 3. Confirm funding, competing interests, author contributions, acknowledgements, data availability, and code availability.
 4. Decide whether to complete the planned 5-model sensitivity analyses before submission.
-5. Replace display-item insertion notes with final tables, figures, captions, and legends in the Word manuscript.
-6. Complete target-journal reference styling and figure/source-data naming.
-7. Re-run DOCX visual QA after resolving the LibreOffice conversion timeout.
+5. Complete target-journal reference styling and figure/source-data naming.
+6. Convert the supplementary tables source index into journal-facing captions or workbook tabs if the target journal requires a polished supplement rather than a source manifest.
 
 ## Editorial Judgment
 

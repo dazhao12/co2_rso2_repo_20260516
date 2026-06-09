@@ -18,5 +18,8 @@ logs/
 *.out
 *.err
 
+# Generated document QA renders
+docs/manuscript_development/render_qa/
+
 # Keep directory placeholders if needed
 !.gitkeep
