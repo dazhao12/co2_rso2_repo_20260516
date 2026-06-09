@@ -22,19 +22,22 @@ This checklist separates what exists from what must be completed before a submis
    - See `CO2_CHANNEL_NAMING_AUDIT.md`.
 
 2. Table 1 and Table 2 generation
-   - Need baseline patient characteristics.
-   - Need intraoperative management characteristics.
-   - These should mirror the prior MAP/CI table format but use the CO2 analytic cohort.
-   - See `CO2_TABLE1_EXTRACTION_SPEC.md` for the current variable list and HPC run guardrails.
+   - Complete for the current manuscript-development package.
+   - Source files are under `results/manuscript_tables/`.
+   - Main Table 1 assets are under `docs/manuscript_development/generated_assets/table1_cohort_characteristics.*`.
+   - Full supplementary eTable 1/2 assets are under `docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics.*`.
+   - The source-coded `SEX=1` label still requires data-dictionary confirmation before final submission.
 
 3. Main EtCO2 slope or contrast table
-   - Need a manuscript-ready table for EtCO2 increments or zones.
-   - Candidate: 5 mmHg clinical-step contrast by channel with bootstrap CI.
+   - Complete as a manuscript-development asset.
+   - Current file: `docs/manuscript_development/generated_assets/table2_clinical_step_contrasts.xlsx`.
+   - It reports the 5 mmHg EtCO2 clinical-step contrast by channel with model-based uncertainty intervals from archived prediction matrices.
    - Optional: quantile-zone slopes from `crossvar_slope_bins.csv`.
 
 4. Sensitivity analysis decision
    - `code/analysis_bundle/output/tables/etco2_sensitivity_5model_summary.csv` currently marks all planned sensitivity result directories as `missing_result_dir`.
-   - Either run these analyses or remove the planned sensitivity claims.
+   - Current manuscript-development decision: do not report sensitivity analyses and do not make a robustness claim.
+   - See `CO2_SENSITIVITY_DECISION.md`.
 
 5. All-intraop comparison decision
    - `run_checks_all_intraop_n10000_mapci_te.csv` reports 27 expected rows, 27 rows present, and 18 missing values.
@@ -56,9 +59,8 @@ This checklist separates what exists from what must be completed before a submis
 
 ## Recommended next work order
 
-1. Pull the corrected supplemental eTable 3-5 labels through to the HPC repo and regenerated submission supplement.
-2. Generate Table 1/2 from the CO2 analytic cohort on a compute node or Slurm job.
-3. Generate EtCO2 5 mmHg contrast table with bootstrap CIs.
-4. Remake main figures as EtCO2-focused.
-5. Decide whether to rerun 5-model sensitivity.
-6. Convert the draft skeleton into a full manuscript.
+1. Confirm the source-coded `SEX=1` table label against the data dictionary.
+2. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
+3. Pull the corrected supplemental eTable 3-5 labels through to the HPC repo and regenerated submission supplement.
+4. Decide whether to run the planned 5-model sensitivity package before journal submission.
+5. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.

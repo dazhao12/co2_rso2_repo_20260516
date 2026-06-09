@@ -115,16 +115,7 @@ The output set includes `table1_2_co2_rso2.xlsx`, `table1_2_co2_rso2_available_c
 
 ## Sensitivity Analyses
 
-The repository includes planned 5-model sensitivity summaries, but the current analysis bundle reports missing result directories for all planned sensitivity variants. Until these analyses are completed, the manuscript should not claim robustness across alternative model specifications.
-
-Recommended sensitivity checks before submission:
-
-- Alternative EtCO2 analytic ranges
-- Alternative tissue oxygenation inclusion ranges
-- Patient-level or case-level bootstrap if not already used
-- Models with broader intraoperative covariate adjustment
-- Lagged EtCO2 analyses, if clinically justified
-- Subgroup analyses by age, sex, and preoperative hypertension status
+No sensitivity analyses are reported in the current manuscript evidence package. The repository includes a planned 5-model sensitivity summary file, but all planned result directories are marked as `missing_result_dir`; therefore, the current manuscript does not claim robustness across alternative ventilatory or hemodynamic model specifications. If these analyses are completed before submission, they should be added as a separate supplementary table with the same outcome-channel terminology used in the main manuscript.
 
 ## Statistical Software and Reproducibility
 

@@ -26,7 +26,7 @@ The Discussion was rewritten around seven claims: principal finding, biological 
 
 ## Round 6. Supplementary methods and table framework
 
-The supplementary methods now describe cohort construction, channel mapping, exposure definition, current covariate set, clipping, imputation, generalized additive models, clinical-step contrasts, model-based uncertainty, sensitivity-analysis status, and reproducibility requirements. The supplementary table index maps eTables 1/2 through 8 to current sources and status.
+The supplementary methods now describe cohort construction, channel mapping, exposure definition, current covariate set, clipping, imputation, generalized additive models, clinical-step contrasts, model-based uncertainty, and reproducibility requirements. The supplementary table index maps eTables 1/2 through 8 to current sources and status. Sensitivity analyses are not reported in the current evidence package.
 
 ## Round 7. Literature integration
 
@@ -38,8 +38,8 @@ The draft was edited to remove inflated claims, formulaic transitions, repeated 
 
 ## Round 9. Statistical boundary pass
 
-The manuscript and supplement now state that clinical-step contrasts come from the 10,000-row `map_ci_te` analysis run and archived bootstrap prediction matrices. Current intervals should be treated as model-based uncertainty intervals unless a patient-level bootstrap is finalized. Planned sensitivity analyses remain incomplete and no robustness claim is made.
+The manuscript and supplement now state that clinical-step contrasts come from the 10,000-row `map_ci_te` analysis run and archived bootstrap prediction matrices. Current intervals should be treated as model-based uncertainty intervals unless a patient-level bootstrap is finalized. The planned 5-model sensitivity outputs are unavailable, so the current manuscript does not report sensitivity analyses and does not make a robustness claim.
 
 ## Round 10. Remaining submission gates
 
-The package is close to a manuscript-development draft but not submission-ready. Remaining gates are: author list and contributions, ethics and consent wording, data/code availability, funding and competing interests, local pull of HPC Table 1/2 files, final sensitivity-analysis decision, final figure formatting, journal-specific reference formatting, and optional rendered DOCX page-level visual QA.
+The package is close to a manuscript-development draft but not submission-ready. Remaining gates are: author list and contributions, ethics and consent wording, data/code availability, funding and competing interests, source-coded `SEX=1` table-label confirmation, optional sensitivity rerun before journal submission, final figure formatting, journal-specific reference formatting, and optional rendered DOCX page-level visual QA.

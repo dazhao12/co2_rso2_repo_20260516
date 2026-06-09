@@ -49,21 +49,24 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 15. `CO2_10_ROUND_MANUSCRIPT_REVIEW_LOG.md`
    Development log documenting the 10-round review and integration process.
 
+16. `CO2_SENSITIVITY_DECISION.md`
+   Current decision to exclude unavailable sensitivity analyses from the reported evidence package and avoid robustness claims.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
 
 > EtCO2 is a nonlinear, clinically available correlate of intraoperative cerebral tissue oxygenation during off-pump coronary bypass surgery, but the current analysis is observational and does not establish PaCO2-mediated causality or an EtCO2 treatment target.
 
-Avoid therapeutic or causal claims until sensitivity analyses and outcome analyses support them.
+Avoid therapeutic or causal claims. The current package also avoids robustness claims because the planned sensitivity-analysis result directories are unavailable.
 
 ## Immediate next actions
 
-1. Decide whether to complete or remove the planned 5-model sensitivity analysis before making any robustness claim.
-2. Confirm the source-coded `SEX=1` table label against the data dictionary before final submission.
+1. Confirm the source-coded `SEX=1` table label against the data dictionary before final submission.
+2. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
 3. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
-4. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
-5. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
+4. Decide whether to run the planned 5-model sensitivity package before journal submission.
+5. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
 
 ## Build the Word draft
 
