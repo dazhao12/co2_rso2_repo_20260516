@@ -86,6 +86,11 @@ POOL_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
 
 # ========================= 分析配置 =========================
 PRIMARY_VARS = ["ET_CO2", "TEMP", "FiO2_new"]
+SENSITIVITY_XVARS = [
+    c.strip()
+    for c in os.getenv("INTRA5_SENSITIVITY_XVARS", "").split(",")
+    if c.strip()
+]
 HEMO_ADJUST_MODE = os.getenv("INTRA5_HEMO_ADJUST_MODE", "auto").strip().lower()
 if HEMO_ADJUST_MODE not in ("auto", "map_ci_te", "map_sv_smooth", "linear"):
     HEMO_ADJUST_MODE = "auto"
@@ -1374,11 +1379,15 @@ def run_one_model(
     take_n = min(int(k), len(d_model))
     df_ref = d_model.sample(n=take_n, random_state=SEED, replace=REF_SAMPLE_REPLACE)
     feature_names = build_feature_names(primary_vars, tensor_vars, smooth_covars, cont_cov, cat_cov)
+    effect_xvars = primary_vars + [
+        c for c in SENSITIVITY_XVARS
+        if c in feature_names and c not in primary_vars
+    ]
     X_ref = df_ref[feature_names].astype(float).values
     need_slope_outputs = EXPORT_SLOPE_METRICS or INCLUDE_SLOPE_PANEL
 
     x_grid_map = {}
-    for xvar in primary_vars:
+    for xvar in effect_xvars:
         x_s = pd.to_numeric(df_ref[xvar], errors="coerce")
         if X_RANGE_MODE == "full":
             x_lo = float(x_s.min())
@@ -1423,21 +1432,24 @@ def run_one_model(
     ref_vals["_hemo_adjustment_terms"] = ";".join(d_model.attrs.get("hemo_adjustment_terms", []))
     curve_store = {
         xvar: {mode: [] for mode in PLOT_MODES}
-        for xvar in primary_vars
+        for xvar in effect_xvars
     }
-    slope_store = {xvar: [] for xvar in primary_vars} if need_slope_outputs else {}
-    metrics_store = {xvar: [] for xvar in primary_vars} if EXPORT_SLOPE_METRICS else {}
+    slope_store = {xvar: [] for xvar in effect_xvars} if need_slope_outputs else {}
+    metrics_store = {xvar: [] for xvar in effect_xvars} if EXPORT_SLOPE_METRICS else {}
     fallback_metrics = {} if EXPORT_SLOPE_METRICS else {}
     fallback_slopes = {} if need_slope_outputs else {}
-    for xvar in primary_vars:
+    for xvar in effect_xvars:
         x_grid = x_grid_map[xvar]
         y_ref_slice = predict_curve_slice(
             gam_ref, x_grid=x_grid, xvar=xvar, feature_names=feature_names, ref_vals=ref_vals
         )
-        y_ref_adjusted = predict_curve_adjusted(
-            gam_ref, x_grid=x_grid, xvar=xvar, primary_vars=primary_vars,
-            feature_names=feature_names, ref_vals=ref_vals, X_obs=X_ref
-        )
+        if xvar in primary_vars:
+            y_ref_adjusted = predict_curve_adjusted(
+                gam_ref, x_grid=x_grid, xvar=xvar, primary_vars=primary_vars,
+                feature_names=feature_names, ref_vals=ref_vals, X_obs=X_ref
+            )
+        else:
+            y_ref_adjusted = y_ref_slice
         m_ref = None
         slope_sd_ref = None
         if need_slope_outputs or EXPORT_SLOPE_METRICS:
@@ -1464,15 +1476,18 @@ def run_one_model(
                 smooth_covars=smooth_covars, cont_cov=cont_cov, cat_cov=cat_cov,
                 n_splines_main=chosen_ns, lam_fixed=chosen_lam
             )
-            for xvar in primary_vars:
+            for xvar in effect_xvars:
                 x_grid = x_grid_map[xvar]
                 y_r_slice = predict_curve_slice(
                     gam_r, x_grid=x_grid, xvar=xvar, feature_names=feature_names, ref_vals=ref_vals
                 )
-                y_r_adjusted = predict_curve_adjusted(
-                    gam_r, x_grid=x_grid, xvar=xvar, primary_vars=primary_vars,
-                    feature_names=feature_names, ref_vals=ref_vals, X_obs=X_ref
-                )
+                if xvar in primary_vars:
+                    y_r_adjusted = predict_curve_adjusted(
+                        gam_r, x_grid=x_grid, xvar=xvar, primary_vars=primary_vars,
+                        feature_names=feature_names, ref_vals=ref_vals, X_obs=X_ref
+                    )
+                else:
+                    y_r_adjusted = y_r_slice
                 m_r = None
                 slope_sd_r = None
                 if need_slope_outputs or EXPORT_SLOPE_METRICS:
@@ -1490,11 +1505,11 @@ def run_one_model(
                     metrics_store[xvar].append(m_r)
         except Exception as e:
             if EXPORT_SLOPE_METRICS:
-                for xvar in primary_vars:
+                for xvar in effect_xvars:
                     metrics_store[xvar].append({"rep": r, "error": str(e)})
 
     out_rows = []
-    for xvar in primary_vars:
+    for xvar in effect_xvars:
         out_dir = out_root / ycol / f"{sec}s" / f"sub{take_n}" / xvar
         out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -2002,6 +2017,7 @@ def main():
         "pointwise_fill_strategy": "forward_fill_then_subject_median_then_global_median",
         "ref_sample_replace": int(REF_SAMPLE_REPLACE),
         "main_smooth_vars": json.dumps(PRIMARY_VARS, ensure_ascii=False),
+        "sensitivity_xvars": json.dumps(SENSITIVITY_XVARS, ensure_ascii=False),
         "hemo_adjust_mode": HEMO_ADJUST_MODE,
         "hemo_tensor_vars": json.dumps(HEMO_TENSOR_VARS, ensure_ascii=False),
         "hemo_smooth_covars_fallback": json.dumps(HEMO_SMOOTH_COVARS_FALLBACK, ensure_ascii=False),

@@ -13,8 +13,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 
-from pptx import Presentation
-from pptx.util import Inches, Pt
+try:
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+except ImportError:
+    Presentation = None
+    Inches = None
+    Pt = None
 
 
 def resolve_path(base, p):
@@ -158,51 +163,74 @@ def delta_ci_approx_from_pointwise(x, lo, hi, x0, x1, delta):
     return float(delta - 1.96 * se), float(delta + 1.96 * se)
 
 
-def compute_one(curve_fp, step, q_window):
+def clinical_window_effects(x, y, step, window_lo, window_hi, n_segments):
+    if not np.isfinite(window_lo) or not np.isfinite(window_hi) or window_hi <= window_lo:
+        raise ValueError("invalid clinical effect window")
+    edges = np.linspace(float(window_lo), float(window_hi), int(n_segments) + 1)
+    rows = []
+    effects = []
+    for i in range(int(n_segments)):
+        x0 = float(edges[i])
+        x1 = float(edges[i + 1])
+        if x1 <= x0:
+            continue
+        y0 = safe_interp(x, y, x0)
+        y1 = safe_interp(x, y, x1)
+        slope = (y1 - y0) / (x1 - x0)
+        effect = slope * float(step)
+        rows.append({
+            "bin_idx": i,
+            "x0": x0,
+            "x1": x1,
+            "x_mid": float((x0 + x1) / 2.0),
+            "slope_per_unit": float(slope),
+            "clinical_step_effect": float(effect),
+        })
+        effects.append(float(effect))
+    if not effects:
+        return np.nan, np.nan, np.nan, rows
+    effects = np.asarray(effects, dtype=float)
+    return (
+        float(np.nanmedian(effects)),
+        float(np.nanquantile(effects, 0.25)),
+        float(np.nanquantile(effects, 0.75)),
+        rows,
+    )
+
+
+def compute_one(curve_fp, step, q_window, window_row=None, n_segments=20):
     c = load_curve(curve_fp)
     x, y, lo, hi = c["x"], c["y"], c["lo"], c["hi"]
     xmin, xmax = float(np.nanmin(x)), float(np.nanmax(x))
 
-    x0 = float(np.nanmedian(x))
-    if x0 + step > xmax:
-        x0 = max(xmin, xmax - step)
-    x1 = min(xmax, x0 + step)
-    if x1 <= x0:
-        x0, x1 = xmin, xmax
-
-    y0 = safe_interp(x, y, x0)
-    y1 = safe_interp(x, y, x1)
-    delta = float(y1 - y0)
-
-    boot_obj, matrix_fp = load_boot_matrix(curve_fp, x)
-    if boot_obj is not None:
-        mat, x_mat = boot_obj
-        ci_lo, ci_hi, delta_boot_mean = delta_ci_from_boot(mat, x_mat, x0, x1)
-        ci_source = "boot_matrix"
+    if window_row is not None:
+        window_lo = float(window_row["q05"])
+        window_hi = float(window_row["q95"])
     else:
-        ci_lo, ci_hi = delta_ci_approx_from_pointwise(x, lo, hi, x0, x1, delta)
-        delta_boot_mean = np.nan
-        ci_source = "approx_pointwise"
+        window_lo = float(np.quantile(x, q_window[0]))
+        window_hi = float(np.quantile(x, q_window[1]))
+    window_lo = max(xmin, window_lo)
+    window_hi = min(xmax, window_hi)
+
+    delta, iqr_lo, iqr_hi, segment_rows = clinical_window_effects(
+        x=x, y=y, step=step, window_lo=window_lo, window_hi=window_hi, n_segments=n_segments
+    )
+    ci_lo, ci_hi = iqr_lo, iqr_hi
+    delta_boot_mean = np.nan
+    ci_source = "pred_mean_5_95_20_segments_iqr"
+    x0, x1 = window_lo, window_hi
 
     slope = np.gradient(y, x)
-    slope_at_median = safe_interp(x, slope, x0)
-    q_lo = float(np.quantile(x, q_window[0]))
-    q_hi = float(np.quantile(x, q_window[1]))
-    mask = (x >= q_lo) & (x <= q_hi)
+    slope_at_median = safe_interp(x, slope, float((window_lo + window_hi) / 2.0))
+    mask = (x >= window_lo) & (x <= window_hi)
     mean_abs_slope_q10_q90 = float(np.nanmean(np.abs(slope[mask]))) if np.any(mask) else np.nan
 
     turnpoint_x = find_turnpoint(x, slope)
     plateau_x0, plateau_x1 = find_plateau(x, slope)
 
-    bin_edges = np.quantile(x, np.linspace(0, 1, 11))
     slope_bins = []
-    for i in range(10):
-        lo_b, hi_b = float(bin_edges[i]), float(bin_edges[i + 1])
-        if i < 9:
-            m = (x >= lo_b) & (x < hi_b)
-        else:
-            m = (x >= lo_b) & (x <= hi_b)
-        slope_bins.append(float(np.nanmean(slope[m])) if np.any(m) else np.nan)
+    for rr in segment_rows:
+        slope_bins.append(float(rr["clinical_step_effect"]))
 
     return {
         "xvar": c["xvar"],
@@ -210,15 +238,22 @@ def compute_one(curve_fp, step, q_window):
         "sec": c["sec"],
         "n_sample": c["n_sample"],
         "curve_fp": str(curve_fp),
-        "boot_matrix_fp": str(matrix_fp) if matrix_fp is not None else "",
+        "boot_matrix_fp": "",
         "x_min": xmin,
         "x_max": xmax,
         "x0": x0,
         "x1": x1,
+        "effect_window_lo": window_lo,
+        "effect_window_hi": window_hi,
+        "effect_window_source": "model_input_q05_q95" if window_row is not None else "curve_x_quantiles",
+        "effect_n_segments": int(n_segments),
         "clinical_step": float(step),
         "delta_rso2_clinical_step": delta,
         "delta_rso2_ci_lo": ci_lo,
         "delta_rso2_ci_hi": ci_hi,
+        "delta_rso2_iqr_lo": iqr_lo,
+        "delta_rso2_iqr_hi": iqr_hi,
+        "delta_rso2_summary": "median_iqr_across_20_segments",
         "delta_rso2_boot_mean": delta_boot_mean,
         "ci_source": ci_source,
         "slope_at_median": slope_at_median,
@@ -227,6 +262,7 @@ def compute_one(curve_fp, step, q_window):
         "plateau_x0": plateau_x0,
         "plateau_x1": plateau_x1,
         "slope_bins": slope_bins,
+        "segment_rows": segment_rows,
         "curve_x": x,
         "curve_y": y,
         "curve_lo": lo,
@@ -276,8 +312,8 @@ def plot_bar(df, cfg, out_png, out_pdf):
         ax.set_title(ch)
         ax.grid(alpha=0.2, axis="y")
 
-    fig.suptitle("Figure A: Clinical-step comparable effect (Delta rSO2)", fontsize=13)
-    axes[0].set_ylabel("Delta rSO2")
+    fig.suptitle("Figure A: Median clinical-step effect across the model-input 5%-95% window", fontsize=13)
+    axes[0].set_ylabel("Delta rSO2, median (IQR)")
     ylims = cfg["plot"]["y_limits"]
     yticks = cfg["plot"]["y_ticks"]
     if ylims and len(ylims) == 2:
@@ -294,12 +330,13 @@ def plot_bar(df, cfg, out_png, out_pdf):
 def plot_heatmap(df, cfg, out_png, out_pdf):
     channels = cfg["channels"]
     variables = cfg["variables"]
-    bin_labels = ["Q0-10", "Q10-20", "Q20-30", "Q30-40", "Q40-50", "Q50-60", "Q60-70", "Q70-80", "Q80-90", "Q90-100"]
+    n_segments = int(cfg["plot"].get("n_segments", 20))
+    bin_labels = ["S{:02d}".format(i + 1) for i in range(n_segments)]
 
     mats = {}
     all_vals = []
     for v in variables:
-        mat = np.full((len(channels), 10), np.nan)
+        mat = np.full((len(channels), n_segments), np.nan)
         for i, ch in enumerate(channels):
             r = df[(df["status"] == "ok") & (df["xvar"] == v) & (df["ycol"] == ch)]
             if r.empty:
@@ -322,14 +359,14 @@ def plot_heatmap(df, cfg, out_png, out_pdf):
     for ax, v in zip(axes, variables):
         im = ax.imshow(mats[v], aspect="auto", cmap="coolwarm", norm=norm)
         ax.set_title(v)
-        ax.set_xticks(np.arange(10))
+        ax.set_xticks(np.arange(n_segments))
         ax.set_xticklabels(bin_labels, rotation=45, ha="right", fontsize=8)
         ax.set_yticks(np.arange(len(channels)))
         ax.set_yticklabels(channels)
 
     cbar = fig.colorbar(im, ax=axes, fraction=0.02, pad=0.02)
-    cbar.set_label("Local slope dy/dx")
-    fig.suptitle("Figure B: Slope heatmap across x-quantile bins", fontsize=13)
+    cbar.set_label("Clinical-step effect per segment")
+    fig.suptitle("Figure B: 20-segment clinical-step effects across the model-input 5%-95% window", fontsize=13)
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     fig.savefig(out_png, dpi=int(cfg["plot"]["dpi"]))
     fig.savefig(out_pdf)
@@ -409,6 +446,8 @@ def add_body(slide, text, left=0.6, top=1.0, width=12.0, height=1.5, size=16):
 
 
 def build_ppt(cfg, run_meta, fig_paths, table_df, out_ppt):
+    if Presentation is None:
+        return False
     prs = Presentation()
 
     # Title slide
@@ -439,18 +478,19 @@ def build_ppt(cfg, run_meta, fig_paths, table_df, out_ppt):
     s4 = prs.slides.add_slide(prs.slide_layouts[6])
     add_title(s4, "Appendix: key numeric summary", size=22)
     lines = []
-    cols = ["ycol", "xvar", "delta_rso2_clinical_step", "delta_rso2_ci_lo", "delta_rso2_ci_hi", "slope_at_median"]
+    cols = ["ycol", "xvar", "delta_rso2_clinical_step", "delta_rso2_iqr_lo", "delta_rso2_iqr_hi", "effect_window_lo", "effect_window_hi"]
     ok = table_df[table_df["status"] == "ok"].copy()
     for _, r in ok[cols].iterrows():
         lines.append(
-            "{} | {}: Delta={:.3f} (95%CI {:.3f},{:.3f}), slope@median={:.4f}".format(
-                r["ycol"], r["xvar"], r["delta_rso2_clinical_step"], r["delta_rso2_ci_lo"], r["delta_rso2_ci_hi"], r["slope_at_median"]
+            "{} | {}: median Delta={:.3f} (IQR {:.3f},{:.3f}), window={:.3f}-{:.3f}".format(
+                r["ycol"], r["xvar"], r["delta_rso2_clinical_step"], r["delta_rso2_iqr_lo"], r["delta_rso2_iqr_hi"], r["effect_window_lo"], r["effect_window_hi"]
             )
         )
     add_body(s4, "\\n".join(lines[:12]), top=0.9, height=6.0, size=11)
 
     out_ppt.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_ppt))
+    return True
 
 
 def main():
@@ -483,7 +523,12 @@ def main():
 
     result_dir = Path(run_row["result_dir"])
     if not result_dir.exists():
-        raise SystemExit("result_dir missing: {}".format(result_dir))
+        repo_root = workspace.parents[1]
+        local_result_dir = repo_root / "results" / "model_runs" / result_dir.name
+        if local_result_dir.exists():
+            result_dir = local_result_dir
+        else:
+            raise SystemExit("result_dir missing: {}".format(result_dir))
 
     logger.info("run_id=%s", run_id)
     logger.info("result_dir=%s", result_dir)
@@ -492,6 +537,19 @@ def main():
     channels = list(cfg["channels"])
     steps = dict(cfg["clinical_steps"])
     q_window = tuple(cfg["plot"]["q_window"])
+    n_segments = int(cfg["plot"].get("n_segments", 20))
+
+    window_lookup = {}
+    quant_fp_raw = str(cfg.get("model_input_quantiles", "")).strip()
+    if quant_fp_raw:
+        quant_fp = resolve_path(workspace, quant_fp_raw)
+        if quant_fp.exists():
+            quant_df = pd.read_csv(quant_fp)
+            for _, rr in quant_df.iterrows():
+                window_lookup[(str(rr["ycol"]), str(rr["xvar"]))] = rr
+            logger.info("model_input_quantiles=%s rows=%s", quant_fp, len(quant_df))
+        else:
+            logger.warning("model_input_quantiles missing: %s", quant_fp)
 
     curve_files = sorted(result_dir.rglob("*_curve_boot.csv"))
     curve_files = [fp for fp in curve_files if fp.name.endswith("_{}_curve_boot.csv".format(cfg["plot_mode"]))]
@@ -514,6 +572,7 @@ def main():
             key = (ch, v)
             fp = key_to_fp.get(key)
             if fp is None:
+                wrow = window_lookup.get((ch, v))
                 rows.append({
                     "run_id": run_id,
                     "model_label": run_row["model_label"],
@@ -521,12 +580,22 @@ def main():
                     "ycol": ch,
                     "xvar": v,
                     "clinical_step": float(steps[v]),
+                    "effect_window_lo": float(wrow["q05"]) if wrow is not None else np.nan,
+                    "effect_window_hi": float(wrow["q95"]) if wrow is not None else np.nan,
+                    "effect_window_source": "model_input_q05_q95" if wrow is not None else "",
+                    "effect_n_segments": int(n_segments),
                     "status": "missing",
                     "curve_fp": "",
                 })
                 continue
 
-            rec = compute_one(fp, step=float(steps[v]), q_window=q_window)
+            rec = compute_one(
+                fp,
+                step=float(steps[v]),
+                q_window=q_window,
+                window_row=window_lookup.get((ch, v)),
+                n_segments=n_segments,
+            )
             rec.update({
                 "run_id": run_id,
                 "model_label": run_row["model_label"],
@@ -535,14 +604,18 @@ def main():
             })
             rows.append(rec)
 
-            for bidx, sval in enumerate(rec["slope_bins"]):
+            for seg in rec["segment_rows"]:
                 slope_rows.append({
                     "run_id": run_id,
                     "ycol": ch,
                     "xvar": v,
-                    "bin_idx": bidx,
-                    "bin_label": "Q{}-{}".format(bidx * 10, (bidx + 1) * 10),
-                    "mean_slope": sval,
+                    "bin_idx": int(seg["bin_idx"]),
+                    "bin_label": "S{:02d}".format(int(seg["bin_idx"]) + 1),
+                    "x0": seg["x0"],
+                    "x1": seg["x1"],
+                    "x_mid": seg["x_mid"],
+                    "slope_per_unit": seg["slope_per_unit"],
+                    "clinical_step_effect": seg["clinical_step_effect"],
                 })
 
     df = pd.DataFrame(rows)
@@ -550,7 +623,7 @@ def main():
 
     out_tables = resolve_path(workspace, cfg["output"]["tables_dir"])
     # Save detailed table without arrays first
-    drop_cols = ["slope_bins", "curve_x", "curve_y", "curve_lo", "curve_hi"]
+    drop_cols = ["slope_bins", "segment_rows", "curve_x", "curve_y", "curve_lo", "curve_hi"]
     cols_keep = [c for c in df.columns if c not in drop_cols]
     summary_fp = out_tables / ("crossvar_effect_summary_{}.csv".format(output_tag))
     df[cols_keep].to_csv(summary_fp, index=False)
@@ -594,7 +667,7 @@ def main():
         "figure_b_png": fig_b_png,
         "figure_c_png": fig_c_png,
     }
-    build_ppt(cfg, run_row, fig_paths, df[cols_keep], out_ppt)
+    ppt_written = build_ppt(cfg, run_row, fig_paths, df[cols_keep], out_ppt)
 
     checks = {
         "n_expected": len(channels) * len(variables),
@@ -602,13 +675,13 @@ def main():
         "n_missing": int((df["status"] == "missing").sum()),
         "summary_csv": str(summary_fp),
         "by_channel_csv": str(by_channel_fp),
-        "ppt": str(out_ppt),
+        "ppt": str(out_ppt) if ppt_written else "",
     }
     pd.DataFrame([checks]).to_csv(out_tables / ("run_checks_{}.csv".format(output_tag)), index=False)
 
     logger.info("done | rows=%s missing=%s", checks["n_rows"], checks["n_missing"])
     logger.info("summary=%s", summary_fp)
-    logger.info("ppt=%s", out_ppt)
+    logger.info("ppt=%s", out_ppt if ppt_written else "skipped: python-pptx not installed")
 
 
 if __name__ == "__main__":

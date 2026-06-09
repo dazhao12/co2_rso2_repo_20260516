@@ -10,41 +10,31 @@ output:
   logs_dir: output/logs
 clinical_steps:
   ET_CO2: 5.0
-  FiO2_new: 10.0
+  FiO2_new: 5.0
   TEMP: 0.5
   MAP: 5.0
-  SV: 10.0
-  HR: 10.0
-  RRtotal: 2.0
-  TVinsp: 100.0
-  Pmean: 2.0
+  CI: 0.05
+model_input_quantiles: input_links/model_input_quantiles_n10000_overall_mapci_te.csv
 axis_labels:
   ET_CO2: "End-Tidal CO2 (mmHg)"
   FiO2_new: "FiO2 (%)"
   TEMP: "Temperature (C)"
   MAP: "MAP (mmHg)"
-  SV: "SV (mL)"
-  HR: "HR (bpm)"
-  RRtotal: "Respiratory Rate (/min)"
-  TVinsp: "TVinsp (mL)"
-  Pmean: "Pmean (cmH2O)"
+  CI: "Cardiac Index (L/min/m2)"
 channels: [rSO2_Ch1, rSO2_Ch2, rSO2_Ch3]
-variables: [ET_CO2, FiO2_new, TEMP, MAP, SV, HR, RRtotal, TVinsp, Pmean]
+variables: [ET_CO2, FiO2_new, TEMP, MAP, CI]
 colors:
   ET_CO2: "#1f77b4"
   FiO2_new: "#2ca02c"
   TEMP: "#d62728"
   MAP: "#9467bd"
-  SV: "#8c564b"
-  HR: "#e377c2"
-  RRtotal: "#7f7f7f"
-  TVinsp: "#bcbd22"
-  Pmean: "#17becf"
+  CI: "#8c564b"
 plot:
   y_limits: [66, 81]
   y_ticks: [66, 68, 70, 72, 74, 76, 78, 80]
   dpi: 300
-  q_window: [0.1, 0.9]
+  q_window: [0.05, 0.95]
+  n_segments: 20
 ppt:
   filename: crossvar_summary_all_intraop.pptx
   title: "Cross-variable Summary (All Intraop Variables)"

@@ -35,24 +35,27 @@ def fmt(x, digits=2):
 
 
 def write_tables():
-    effects = pd.read_csv(ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary.csv")
+    effects_path = ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary_n10000_overall_mapci_te_boot200.csv"
+    if not effects_path.exists():
+        effects_path = ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_effect_summary.csv"
+    effects = pd.read_csv(effects_path)
     effects = effects[effects["xvar"].isin(["ET_CO2", "FiO2_new", "TEMP"])].copy()
     effects["Outcome channel"] = effects["ycol"].map(CHANNEL_LABELS)
     effects["Exposure"] = effects["xvar"].map(EXPOSURE_LABELS)
     effects["Clinical increment"] = effects["xvar"].map(
-        {"ET_CO2": "+5 mmHg", "FiO2_new": "+10 percentage points", "TEMP": "+0.5 C"}
+        {"ET_CO2": "+5 mmHg", "FiO2_new": "+5 percentage points", "TEMP": "+0.5 C"}
     )
-    effects["Adjusted rSO2 difference, percentage points"] = effects["delta_rso2_clinical_step"].map(lambda x: fmt(x))
-    effects["95% CI"] = effects.apply(
-        lambda r: f"{fmt(r['delta_rso2_ci_lo'])} to {fmt(r['delta_rso2_ci_hi'])}", axis=1
+    effects["Adjusted rSO2 difference, median percentage points"] = effects["delta_rso2_clinical_step"].map(lambda x: fmt(x))
+    effects["IQR across 20 segments"] = effects.apply(
+        lambda r: f"{fmt(r['delta_rso2_iqr_lo'])} to {fmt(r['delta_rso2_iqr_hi'])}", axis=1
     )
     table2 = effects[
         [
             "Outcome channel",
             "Exposure",
             "Clinical increment",
-            "Adjusted rSO2 difference, percentage points",
-            "95% CI",
+            "Adjusted rSO2 difference, median percentage points",
+            "IQR across 20 segments",
         ]
     ]
     table2.to_csv(OUT / "table2_clinical_step_contrasts.csv", index=False, encoding="utf-8-sig")
@@ -498,7 +501,7 @@ def make_figure3(table2):
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="white"/>',
         svg_text(width / 2, 26, "Adjusted clinical-step contrasts", 20, weight="bold"),
-        svg_text(width / 2, 52, "Bars show adjusted rSO2 differences; error bars show 95% bootstrap intervals", 12, fill="#444"),
+        svg_text(width / 2, 52, "Bars show median adjusted rSO2 differences; error bars show IQR across 20 segments", 12, fill="#444"),
     ]
     for idx, label in enumerate(CHANNEL_LABELS.values()):
         left = margin_left + idx * (panel_w + gap)
@@ -516,8 +519,8 @@ def make_figure3(table2):
         sub = source[source["Outcome channel"] == label]
         for j, exp in enumerate(["EtCO2", "FiO2", "Temperature"]):
             r = sub[sub["Exposure"] == exp].iloc[0]
-            delta = float(r["Adjusted rSO2 difference, percentage points"])
-            lo, hi = [float(x.strip()) for x in r["95% CI"].split(" to ")]
+            delta = float(r["Adjusted rSO2 difference, median percentage points"])
+            lo, hi = [float(x.strip()) for x in r["IQR across 20 segments"].split(" to ")]
             cx = left + (j + 0.5) * panel_w / 3
             bar_w = panel_w / 6
             y0, yv = sy(0), sy(delta)
@@ -529,7 +532,7 @@ def make_figure3(table2):
             parts.append(f'<line x1="{cx - 7:.1f}" x2="{cx + 7:.1f}" y1="{sy(hi):.1f}" y2="{sy(hi):.1f}" stroke="#111" stroke-width="1.5"/>')
             parts.append(svg_text(cx, bottom + 22, exp, 11))
         parts.append(svg_text((left + right) / 2, top - 18, label, 14, weight="bold"))
-    parts.append(svg_text(margin_left, margin_top - 20, "Adjusted rSO2 difference (percentage points)", 12, anchor="start"))
+    parts.append(svg_text(margin_left, margin_top - 20, "Adjusted rSO2 difference, median percentage points", 12, anchor="start"))
     parts.append("</svg>")
     (OUT / "figure3_clinical_step_contrasts.svg").write_text("\n".join(parts), encoding="utf-8")
     make_figure3_png(table2)
@@ -555,7 +558,7 @@ def make_figure3_png(table2):
         return margin_top + (y_max - float(y)) / (y_max - y_min) * panel_h
 
     text(draw, (S(width / 2), S(26)), "Adjusted clinical-step contrasts", 20 * scale, bold=True)
-    text(draw, (S(width / 2), S(52)), "Bars show adjusted rSO2 differences; error bars show 95% bootstrap intervals", 12 * scale, fill=(68, 68, 68))
+    text(draw, (S(width / 2), S(52)), "Bars show median adjusted rSO2 differences; error bars show IQR across 20 segments", 12 * scale, fill=(68, 68, 68))
 
     for idx, label in enumerate(CHANNEL_LABELS.values()):
         left = margin_left + idx * (panel_w + gap)
@@ -573,8 +576,8 @@ def make_figure3_png(table2):
         sub = source[source["Outcome channel"] == label]
         for j, exp in enumerate(["EtCO2", "FiO2", "Temperature"]):
             r = sub[sub["Exposure"] == exp].iloc[0]
-            delta = float(r["Adjusted rSO2 difference, percentage points"])
-            lo, hi = [float(x.strip()) for x in r["95% CI"].split(" to ")]
+            delta = float(r["Adjusted rSO2 difference, median percentage points"])
+            lo, hi = [float(x.strip()) for x in r["IQR across 20 segments"].split(" to ")]
             cx = left + (j + 0.5) * panel_w / 3
             bar_w = panel_w / 6
             y0, yv = sy(0), sy(delta)
@@ -585,7 +588,7 @@ def make_figure3_png(table2):
             text(draw, (S(cx), S(bottom + 22)), exp, 11 * scale)
         text(draw, (S((left + right) / 2), S(top - 18)), label, 14 * scale, bold=True)
 
-    text(draw, (S(margin_left), S(margin_top - 20)), "Adjusted rSO2 difference", 12 * scale, anchor="lm")
+    text(draw, (S(margin_left), S(margin_top - 20)), "Adjusted rSO2 difference, median", 12 * scale, anchor="lm")
     img = img.resize((width, height), Image.Resampling.LANCZOS)
     img.save(OUT / "figure3_clinical_step_contrasts.png")
 

@@ -191,6 +191,32 @@ FIO2_EXTRA_SMOOTH <- tolower(Sys.getenv("INTRA5_FIO2_EXTRA_SMOOTH", "1")) %in% c
 FIO2_SMOOTH_SP <- suppressWarnings(as.numeric(Sys.getenv("INTRA5_FIO2_SMOOTH_SP", "1.25")))
 if (!is.finite(FIO2_SMOOTH_SP)) FIO2_SMOOTH_SP <- 1.25
 FIO2_SMOOTH_SP <- max(0.2, min(2.0, FIO2_SMOOTH_SP))
+EXPORT_PNG <- tolower(Sys.getenv("INTRA5_EXPORT_PNG", "0")) %in% c("1", "true", "t", "yes", "y")
+ADD_CLINICAL_COMPARE <- tolower(Sys.getenv("INTRA5_ADD_CLINICAL_COMPARE", "1")) %in% c("1", "true", "t", "yes", "y")
+CLINICAL_Q_WINDOW <- c(0.05, 0.95)
+CLINICAL_N_SEGMENTS <- suppressWarnings(as.integer(Sys.getenv("INTRA5_CLINICAL_N_SEGMENTS", "20")))
+if (!is.finite(CLINICAL_N_SEGMENTS) || CLINICAL_N_SEGMENTS < 2) CLINICAL_N_SEGMENTS <- 20L
+CLINICAL_STEPS <- c(
+  "ET_CO2" = 5,
+  "FiO2_new" = 5,
+  "TEMP" = 0.5,
+  "MAP" = 5,
+  "CI" = 0.05
+)
+CLINICAL_STEP_LABELS <- c(
+  "ET_CO2" = "CO2 +5 mmHg",
+  "FiO2_new" = "FiO2 +5%",
+  "TEMP" = "TEMP +0.5 C",
+  "MAP" = "MAP +5 mmHg",
+  "CI" = "CI +0.05"
+)
+CLINICAL_STEP_COLORS <- c(
+  "ET_CO2" = "#C55A11",
+  "TEMP" = "#2E75B6",
+  "FiO2_new" = "#BF9000",
+  "MAP" = "#C55A11",
+  "CI" = "#2E75B6"
+)
 
 PROJECT_ROOT <- "/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025"
 OUT_FIG_BASE <- file.path(PROJECT_ROOT, "fig_output", "R_intraop5_slice_only_ppt_v2_4_1_2026_multismooth")
@@ -223,6 +249,8 @@ dir_create(OUTDIR, recurse = TRUE)
 message("[RESULT_DIR] ", RESULT_DIR)
 message("[OUTDIR] ", OUTDIR)
 message("[PLOT_MODE] ", PLOT_MODE)
+message("[EXPORT_PNG] ", EXPORT_PNG)
+message("[ADD_CLINICAL_COMPARE] ", ADD_CLINICAL_COMPARE)
 
 curve_files <- dir_ls(RESULT_DIR, recurse = TRUE, type = "file", regexp = "_curve_boot\\.csv$")
 if (!length(curve_files)) stop("No *_curve_boot.csv found in RESULT_DIR")
@@ -265,6 +293,40 @@ curve_df <- curve_df %>%
 SUBGROUP_VALUES <- unique(curve_df$subgroup)
 if (!length(SUBGROUP_VALUES)) SUBGROUP_VALUES <- "All"
 message("[SUBGROUPS] ", paste(SUBGROUP_VALUES, collapse = ", "))
+
+load_model_input_quantiles <- function(result_dir) {
+  fp <- Sys.getenv("INTRA5_MODEL_INPUT_QUANTILES", file.path(result_dir, "model_input_quantiles_n10000_ref_sample.csv"))
+  if (!nzchar(fp) || !file_exists(fp)) {
+    warning("[clinical compare] model input quantile CSV not found; falling back to curve-grid 5%-95% ranges: ", fp)
+    return(tibble(
+      ycol = character(0),
+      xvar = character(0),
+      q05 = numeric(0),
+      q95 = numeric(0)
+    ))
+  }
+  qd <- suppressMessages(read_csv(fp, show_col_types = FALSE))
+  req <- c("ycol", "xvar", "q05", "q95")
+  miss <- setdiff(req, names(qd))
+  if (length(miss)) {
+    stop("[clinical compare] quantile CSV missing columns: ", paste(miss, collapse = ", "))
+  }
+  qd %>%
+    transmute(
+      ycol = as.character(.data$ycol),
+      xvar = as.character(.data$xvar),
+      q05 = as.numeric(.data$q05),
+      q95 = as.numeric(.data$q95)
+    ) %>%
+    filter(
+      .data$ycol %in% Y_ORDER,
+      .data$xvar %in% names(CLINICAL_STEPS),
+      is.finite(.data$q05),
+      is.finite(.data$q95),
+      .data$q95 > .data$q05
+    )
+}
+model_input_quantiles <- load_model_input_quantiles(RESULT_DIR)
 
 find_unified_cache <- function(root_dir) {
   cache_dir <- file.path(root_dir, "result", "raw_cache")
@@ -462,8 +524,10 @@ if (length(raw_cache_candidates)) {
 }
 
 save_png <- function(p, path, w = FIG_W, h = FIG_H, dpi = 320) {
+  if (!isTRUE(EXPORT_PNG)) return(NA_character_)
   dir_create(path_dir(path), recurse = TRUE)
   ggsave(path, p, width = w, height = h, dpi = dpi, bg = "white")
+  path
 }
 
 add_blank <- function(ppt) add_slide(ppt, layout = "Blank", master = layout_summary(ppt)$master[1])
@@ -496,6 +560,20 @@ ppt_add_plots_in_row <- function(ppt, ps, top = 0.75, gap = MERGE_GAP_IN) {
     ppt <- ph_with(ppt, dml(ggobj = ps[[i]]), location = ph_location(left = left, top = top, width = FIG_W, height = FIG_H))
   }
   ppt
+}
+
+ppt_add_full_plot <- function(ppt, p, margin = 0.45, top = 0.55) {
+  sz <- officer::slide_size(ppt)
+  ph_with(
+    ppt,
+    dml(ggobj = p),
+    location = ph_location(
+      left = margin,
+      top = top,
+      width = sz$width - 2 * margin,
+      height = sz$height - top - margin
+    )
+  )
 }
 
 add_edge_marginal_layers <- function(p, x_hist, y_hist, x_data_lims, x_plot_lims, y_lims) {
@@ -568,6 +646,148 @@ build_hist_descriptions <- function(x_hist, y_hist, xvar, ycol) {
     x_hist_peak = sx$peak,
     y_hist_peak = sy$peak
   )
+}
+
+compare_y_label <- function(ycol) {
+  labs <- c(
+    "rSO2_Ch1" = "Left SctO2",
+    "rSO2_Ch2" = "Right SctO2",
+    "rSO2_Ch3" = "SftO2"
+  )
+  labs[[as.character(ycol)[1]]] %||% as.character(ycol)[1]
+}
+
+get_clinical_window <- function(ycol, xvar, d, input_quantiles) {
+  qrow <- input_quantiles %>%
+    filter(.data$ycol == !!ycol, .data$xvar == !!xvar) %>%
+    slice_head(n = 1)
+  if (nrow(qrow)) {
+    return(list(
+      lo = qrow$q05[[1]],
+      hi = qrow$q95[[1]],
+      source = "model_input_q05_q95"
+    ))
+  }
+  q <- as.numeric(stats::quantile(d$x, probs = CLINICAL_Q_WINDOW, na.rm = TRUE, names = FALSE))
+  list(lo = q[[1]], hi = q[[2]], source = "curve_grid_q05_q95")
+}
+
+build_clinical_compare_data <- function(curves, input_quantiles = tibble()) {
+  dat <- curves %>%
+    filter(.data$xvar %in% names(CLINICAL_STEPS), .data$ycol %in% Y_ORDER) %>%
+    mutate(
+      subgroup = as.character(.data$subgroup),
+      ycol = as.character(.data$ycol),
+      xvar = as.character(.data$xvar),
+      x = as.numeric(.data$x),
+      pred_mean = as.numeric(.data$pred_mean)
+    ) %>%
+    filter(is.finite(.data$x), is.finite(.data$pred_mean))
+
+  if (!nrow(dat)) {
+    return(list(summary = tibble(), segments = tibble()))
+  }
+
+  split_keys <- interaction(dat$subgroup, dat$ycol, dat$xvar, drop = TRUE, sep = "\r")
+  pieces <- split(dat, split_keys)
+  segment_rows <- list()
+  summary_rows <- list()
+
+  for (d0 in pieces) {
+    subgroup <- unique(d0$subgroup)[[1]]
+    ycol <- unique(d0$ycol)[[1]]
+    xvar <- unique(d0$xvar)[[1]]
+    d <- d0 %>%
+      group_by(.data$x) %>%
+      summarise(pred_mean = mean(.data$pred_mean, na.rm = TRUE), .groups = "drop") %>%
+      arrange(.data$x)
+    if (nrow(d) < 2) next
+
+    win <- get_clinical_window(ycol, xvar, d, input_quantiles)
+    lo <- as.numeric(win$lo)
+    hi <- as.numeric(win$hi)
+    if (!is.finite(lo) || !is.finite(hi) || hi <= lo) next
+
+    edges <- seq(lo, hi, length.out = CLINICAL_N_SEGMENTS + 1L)
+    x0 <- head(edges, -1)
+    x1 <- tail(edges, -1)
+    y0 <- approx(d$x, d$pred_mean, xout = x0, ties = mean, rule = 1)$y
+    y1 <- approx(d$x, d$pred_mean, xout = x1, ties = mean, rule = 1)$y
+    effect <- (y1 - y0) / (x1 - x0) * unname(CLINICAL_STEPS[[xvar]])
+    ok <- is.finite(effect)
+    if (!any(ok)) next
+
+    seg <- tibble(
+      subgroup = subgroup,
+      ycol = ycol,
+      xvar = xvar,
+      segment = seq_along(x0),
+      x_start = x0,
+      x_end = x1,
+      pred_start = y0,
+      pred_end = y1,
+      clinical_step = unname(CLINICAL_STEPS[[xvar]]),
+      clinical_step_label = unname(CLINICAL_STEP_LABELS[[xvar]]),
+      signed_effect = effect,
+      window_lo = lo,
+      window_hi = hi,
+      window_source = win$source
+    ) %>%
+      filter(is.finite(.data$signed_effect))
+    segment_rows[[length(segment_rows) + 1L]] <- seg
+
+    qs <- as.numeric(stats::quantile(seg$signed_effect, probs = c(0.25, 0.50, 0.75), na.rm = TRUE, names = FALSE))
+    summary_rows[[length(summary_rows) + 1L]] <- tibble(
+      subgroup = subgroup,
+      ycol = ycol,
+      xvar = xvar,
+      clinical_step = unname(CLINICAL_STEPS[[xvar]]),
+      clinical_step_label = unname(CLINICAL_STEP_LABELS[[xvar]]),
+      signed_effect_q25 = qs[[1]],
+      signed_effect_median = qs[[2]],
+      signed_effect_q75 = qs[[3]],
+      n_segments = nrow(seg),
+      window_lo = lo,
+      window_hi = hi,
+      window_source = win$source
+    )
+  }
+
+  list(
+    summary = if (length(summary_rows)) bind_rows(summary_rows) else tibble(),
+    segments = if (length(segment_rows)) bind_rows(segment_rows) else tibble()
+  )
+}
+
+plot_clinical_compare_bar <- function(summary_df) {
+  d <- summary_df %>%
+    mutate(
+      xvar = factor(.data$xvar, levels = XVAR_ORDER[XVAR_ORDER %in% names(CLINICAL_STEPS)]),
+      x_label = unname(CLINICAL_STEP_LABELS[as.character(.data$xvar)]),
+      x_label = factor(.data$x_label, levels = unname(CLINICAL_STEP_LABELS[XVAR_ORDER[XVAR_ORDER %in% names(CLINICAL_STEPS)]])),
+      y_label = vapply(.data$ycol, compare_y_label, FUN.VALUE = character(1))
+    ) %>%
+    filter(!is.na(.data$xvar), is.finite(.data$signed_effect_median))
+
+  ggplot(d, aes(x = .data$x_label, y = .data$signed_effect_median, colour = .data$xvar)) +
+    geom_hline(yintercept = 0, linewidth = 0.45, colour = "#4D4D4D") +
+    geom_col(width = 0.66, fill = "white", linewidth = 0.45) +
+    geom_errorbar(aes(ymin = .data$signed_effect_q25, ymax = .data$signed_effect_q75), width = 0.18, linewidth = 0.45) +
+    facet_wrap(~y_label, nrow = 1, scales = "fixed") +
+    scale_colour_manual(values = CLINICAL_STEP_COLORS, drop = FALSE) +
+    labs(
+      x = NULL,
+      y = "Tissue O2 change (% per clinical increment)",
+      title = NULL
+    ) +
+    theme_clean() +
+    theme(
+      legend.position = "none",
+      strip.background = element_blank(),
+      strip.text = element_text(size = 11, colour = "black"),
+      axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 9),
+      panel.spacing.x = unit(0.35, "in")
+    )
 }
 
 smooth_fio2_curves <- function(d) {
@@ -740,6 +960,18 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
     return(invisible(NULL))
   }
 
+  clinical_compare <- if (isTRUE(ADD_CLINICAL_COMPARE)) {
+    build_clinical_compare_data(curve_df_sub, model_input_quantiles)
+  } else {
+    list(summary = tibble(), segments = tibble())
+  }
+  compare_summary <- clinical_compare$summary
+  compare_segments <- clinical_compare$segments
+  compare_plot <- NULL
+  if (nrow(compare_summary)) {
+    compare_plot <- plot_clinical_compare_bar(compare_summary)
+  }
+
   ppt_merge <- read_pptx()
   ppt_merge <- set_ppt_slide_size(ppt_merge, width_in = MERGE_SLIDE_W_IN, height_in = MERGE_SLIDE_H_IN)
   for (x in XVAR_ORDER) {
@@ -749,6 +981,10 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
     ppt_merge <- add_blank(ppt_merge)
     ppt_merge <- ppt_add_plots_in_row(ppt_merge, ps)
   }
+  if (!is.null(compare_plot)) {
+    ppt_merge <- add_blank(ppt_merge)
+    ppt_merge <- ppt_add_full_plot(ppt_merge, compare_plot)
+  }
 
   ppt_single <- read_pptx()
   for (y in Y_ORDER) {
@@ -757,6 +993,13 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
       if (is.null(p)) next
       ppt_single <- add_blank(ppt_single)
       ppt_single <- ppt_add_one(ppt_single, p, width = FIG_W, height = FIG_H, top = 0.8)
+    }
+    if (nrow(compare_summary)) {
+      py <- compare_summary %>% filter(.data$ycol == y)
+      if (nrow(py)) {
+        ppt_single <- add_blank(ppt_single)
+        ppt_single <- ppt_add_full_plot(ppt_single, plot_clinical_compare_bar(py))
+      }
     }
   }
 
@@ -770,6 +1013,8 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   if (nrow(idx_df)) write_csv(idx_df, file.path(out_root, "plot_index.csv"))
   if (length(slice_plot_rows)) write_csv(bind_rows(slice_plot_rows), file.path(out_root, "plot_data_slice_all.csv"))
   if (length(hist_desc_rows)) write_csv(bind_rows(hist_desc_rows), file.path(out_root, "plot_hist_descriptions.csv"))
+  if (nrow(compare_summary)) write_csv(compare_summary, file.path(out_root, "plot_data_clinical_step_summary.csv"))
+  if (nrow(compare_segments)) write_csv(compare_segments, file.path(out_root, "plot_data_clinical_step_segments.csv"))
   write_csv(
     bind_rows(lapply(XVAR_ORDER, function(v) {
       sp <- get_x_axis_spec(v)
