@@ -85,7 +85,6 @@ PACKAGE_FILES = [
     ("documentation/CO2_REFERENCE_AUDIT.md", "docs/manuscript_development/CO2_REFERENCE_AUDIT.md"),
     ("documentation/CO2_SOURCE_DATA_PACKAGE_INDEX.md", "docs/manuscript_development/CO2_SOURCE_DATA_PACKAGE_INDEX.md"),
     ("documentation/CO2_NATURE_STYLE_READINESS_AUDIT.md", "docs/manuscript_development/CO2_NATURE_STYLE_READINESS_AUDIT.md"),
-    ("documentation/CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md", "docs/manuscript_development/CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md"),
     ("documentation/CO2_LITERATURE_AND_POSITIONING.md", "docs/manuscript_development/CO2_LITERATURE_AND_POSITIONING.md"),
     ("documentation/CO2_MANUSCRIPT_BLUEPRINT.md", "docs/manuscript_development/CO2_MANUSCRIPT_BLUEPRINT.md"),
     ("documentation/CO2_PRIOR_MAPCI_FRAMEWORK_EXTRACT.md", "docs/manuscript_development/CO2_PRIOR_MAPCI_FRAMEWORK_EXTRACT.md"),

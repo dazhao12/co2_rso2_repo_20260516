@@ -35,7 +35,6 @@ EXPECTED_ZIP_ENTRIES = [
     "supplement/CO2_SUPPLEMENTARY_METHODS_DRAFT.docx",
     "supplement/CO2_SUPPLEMENTARY_TABLES_INDEX.docx",
     "documentation/CO2_NATURE_STYLE_READINESS_AUDIT.md",
-    "documentation/CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md",
 ]
 
 
