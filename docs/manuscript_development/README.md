@@ -70,7 +70,7 @@ Avoid therapeutic or causal claims. The current package also avoids robustness c
 
 1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
-3. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
+3. Complete target-journal figure formatting and source-data packaging.
 4. Complete optional rendered DOCX page-level visual QA.
 
 ## Build the Word draft
@@ -97,9 +97,11 @@ Main generated outputs:
 - `generated_assets/supplementary_etable1_2_cohort_characteristics.xlsx`
 - `generated_assets/table2_clinical_step_contrasts.xlsx`
 - `generated_assets/supplementary_model_diagnostics.xlsx`
+- `generated_assets/figure1_cohort_flow.png`
 - `generated_assets/figure2_etco2_adjusted_curves.png`
 - `generated_assets/figure3_clinical_step_contrasts.png`
-- source-data CSV files for both figures.
+- `generated_assets/figure4_etco2_local_slopes.png`
+- source-data CSV files for the generated main figures.
 
 ## Generate CO2 Table 1/2 on HPC
 

@@ -93,19 +93,20 @@ Generated files:
 
 ## Figure 1: cohort and distributions
 
-Status: not yet manuscript-ready.
+Status: generated as a cohort-flow figure.
 
-Recommended panels:
+Generated clean figure:
 
-- Panel a: cohort assembly and filtering.
-- Panel b: EtCO2 distribution by channel.
-- Panel c: rSO2 distribution by channel.
-- Panel d: patient-level EtCO2 and rSO2 summary.
+- `generated_assets/figure1_cohort_flow.png`
+- `generated_assets/source_data_figure1_cohort_flow.csv`
 
-Candidate source tables:
+Source:
 
-- `results/supplemental_etables/supplemental_etable3_artifact_co2_rso2.csv`
-- `results/supplemental_etables/supplemental_etable5_patient_level_co2_rso2.csv`
+- `results/manuscript_tables/table1_2_co2_rso2_flow_counts.csv`
+
+Legend draft:
+
+Figure 1. Cohort assembly by tissue oxygenation channel. Bars show timestamp-level rows retained at each filtering step, and labels show the corresponding number of patients. The final analytic rows were 20,021,703 for left SctO2, 20,075,597 for right SctO2, and 20,068,759 for SftO2.
 
 ## Figure 2: adjusted EtCO2-rSO2 curves
 
@@ -162,18 +163,22 @@ Required cleanup:
 
 ## Figure 4: local slope or threshold interpretation
 
-Status: optional.
+Status: generated as an optional EtCO2-focused slope figure.
 
-The local slope heatmap is useful for analysts but may be too abstract for a clinical journal. If used, restrict it to EtCO2 and make the y-axis channel labels clinical.
+The local slope heatmap is avoided in the main package because it is too abstract for a clinical journal. The generated Figure 4 is a simple EtCO2-only local-slope plot by decile bin.
 
-Alternative:
+Generated clean figure:
 
-- A small table or line plot of EtCO2 local slopes by exposure decile.
-- Main message: left and right SctO2 show the largest slope in the mid-range EtCO2 distribution and taper at high EtCO2; SftO2 shows a smaller, gradually declining slope.
+- `generated_assets/figure4_etco2_local_slopes.png`
+- `generated_assets/source_data_figure4_etco2_local_slopes.csv`
 
 Source:
 
 - `code/analysis_bundle/output/tables/crossvar_slope_bins.csv`
+
+Legend draft:
+
+Figure 4. Local EtCO2-rSO2 slopes across the EtCO2 distribution. Lines show descriptive mean local slopes from EtCO2 decile bins for each tissue oxygenation channel. Left and right SctO2 showed the largest slopes in the mid-distribution bins, whereas SftO2 showed a smaller and gradually declining slope. These slopes are model summaries and should not be interpreted as causal effects of changing EtCO2.
 
 ## Figure legend draft for Figure 2
 

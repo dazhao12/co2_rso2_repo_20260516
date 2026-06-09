@@ -1,0 +1,13 @@
+﻿Outcome channel,Stage,n_rows,n_patients
+Left SctO2,Raw time series,25385328,1872
+Left SctO2,EtCO2 and rSO2 present,20657553,1792
+Left SctO2,After artifact screening,20115169,1792
+Left SctO2,Final analytic rows,20021703,1792
+Right SctO2,Raw time series,25385328,1872
+Right SctO2,EtCO2 and rSO2 present,20718216,1793
+Right SctO2,After artifact screening,20169291,1792
+Right SctO2,Final analytic rows,20075597,1792
+SftO2,Raw time series,25385328,1872
+SftO2,EtCO2 and rSO2 present,20712816,1789
+SftO2,After artifact screening,20167307,1789
+SftO2,Final analytic rows,20068759,1789

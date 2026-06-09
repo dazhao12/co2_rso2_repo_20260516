@@ -211,6 +211,128 @@ def text(draw, xy, value, size=12, anchor="mm", bold=False, fill=(17, 17, 17)):
     draw.text(xy, str(value), font=font(size, bold=bold), anchor=anchor, fill=fill)
 
 
+def write_figure1_source():
+    flow = pd.read_csv(ROOT / "results" / "manuscript_tables" / "table1_2_co2_rso2_flow_counts.csv")
+    flow["Outcome channel"] = flow["ycol"].map(CHANNEL_LABELS)
+    stage_labels = {
+        "raw_timeseries_rows": "Raw time series",
+        "after_required_etco2_y_nonmissing": "EtCO2 and rSO2 present",
+        "after_cohort_clip_to_missing_and_dropna": "After artifact screening",
+        "final_usable_points_strict_etco2_rso2": "Final analytic rows",
+    }
+    out = flow[flow["stage"].isin(stage_labels)].copy()
+    out["Stage"] = out["stage"].map(stage_labels)
+    out = out[["Outcome channel", "Stage", "n_rows", "n_patients"]]
+    out.to_csv(OUT / "source_data_figure1_cohort_flow.csv", index=False, encoding="utf-8-sig")
+    return out
+
+
+def make_figure1(flow):
+    width, height, scale = 1450, 720, 2
+    img = Image.new("RGB", (width * scale, height * scale), "white")
+    draw = ImageDraw.Draw(img)
+
+    def S(v):
+        return int(round(v * scale))
+
+    left, right, top, bottom = 245, 1350, 130, 610
+    stages = list(dict.fromkeys(flow["Stage"]))
+    channels = list(CHANNEL_LABELS.values())
+    colors = {"Left SctO2": (37, 99, 235), "Right SctO2": (5, 150, 105), "SftO2": (217, 119, 6)}
+    max_rows = float(flow["n_rows"].max())
+
+    text(draw, (S(width / 2), S(42)), "Cohort assembly by tissue oxygenation channel", 21 * scale, bold=True)
+    text(draw, (S(width / 2), S(75)), "Bars show timestamp-level rows; labels show patients retained at each step", 12 * scale, fill=(68, 68, 68))
+
+    for tick in [0, 5_000_000, 10_000_000, 15_000_000, 20_000_000, 25_000_000]:
+        x = left + tick / max_rows * (right - left)
+        draw.line([S(x), S(top - 8), S(x), S(bottom)], fill=(229, 231, 235), width=1)
+        text(draw, (S(x), S(bottom + 28)), f"{tick // 1_000_000}M", 11 * scale, fill=(68, 68, 68))
+    text(draw, (S((left + right) / 2), S(bottom + 58)), "Timestamp-level rows", 12 * scale, fill=(68, 68, 68))
+
+    group_gap, bar_h, inner_gap = 42, 22, 8
+    y = top
+    for stage in stages:
+        text(draw, (S(30), S(y + 32)), stage, 12 * scale, anchor="lm", bold=True)
+        for j, channel in enumerate(channels):
+            r = flow[(flow["Stage"] == stage) & (flow["Outcome channel"] == channel)].iloc[0]
+            y_bar = y + j * (bar_h + inner_gap) + 10
+            bar_w = float(r["n_rows"]) / max_rows * (right - left)
+            label = f"{int(r['n_rows']):,} rows; {int(r['n_patients']):,} patients"
+            draw.rectangle([S(left), S(y_bar), S(left + bar_w), S(y_bar + bar_h)], fill=colors[channel])
+            if bar_w > 930:
+                text(draw, (S(left + bar_w - 8), S(y_bar + bar_h / 2)), label, 11 * scale, anchor="rm", fill=(255, 255, 255))
+            else:
+                text(draw, (S(left + bar_w + 8), S(y_bar + bar_h / 2)), label, 11 * scale, anchor="lm")
+            text(draw, (S(left - 10), S(y_bar + bar_h / 2)), channel, 11 * scale, anchor="rm", fill=(68, 68, 68))
+        y += 3 * (bar_h + inner_gap) + group_gap
+
+    img = img.resize((width, height), Image.Resampling.LANCZOS)
+    img.save(OUT / "figure1_cohort_flow.png")
+
+
+def write_figure4_source():
+    slopes = pd.read_csv(ROOT / "code" / "analysis_bundle" / "output" / "tables" / "crossvar_slope_bins.csv")
+    slopes = slopes[slopes["xvar"] == "ET_CO2"].copy()
+    slopes["Outcome channel"] = slopes["ycol"].map(CHANNEL_LABELS)
+    slopes["EtCO2 decile"] = slopes["bin_label"]
+    slopes["Mean local slope, percentage points per mmHg"] = slopes["mean_slope"].map(lambda x: round(float(x), 4))
+    out = slopes[["Outcome channel", "EtCO2 decile", "Mean local slope, percentage points per mmHg"]]
+    out.to_csv(OUT / "source_data_figure4_etco2_local_slopes.csv", index=False, encoding="utf-8-sig")
+    return out
+
+
+def make_figure4(slopes):
+    width, height, scale = 1250, 620, 2
+    img = Image.new("RGB", (width * scale, height * scale), "white")
+    draw = ImageDraw.Draw(img)
+
+    def S(v):
+        return int(round(v * scale))
+
+    left, right, top, bottom = 105, 1170, 120, 510
+    colors = {"Left SctO2": (37, 99, 235), "Right SctO2": (5, 150, 105), "SftO2": (217, 119, 6)}
+    y_min, y_max = 0.0, max(0.7, float(slopes["Mean local slope, percentage points per mmHg"].max()) + 0.05)
+    deciles = list(dict.fromkeys(slopes["EtCO2 decile"]))
+
+    def sx(idx):
+        return left + idx / (len(deciles) - 1) * (right - left)
+
+    def sy(value):
+        return bottom - (float(value) - y_min) / (y_max - y_min) * (bottom - top)
+
+    text(draw, (S(width / 2), S(42)), "Local EtCO2-rSO2 slope across the EtCO2 distribution", 21 * scale, bold=True)
+    text(draw, (S(width / 2), S(75)), "Mean local slopes are descriptive model summaries from EtCO2 decile bins", 12 * scale, fill=(68, 68, 68))
+    draw.rectangle([S(left), S(top), S(right), S(bottom)], outline=(34, 34, 34), width=2)
+    for tick in [0, 0.2, 0.4, 0.6]:
+        y = sy(tick)
+        draw.line([S(left), S(y), S(right), S(y)], fill=(229, 231, 235), width=1)
+        text(draw, (S(left - 10), S(y)), f"{tick:.1f}", 11 * scale, anchor="rm", fill=(68, 68, 68))
+    for idx, label in enumerate(deciles):
+        x = sx(idx)
+        draw.line([S(x), S(bottom), S(x), S(bottom + 6)], fill=(34, 34, 34), width=1)
+        text(draw, (S(x), S(bottom + 25)), label.replace("Q", ""), 10 * scale, fill=(68, 68, 68))
+
+    for channel in CHANNEL_LABELS.values():
+        sub = slopes[slopes["Outcome channel"] == channel].reset_index(drop=True)
+        pts = [(S(sx(i)), S(sy(r["Mean local slope, percentage points per mmHg"]))) for i, r in sub.iterrows()]
+        for a, b in zip(pts[:-1], pts[1:]):
+            draw.line([a, b], fill=colors[channel], width=4)
+        for p in pts:
+            draw.ellipse([p[0] - S(4), p[1] - S(4), p[0] + S(4), p[1] + S(4)], fill=colors[channel])
+
+    legend_x = right - 260
+    for i, channel in enumerate(CHANNEL_LABELS.values()):
+        y = top + 22 + i * 28
+        draw.line([S(legend_x), S(y), S(legend_x + 34), S(y)], fill=colors[channel], width=5)
+        text(draw, (S(legend_x + 45), S(y)), channel, 12 * scale, anchor="lm")
+
+    text(draw, (S(left), S(top - 24)), "Slope, percentage points per mmHg", 12 * scale, anchor="lm", fill=(68, 68, 68))
+    text(draw, (S((left + right) / 2), S(bottom + 58)), "EtCO2 decile bin", 12 * scale, fill=(68, 68, 68))
+    img = img.resize((width, height), Image.Resampling.LANCZOS)
+    img.save(OUT / "figure4_etco2_local_slopes.png")
+
+
 def make_figure2(curves):
     width, height = 1500, 520
     margin_left, margin_right, margin_top, margin_bottom = 70, 30, 95, 70
@@ -443,9 +565,13 @@ def make_figure3_png(table2):
 def main():
     write_table1_assets()
     table2, diag = write_tables()
+    flow = write_figure1_source()
+    make_figure1(flow)
     curves = read_etco2_curves()
     make_figure2(curves)
     make_figure3(table2)
+    slopes = write_figure4_source()
+    make_figure4(slopes)
     print(OUT)
 
 

@@ -31,7 +31,7 @@ EtCO2 and tissue oxygenation during OPCAB
 Planned main display items:
 
 - Table 1. Baseline and intraoperative characteristics of the CO2-rSO2 analytic cohort.
-- Figure 1. Cohort assembly and intraoperative EtCO2/rSO2 distributions.
+- Figure 1. Cohort assembly by tissue oxygenation channel.
 - Figure 2. Adjusted EtCO2-rSO2 response curves by tissue oxygenation channel.
 - Figure 3. Clinical-step comparison of EtCO2, FiO2, and temperature.
 - Figure 4. Local slope or threshold view of the adjusted EtCO2-rSO2 relationship.
@@ -98,6 +98,8 @@ Patient-level EtCO2 summaries showed mean EtCO2 near 30 mmHg across channels. Me
 
 [Insert Table 1 from `docs/manuscript_development/generated_assets/table1_cohort_characteristics.xlsx`. The full baseline, intraoperative, and flow-count tables are available as Supplementary eTable 1/2 in `docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics.xlsx`. The sex label audit supports reporting the source-coded `SEX=1` row as male.]
 
+[Insert Figure 1: `docs/manuscript_development/generated_assets/figure1_cohort_flow.png`. Source data: `docs/manuscript_development/generated_assets/source_data_figure1_cohort_flow.csv`.]
+
 ### EtCO2 showed the largest clinical-step association with cerebral oxygenation
 
 Clinical-step contrasts showed a consistent positive association between EtCO2 and rSO2. A 5 mmHg higher EtCO2 was associated with 2.89 percentage-point higher left SctO2 (95% CI, 2.41 to 3.33) and 2.98 percentage-point higher right SctO2 (95% CI, 2.64 to 3.28). The corresponding estimate for SftO2 was 0.92 percentage points (95% CI, 0.68 to 1.16). In the same analysis, a 10 percentage-point higher FiO2 was associated with changes of -0.18 (95% CI, -0.49 to 0.12), -0.05 (95% CI, -0.46 to 0.37), and 0.30 (95% CI, 0.11 to 0.46) percentage points across left SctO2, right SctO2, and SftO2. A 0.5 C higher temperature was associated with changes of 0.10 (95% CI, -0.16 to 0.35), 0.55 (95% CI, 0.25 to 0.87), and 0.15 (95% CI, -0.03 to 0.30) percentage points.
@@ -111,6 +113,8 @@ Among the three prespecified clinical-step comparisons shown here, EtCO2 had the
 The adjusted EtCO2 response curves showed increasing rSO2 across much of the observed EtCO2 range. Left and right SctO2 had similar curve shapes and effect sizes, while SftO2 showed higher baseline oxygenation and a smaller EtCO2-associated contrast. Descriptive local-slope summaries suggested steeper EtCO2-rSO2 gradients in the central exposure range and flatter gradients near the upper tail, where data were sparser and uncertainty was wider.
 
 [Insert Figure 2: `generated_assets/figure2_etco2_adjusted_curves.png`. Bands show uncertainty intervals derived from archived prediction matrices; the bootstrap construction and sampling unit are described in the Supplement.]
+
+[Insert Figure 4: `generated_assets/figure4_etco2_local_slopes.png`. Source data: `generated_assets/source_data_figure4_etco2_local_slopes.csv`. Local slopes are descriptive model summaries from EtCO2 decile bins.]
 
 ### Model diagnostics supported nonlinear adjustment
 

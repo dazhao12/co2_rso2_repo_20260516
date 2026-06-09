@@ -46,9 +46,9 @@ This checklist separates what exists from what must be completed before a submis
    - Do not use empty MAP/SV/HR/RRtotal/TVinsp/Pmean panels in the main paper.
 
 6. Figure cleanup
-   - Figure A is usable as a concept but should remove variables with missing values if used in the main text.
-   - Figure B and C should be remade as EtCO2/FiO2/TEMP-only or EtCO2-focused figures.
-   - Main figures need publication sizing, panel labels, readable fonts, and colorblind-safe colors.
+   - Main manuscript-development figures now exist for cohort flow, adjusted EtCO2-rSO2 curves, clinical-step contrasts, and EtCO2 local slopes.
+   - Generated assets are under `docs/manuscript_development/generated_assets/`.
+   - Final submission figures still need target-journal sizing, panel labels, font checks, and journal-specific source-data packaging.
 
 7. Methods provenance
    - The manuscript must cite current scripts and output paths.
@@ -62,5 +62,5 @@ This checklist separates what exists from what must be completed before a submis
 
 1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
-3. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.
+3. Complete target-journal figure formatting and source-data packaging.
 4. Complete optional rendered DOCX page-level visual QA.
