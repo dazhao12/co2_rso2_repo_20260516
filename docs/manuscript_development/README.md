@@ -70,6 +70,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 22. `CO2_NATURE_STYLE_READINESS_AUDIT.md`
    Nature-style manuscript readiness audit covering structural QA, remaining hard stops, and table/readiness status.
 
+23. `CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md`
+   Reproducible QA report generated from the current DOCX files, table assets, render intermediates, and package zip.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
@@ -105,6 +108,16 @@ Run from the repository root:
 ```
 
 The script writes `docs/manuscript_development/package_outputs/CO2_rSO2_manuscript_development_package.zip` and includes an internal `PACKAGE_MANIFEST.md`.
+
+## Check the manuscript-development package
+
+Run from the repository root:
+
+```powershell
+& 'C:\Users\12080\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' docs\manuscript_development\check_manuscript_package.py
+```
+
+The script writes `docs/manuscript_development/CO2_MANUSCRIPT_PACKAGE_QA_REPORT.md`.
 
 ## Generate manuscript tables and figures
 
