@@ -103,7 +103,7 @@ def working_tree_dirty() -> bool:
     status = git_value("status", "--short")
     ignored = {"docs/manuscript_development/package_outputs/CO2_rSO2_manuscript_development_package.zip"}
     for line in status.splitlines():
-        path = line[3:].strip()
+        path = line[2:].strip()
         if path and path not in ignored:
             return True
     return False
