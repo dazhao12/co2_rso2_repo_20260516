@@ -27,4 +27,4 @@ Draft status: source-backed index for the supplement. This is not a formatted jo
 - Format all abbreviations consistently: EtCO2, FiO2, SctO2, SftO2, MAP, CI, SV, HR.
 - Replace repository paths with journal-facing supplement captions before submission.
 - No sensitivity-analysis table is included in the current evidence package because the planned result directories are unavailable; see `CO2_SENSITIVITY_DECISION.md`.
-- Confirm the source-coded `SEX=1` label against the data dictionary before final table submission.
+- Sex is reported as `Male, n (%)` in manuscript-facing table assets; see `CO2_SEX_LABEL_AUDIT.md`.

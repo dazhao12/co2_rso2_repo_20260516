@@ -52,6 +52,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 16. `CO2_SENSITIVITY_DECISION.md`
    Current decision to exclude unavailable sensitivity analyses from the reported evidence package and avoid robustness claims.
 
+17. `CO2_SEX_LABEL_AUDIT.md`
+   Evidence supporting the manuscript-facing `Male, n (%)` label for the source-coded `SEX=1` Table 1 row.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
@@ -62,11 +65,11 @@ Avoid therapeutic or causal claims. The current package also avoids robustness c
 
 ## Immediate next actions
 
-1. Confirm the source-coded `SEX=1` table label against the data dictionary before final submission.
-2. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
-3. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
-4. Decide whether to run the planned 5-model sensitivity package before journal submission.
-5. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
+1. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
+2. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
+3. Decide whether to run the planned 5-model sensitivity package before journal submission.
+4. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
+5. Complete optional rendered DOCX page-level visual QA.
 
 ## Build the Word draft
 

@@ -42,4 +42,4 @@ The manuscript and supplement now state that clinical-step contrasts come from t
 
 ## Round 10. Remaining submission gates
 
-The package is close to a manuscript-development draft but not submission-ready. Remaining gates are: author list and contributions, ethics and consent wording, data/code availability, funding and competing interests, source-coded `SEX=1` table-label confirmation, optional sensitivity rerun before journal submission, final figure formatting, journal-specific reference formatting, and optional rendered DOCX page-level visual QA.
+The package is close to a manuscript-development draft but not submission-ready. Remaining gates are: author list and contributions, ethics and consent wording, data/code availability, funding and competing interests, optional sensitivity rerun before journal submission, final figure formatting, journal-specific reference formatting, and optional rendered DOCX page-level visual QA. The source-coded `SEX=1` row is now supported as male in manuscript-facing tables by `CO2_SEX_LABEL_AUDIT.md`.

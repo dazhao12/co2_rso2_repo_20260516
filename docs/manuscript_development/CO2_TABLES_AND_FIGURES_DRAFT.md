@@ -30,7 +30,7 @@ Content:
 
 Table note:
 
-- `SEX=1` is retained as a source-coded row and needs final data-dictionary confirmation before journal submission.
+- `SEX=1` is reported as `Male, n (%)` in manuscript-facing generated assets; see `CO2_SEX_LABEL_AUDIT.md`.
 
 Full supplementary eTable 1/2:
 

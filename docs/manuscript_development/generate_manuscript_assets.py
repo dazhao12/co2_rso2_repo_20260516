@@ -98,7 +98,7 @@ def write_table1_assets():
         "Patients, n": "Patients, n",
         "Age, mean (SD)": "Age, years, mean (s.d.)",
         "BMI, mean (SD)": "Body mass index, kg/m2, mean (s.d.)",
-        "SEX, n (%)": "SEX=1, n (%)",
+        "SEX, n (%)": "Male, n (%)",
         "Diabetes_status, n (%)": "Diabetes, n (%)",
         "Hypertension, n (%)": "Hypertension, n (%)",
         "Drinking_status, n (%)": "Drinking history, n (%)",
@@ -156,12 +156,17 @@ def write_table1_assets():
     table1.to_csv(OUT / "table1_cohort_characteristics.csv", index=False, encoding="utf-8-sig")
     table1.to_excel(OUT / "table1_cohort_characteristics.xlsx", index=False)
 
+    supplement_wide = wide.copy()
+    supplement_long = long.copy()
+    supplement_wide["characteristic"] = supplement_wide["characteristic"].replace({"SEX, n (%)": "Male, n (%)"})
+    supplement_long["characteristic"] = supplement_long["characteristic"].replace({"SEX, n (%)": "Male, n (%)"})
+
     with pd.ExcelWriter(OUT / "supplementary_etable1_2_cohort_characteristics.xlsx") as writer:
-        wide.to_excel(writer, sheet_name="wide", index=False)
-        long.to_excel(writer, sheet_name="long", index=False)
+        supplement_wide.to_excel(writer, sheet_name="wide", index=False)
+        supplement_long.to_excel(writer, sheet_name="long", index=False)
         flow.to_excel(writer, sheet_name="flow_counts", index=False)
 
-    long.to_csv(OUT / "supplementary_etable1_2_cohort_characteristics_long.csv", index=False, encoding="utf-8-sig")
+    supplement_long.to_csv(OUT / "supplementary_etable1_2_cohort_characteristics_long.csv", index=False, encoding="utf-8-sig")
     return table1
 
 

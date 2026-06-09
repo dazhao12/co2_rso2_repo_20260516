@@ -26,7 +26,8 @@ This checklist separates what exists from what must be completed before a submis
    - Source files are under `results/manuscript_tables/`.
    - Main Table 1 assets are under `docs/manuscript_development/generated_assets/table1_cohort_characteristics.*`.
    - Full supplementary eTable 1/2 assets are under `docs/manuscript_development/generated_assets/supplementary_etable1_2_cohort_characteristics.*`.
-   - The source-coded `SEX=1` label still requires data-dictionary confirmation before final submission.
+   - The source-coded `SEX=1` label is now reported as `Male, n (%)` in manuscript-facing generated assets.
+   - See `CO2_SEX_LABEL_AUDIT.md`.
 
 3. Main EtCO2 slope or contrast table
    - Complete as a manuscript-development asset.
@@ -59,8 +60,8 @@ This checklist separates what exists from what must be completed before a submis
 
 ## Recommended next work order
 
-1. Confirm the source-coded `SEX=1` table label against the data dictionary.
-2. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
-3. Pull the corrected supplemental eTable 3-5 labels through to the HPC repo and regenerated submission supplement.
-4. Decide whether to run the planned 5-model sensitivity package before journal submission.
-5. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.
+1. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
+2. Pull the corrected supplemental eTable 3-5 labels through to the HPC repo and regenerated submission supplement.
+3. Decide whether to run the planned 5-model sensitivity package before journal submission.
+4. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.
+5. Complete optional rendered DOCX page-level visual QA.
