@@ -61,6 +61,9 @@ This folder converts the current CO2-rSO2 analysis into a manuscript draft using
 19. `CO2_REFERENCE_AUDIT.md`
    Verification source and manuscript role for each reference in the current draft.
 
+20. `CO2_SOURCE_DATA_PACKAGE_INDEX.md`
+   Source-data manifest for the generated main figures, main tables, and key supplementary table assets.
+
 ## Current manuscript stance
 
 The manuscript should currently be framed as a high-frequency observational physiology study:
@@ -74,7 +77,7 @@ Avoid therapeutic or causal claims. The current package also avoids robustness c
 1. Fill `CO2_AUTHOR_SUBMISSION_STATEMENTS_TEMPLATE.md` with confirmed author-side information.
 2. Decide whether to run the planned 5-model sensitivity package before journal submission.
 3. Complete target-journal figure and reference formatting.
-4. Complete source-data packaging.
+4. Convert the source-data manifest into the target journal's upload format.
 5. Complete optional rendered DOCX page-level visual QA.
 
 ## Build the Word draft
