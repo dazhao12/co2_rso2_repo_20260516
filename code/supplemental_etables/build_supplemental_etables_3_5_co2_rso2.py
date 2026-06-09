@@ -691,7 +691,7 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
         sheet_name="eTable3_artifact",
         title=(
             "eTable 3. Summary of timestamp-level outlier exclusions in left cerebral, right cerebral, "
-            "and frontal cerebral tissue oxygen saturation cohorts"
+            "and forearm tissue oxygen saturation cohorts"
         ),
         first_col_header="Outlier criterion",
         rows=format_etable3_rows(et3),
@@ -714,7 +714,7 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
         sheet_name="eTable4_imputation",
         title=(
             "eTable 4. Missingness and imputation of intraoperative time-varying covariates in left cerebral, "
-            "right cerebral, and frontal cerebral tissue oxygenation cohorts"
+            "right cerebral, and forearm tissue oxygenation cohorts"
         ),
         first_col_header="Covariate",
         rows=format_etable4_rows(et4),
@@ -740,7 +740,7 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
         sheet_name="eTable5_patient_level",
         title=(
             "eTable 5. Patient-level summary of intraoperative EtCO2 and tissue oxygenation in left cerebral, "
-            "right cerebral, and frontal cerebral tissue oxygenation cohorts"
+            "right cerebral, and forearm tissue oxygenation cohorts"
         ),
         first_col_header="Variable",
         rows=format_etable5_rows(et5),

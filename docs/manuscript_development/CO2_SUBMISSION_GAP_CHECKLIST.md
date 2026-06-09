@@ -16,9 +16,9 @@ This checklist separates what exists from what must be completed before a submis
    - Current files use `rSO2_Ch1`, `rSO2_Ch2`, and `rSO2_Ch3`.
    - Prior MAP/CI paper used left SctO2, right SctO2, and SftO2.
    - CO2 model/plot scripts label `rSO2_Ch3` as SftO2.
-   - Earlier CO2 supplemental eTable 3-5 code/results labeled `rSO2_Ch3` as `Frontal SctO2 cohort`; the local manuscript package now treats this as a label bug and has corrected the local script/outputs.
+   - Earlier CO2 supplemental eTable 3-5 code/results labeled `rSO2_Ch3` as `Frontal SctO2 cohort`; the local manuscript package now treats this as a label bug and has corrected the local script, CSV outputs, and formatted workbook titles.
    - Current CO2 supplemental eTable 6-8 code/results label `rSO2_Ch3` as `SftO2 cohort` / `SftO2 model`.
-   - The manuscript should use SftO2 for `rSO2_Ch3`, and eTables 3-5 should be regenerated or corrected to match.
+   - The manuscript should use SftO2 for `rSO2_Ch3`.
    - See `CO2_CHANNEL_NAMING_AUDIT.md`.
 
 2. Table 1 and Table 2 generation
@@ -61,7 +61,6 @@ This checklist separates what exists from what must be completed before a submis
 ## Recommended next work order
 
 1. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
-2. Pull the corrected supplemental eTable 3-5 labels through to the HPC repo and regenerated submission supplement.
-3. Decide whether to run the planned 5-model sensitivity package before journal submission.
-4. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.
-5. Complete optional rendered DOCX page-level visual QA.
+2. Decide whether to run the planned 5-model sensitivity package before journal submission.
+3. Remake main figures as EtCO2-focused if figures are prioritized for the target journal.
+4. Complete optional rendered DOCX page-level visual QA.

@@ -66,10 +66,9 @@ Avoid therapeutic or causal claims. The current package also avoids robustness c
 ## Immediate next actions
 
 1. Replace author-side placeholders: author order, ethics, funding, competing interests, data availability, code availability, and author contributions.
-2. Carry the corrected supplemental eTable 3-5 labels into the HPC repo and final submission supplement.
-3. Decide whether to run the planned 5-model sensitivity package before journal submission.
-4. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
-5. Complete optional rendered DOCX page-level visual QA.
+2. Decide whether to run the planned 5-model sensitivity package before journal submission.
+3. Remake the main figures without empty/missing all-intraop panels if figures are prioritized later.
+4. Complete optional rendered DOCX page-level visual QA.
 
 ## Build the Word draft
 

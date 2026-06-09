@@ -43,7 +43,7 @@ The prior manuscript defines:
 
 The prior supplementary methods state that tissue oxygenation was modeled separately as left cerebral tissue oxygen saturation, right SctO2, and forearm tissue oxygen saturation.
 
-This supports the old MAP/CI framework using a forearm third tissue bed. Together with the current CO2 model and plotting scripts, it supports using SftO2 as the manuscript label for `rSO2_Ch3`; the `Frontal SctO2 cohort` label in CO2 eTables 3-5 should be corrected before submission.
+This supports the old MAP/CI framework using a forearm third tissue bed. Together with the current CO2 model and plotting scripts, it supports using SftO2 as the manuscript label for `rSO2_Ch3`. The earlier `Frontal SctO2 cohort` label in CO2 eTables 3-5 has been corrected in the local manuscript package.
 
 ## Prior supplement table structure
 
