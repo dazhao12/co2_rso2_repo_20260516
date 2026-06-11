@@ -122,7 +122,9 @@ theme_matrix <- function() {
       axis.ticks = element_blank(),
       strip.text = element_text(size = 10.8, colour = "black", face = "plain"),
       legend.title = element_text(size = 8.8, colour = "black"),
-      legend.text = element_text(size = 8.2, colour = "black"),
+      legend.text = element_text(size = 8.2, colour = "black", margin = margin(l = 3, unit = "pt")),
+      legend.box.margin = margin(0, 0, 0, 8, "pt"),
+      legend.spacing.x = grid::unit(5, "pt"),
       plot.caption = element_text(size = 8.0, colour = "#444444", hjust = 0, lineheight = 1.15),
       plot.margin = margin(6, 10, 8, 6, "pt")
     )
@@ -164,10 +166,12 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
       fill = guide_colorbar(
         title.position = "right",
         title.hjust = 0.5,
-        title.theme = element_text(angle = 90, hjust = 0.5, size = 8.8, colour = "black"),
-        barwidth = grid::unit(0.24, "cm"),
-        barheight = grid::unit(4.25, "cm"),
+        title.theme = element_text(angle = 90, hjust = 0.5, size = 8.8, colour = "black", margin = margin(l = 8, unit = "pt")),
+        label.position = "right",
+        barwidth = grid::unit(0.22, "cm"),
+        barheight = grid::unit(6.25, "cm"),
         ticks = TRUE,
+        ticks.colour = "#333333",
         frame.colour = "#333333",
         frame.linewidth = 0.35
       )
