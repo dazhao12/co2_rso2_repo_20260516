@@ -226,9 +226,9 @@ CLINICAL_STEP_FILL_COLORS <- c(
   "CI" = "#DEEBF7"
 )
 XVAR_TICK_LABELS <- c(
-  "ET_CO2" = "EtCO2",
+  "ET_CO2" = "EtCO₂",
   "TEMP" = "TEMP",
-  "FiO2_new" = "FiO2",
+  "FiO2_new" = "FiO₂",
   "MAP" = "MAP",
   "CI" = "CI"
 )
@@ -860,12 +860,12 @@ plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed
     y_est <- "abs_est"
     y_lo <- "abs_lo"
     y_hi <- "abs_hi"
-    y_lab <- "Absolute change (%)"
+    y_lab <- "Slope (% per clinical increment)"
   } else {
     y_est <- "signed_est"
     y_lo <- "signed_lo"
     y_hi <- "signed_hi"
-    y_lab <- "Tissue O2 change (%)"
+    y_lab <- "Slope (% per clinical increment)"
   }
   ggplot(d, aes(x = .data$xvar, fill = .data$xvar, colour = .data$xvar, y = .data[[y_est]])) +
     geom_col(width = 0.6, linewidth = 0.5) +
