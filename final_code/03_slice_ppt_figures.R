@@ -823,23 +823,30 @@ get_compare_y_spec <- function(db, metric = c("abs", "signed")) {
     vals <- c(0, db$abs_lo, db$abs_hi)
     vals <- vals[is.finite(vals)]
     if (!length(vals)) vals <- c(0, 1)
-    lo <- min(0, min(vals, na.rm = TRUE))
     hi <- max(vals, na.rm = TRUE)
-    span <- max(hi - lo, 1e-8)
-    pad <- max(0.08 * span, 0.05)
-    br <- pretty(c(lo, hi + pad), n = 6)
-    br <- br[br >= lo - 1e-8]
-    lims <- c(lo, max(br, hi + pad, na.rm = TRUE))
+    upper_pad <- max(0.06 * hi, 0.05)
+    lower_pad <- max(0.03 * hi, 0.05)
+    lims <- c(-lower_pad, hi + upper_pad)
+    br <- pretty(c(0, lims[2]), n = 6)
+    br <- br[br >= 0 & br <= lims[2]]
   } else {
     vals <- c(0, db$signed_lo, db$signed_hi)
     vals <- vals[is.finite(vals)]
     if (!length(vals)) vals <- c(-1, 1)
-    lo <- min(vals, na.rm = TRUE)
-    hi <- max(vals, na.rm = TRUE)
-    span <- max(hi - lo, 1e-8)
-    pad <- max(0.08 * span, 0.05)
-    br <- pretty(c(lo - pad, hi + pad), n = 6)
-    lims <- range(br, lo - pad, hi + pad, finite = TRUE)
+    lo_data <- min(vals, na.rm = TRUE)
+    hi_data <- max(vals, na.rm = TRUE)
+    span <- max(hi_data - min(0, lo_data), 1e-8)
+    upper_pad <- max(0.06 * span, 0.05)
+    if (lo_data >= 0) {
+      lower <- -max(0.03 * max(hi_data, 1), 0.05)
+      br <- pretty(c(0, hi_data + upper_pad), n = 6)
+      br <- br[br >= 0 & br <= hi_data + upper_pad]
+    } else {
+      lower <- lo_data - max(0.06 * span, 0.05)
+      br <- pretty(c(lower, hi_data + upper_pad), n = 6)
+      br <- br[br >= lower & br <= hi_data + upper_pad]
+    }
+    lims <- c(lower, hi_data + upper_pad)
   }
   list(lims = lims, breaks = br)
 }
@@ -853,12 +860,12 @@ plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed
     y_est <- "abs_est"
     y_lo <- "abs_lo"
     y_hi <- "abs_hi"
-    y_lab <- "Absolute tissue O2 change (% per clinical increment)"
+    y_lab <- "Absolute change (%)"
   } else {
     y_est <- "signed_est"
     y_lo <- "signed_lo"
     y_hi <- "signed_hi"
-    y_lab <- "Tissue O2 change (% per clinical increment)"
+    y_lab <- "Tissue O2 change (%)"
   }
   ggplot(d, aes(x = .data$xvar, fill = .data$xvar, colour = .data$xvar, y = .data[[y_est]])) +
     geom_col(width = 0.6, linewidth = 0.5) +
@@ -918,8 +925,8 @@ smooth_fio2_curves <- function(d) {
   dd
 }
 
-plot_slice_curve <- function(d) {
-  d <- smooth_fio2_curves(d)
+plot_slice_curve <- function(d, smooth = TRUE) {
+  if (isTRUE(smooth)) d <- smooth_fio2_curves(d)
   xvar <- as.character(d$xvar[1])
   ycol <- as.character(d$ycol[1])
   spx <- get_x_axis_spec(xvar)
@@ -973,6 +980,7 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   plot_index <- list()
   slice_plot_rows <- list()
   hist_desc_rows <- list()
+  compare_curve_rows <- list()
   plot_map <- list()
   pair_grid <- expand.grid(
     y_key = Y_ORDER,
@@ -988,13 +996,15 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
       arrange(.data$x)
     if (!nrow(d)) next
 
-    p <- plot_slice_curve(d)
+    d_plot <- smooth_fio2_curves(d)
+    p <- plot_slice_curve(d_plot, smooth = FALSE)
     key <- paste(y_key, x_key, sep = "__")
     plot_map[[key]] <- p
+    compare_curve_rows[[length(compare_curve_rows) + 1L]] <- d_plot
 
-    sec <- unique(d$sec)[1] %||% NA
-    n_sample <- unique(d$n_sample)[1] %||% NA
-    n_boot_ok <- unique(d$n_boot_ok)[1] %||% NA
+    sec <- unique(d_plot$sec)[1] %||% NA
+    n_sample <- unique(d_plot$n_sample)[1] %||% NA
+    n_boot_ok <- unique(d_plot$n_boot_ok)[1] %||% NA
     out_sub <- file.path(out_root, y_key, paste0(sec, "s"), paste0("sub", n_sample), x_key)
     out_png <- file.path(out_sub, glue("{y_key}_{x_key}_{sec}s_sub{n_sample}_{PLOT_MODE_TAG}_curve.png"))
     save_png(p, out_png)
@@ -1013,7 +1023,7 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
     )
 
     spx <- get_x_axis_spec(x_key)
-    slice_plot_rows[[length(slice_plot_rows) + 1]] <- d %>%
+    slice_plot_rows[[length(slice_plot_rows) + 1]] <- d_plot %>%
       transmute(
         plot_mode = PLOT_MODE,
         subgroup = subgroup_val,
@@ -1056,7 +1066,8 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   }
 
   clinical_compare <- if (isTRUE(ADD_CLINICAL_COMPARE)) {
-    build_clinical_compare_data(curve_df_sub, model_input_quantiles)
+    curve_df_compare <- if (length(compare_curve_rows)) bind_rows(compare_curve_rows) else curve_df_sub
+    build_clinical_compare_data(curve_df_compare, model_input_quantiles)
   } else {
     list(summary = tibble(), segments = tibble())
   }
