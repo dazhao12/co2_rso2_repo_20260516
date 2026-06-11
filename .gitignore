@@ -20,6 +20,27 @@ logs/
 
 # Generated local outputs: data, tables, figures, PPT/DOCX exports, QA renders
 outputs_local/
+docs/
+results/
+data/
+archive/
+
+# Non-code artifacts are local only
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.docx
+*.pptx
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.tif
+*.tiff
+*.md
+!/README.md
 
 # Keep directory placeholders if needed
 !.gitkeep
