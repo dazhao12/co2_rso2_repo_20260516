@@ -146,32 +146,34 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
   mode <- match.arg(mode)
   d <- build_matrix_data(df, mode)
   cap <- unique(d$fill_cap)[1]
+  d <- d %>%
+    mutate(text_colour = if_else(abs(.data$fill_value) >= 0.55 * cap, "white", "#222222"))
   legend_title <- if (mode == "raw") "Slope (% per clinical increment)" else "Difference vs overall"
-  caption <- if (mode == "raw") {
-    "Cells show median slope; dark borders indicate IQR does not cross 0."
-  } else {
-    "Colors show subgroup minus overall slope; cell values are raw median slopes."
-  }
-
   ggplot(d, aes(x = .data$x_label, y = .data$subgroup)) +
     geom_tile(
-      aes(fill = .data$fill_value, colour = .data$iqr_status),
-      width = 0.96, height = 0.96, linewidth = 0.55
-    ) +
-    geom_tile(
-      data = d %>% filter(.data$iqr_status == "IQR excludes 0"),
       aes(fill = .data$fill_value),
-      width = 0.96, height = 0.96, colour = "#222222", linewidth = 1.05
+      width = 0.98, height = 0.98, colour = "white", linewidth = 0.70
     ) +
-    geom_text(aes(label = .data$value_label), size = 2.75, colour = "#222222") +
+    geom_text(aes(label = .data$value_label, colour = .data$text_colour), size = 2.75) +
     facet_grid(. ~ ycol, labeller = label_parsed) +
     scale_fill_gradient2(
       low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
       midpoint = 0, limits = c(-cap, cap), name = legend_title
     ) +
-    scale_colour_manual(values = c("IQR crosses 0" = "#C8C8C8", "IQR excludes 0" = "#222222"), guide = "none") +
+    guides(
+      fill = guide_colorbar(
+        title.position = "right",
+        title.hjust = 0.5,
+        title.theme = element_text(angle = 90, hjust = 0.5, size = 8.8, colour = "black"),
+        barwidth = grid::unit(0.24, "cm"),
+        barheight = grid::unit(4.25, "cm"),
+        ticks = TRUE,
+        frame.colour = "#333333",
+        frame.linewidth = 0.35
+      )
+    ) +
     scale_x_discrete(drop = FALSE, labels = parse_plotmath_labels) +
-    labs(caption = caption) +
+    scale_colour_identity() +
     coord_equal(expand = FALSE) +
     theme_matrix()
 }
