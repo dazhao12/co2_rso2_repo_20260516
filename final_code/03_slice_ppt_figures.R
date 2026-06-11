@@ -348,9 +348,11 @@ model_input_quantiles <- load_model_input_quantiles(RESULT_DIR)
 
 find_unified_cache <- function(root_dir) {
   cache_dir <- file.path(root_dir, "result", "raw_cache")
-  cands_intra <- dir_ls(cache_dir, type = "file", recurse = FALSE, regexp = "intra5_selected_.*\\.parquet$")
   cands_unified <- dir_ls(cache_dir, type = "file", recurse = FALSE, regexp = "unified5_selected_.*\\.parquet$")
-  cands <- c(cands_intra, cands_unified)
+  cands <- cands_unified
+  if (!length(cands)) {
+    cands <- dir_ls(cache_dir, type = "file", recurse = FALSE, regexp = "intra5_selected_.*\\.parquet$")
+  }
   if (!length(cands)) return(character(0))
   cands[order(file_info(cands)$modification_time, decreasing = TRUE)]
 }
@@ -416,24 +418,21 @@ choose_adaptive_bin_width <- function(v, from, to, width_min = 0.5, width_max = 
 }
 
 build_marginal_density_map <- function(df_raw) {
-  present_cols <- names(df_raw)
-  present_y <- intersect(Y_ORDER, present_cols)
-  present_x <- intersect(XVAR_ORDER, present_cols)
-  if (!length(present_y)) stop("No Y channel columns found in raw cache for marginal density.")
-  for (c in unique(c(present_x, present_y))) df_raw[[c]] <- suppressWarnings(as.numeric(df_raw[[c]]))
+  need <- unique(c(XVAR_ORDER, Y_ORDER))
+  if (!all(need %in% names(df_raw))) stop("Missing required cols in raw cache for marginal density.")
+
+  for (c in need) df_raw[[c]] <- suppressWarnings(as.numeric(df_raw[[c]]))
+
+  mask_base <- complete.cases(df_raw[, need, drop = FALSE])
+  for (xv in XVAR_ORDER) {
+    lim <- PRIMARY_PHYSIO_LIMITS[[xv]]
+    mask_base <- mask_base & df_raw[[xv]] >= lim[1] & df_raw[[xv]] <= lim[2]
+  }
 
   out <- list()
   for (yy in Y_ORDER) {
-    if (!(yy %in% present_y)) {
-      out[[yy]] <- list(
-        x_hist = list(),
-        y_hist = data.frame(low = numeric(0), high = numeric(0), count = numeric(0)),
-        n = 0L
-      )
-      next
-    }
     yv <- df_raw[[yy]]
-    mask_y <- is.finite(yv) & yv >= Y_PHYSIO_LIMITS[1] & yv <= Y_PHYSIO_LIMITS[2]
+    mask_y <- mask_base & yv >= Y_PHYSIO_LIMITS[1] & yv <= Y_PHYSIO_LIMITS[2]
     y_tmp <- yv[mask_y]
     if (length(y_tmp) < 200) {
       out[[yy]] <- list(
@@ -450,25 +449,8 @@ build_marginal_density_map <- function(df_raw) {
 
     x_hist <- list()
     for (xv in XVAR_ORDER) {
-      if (!(xv %in% present_x)) {
-        x_hist[[xv]] <- data.frame(low = numeric(0), high = numeric(0), count = numeric(0))
-        next
-      }
       spx <- get_x_axis_spec(xv)
       x_use <- df_raw[[xv]][mask_y]
-      x_use <- x_use[is.finite(x_use)]
-      lim <- PRIMARY_PHYSIO_LIMITS[[xv]]
-      if (!is.null(lim) && length(lim) == 2 && all(is.finite(lim))) {
-        x_use <- x_use[x_use >= lim[1] & x_use <= lim[2]]
-      }
-      if (is.null(spx$lims) || any(!is.finite(spx$lims)) || diff(spx$lims) <= 0) {
-        qx <- suppressWarnings(stats::quantile(x_use, probs = c(0.01, 0.99), na.rm = TRUE))
-        if (length(qx) == 2 && all(is.finite(qx)) && qx[2] > qx[1]) {
-          spx$lims <- as.numeric(qx)
-        } else {
-          spx$lims <- range(x_use, na.rm = TRUE)
-        }
-      }
       x_hist[[xv]] <- make_hist_df(x_use, from = spx$lims[1], to = spx$lims[2], bins = MARG_BINS_X)
     }
     if (is.finite(MARG_Y_BIN_WIDTH_FIXED) && MARG_Y_BIN_WIDTH_FIXED > 0) {
