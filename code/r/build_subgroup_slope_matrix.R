@@ -144,6 +144,75 @@ parse_plotmath_labels <- function(labels) {
   parse(text = as.character(labels))
 }
 
+legend_breaks <- function(cap, mode) {
+  by <- if (identical(mode, "raw")) 0.5 else 0.2
+  lo <- ceiling((-cap) / by) * by
+  hi <- floor(cap / by) * by
+  if (lo > hi) return(0)
+  seq(lo, hi, by = by)
+}
+
+legend_labels <- function(x, mode) {
+  if (identical(mode, "raw")) sprintf("%.1f", x) else sprintf("%.1f", x)
+}
+
+make_colorbar_legend <- function(cap, mode, title) {
+  fill_breaks <- legend_breaks(cap, mode)
+  bar_df <- data.frame(
+    x = 1,
+    y = seq(-cap, cap, length.out = 300)
+  )
+  bar_height <- (2 * cap) / 299
+  tick_df <- data.frame(
+    y = fill_breaks,
+    label = legend_labels(fill_breaks, mode)
+  )
+
+  ggplot(bar_df, aes(x = .data$x, y = .data$y, fill = .data$y)) +
+    geom_tile(width = 0.32, height = bar_height) +
+    annotate(
+      "rect",
+      xmin = 0.84, xmax = 1.16, ymin = -cap, ymax = cap,
+      fill = NA, colour = "#333333", linewidth = 0.35
+    ) +
+    geom_segment(
+      data = tick_df,
+      aes(x = 1.16, xend = 1.26, y = .data$y, yend = .data$y),
+      inherit.aes = FALSE,
+      colour = "#333333", linewidth = 0.35
+    ) +
+    geom_text(
+      data = tick_df,
+      aes(x = 1.35, y = .data$y, label = .data$label),
+      inherit.aes = FALSE,
+      hjust = 0, size = 2.75, colour = "black"
+    ) +
+    annotate(
+      "text",
+      x = 2.05, y = 0, label = title,
+      angle = 90, hjust = 0.5, vjust = 0.5, size = 3.0, colour = "black"
+    ) +
+    scale_fill_gradient2(
+      low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
+      midpoint = 0, limits = c(-cap, cap), guide = "none"
+    ) +
+    coord_cartesian(xlim = c(0.82, 2.25), ylim = c(-cap, cap), expand = FALSE, clip = "off") +
+    theme_void() +
+    theme(plot.margin = margin(4, 4, 4, 4, "pt"))
+}
+
+combine_with_legend <- function(main_plot, legend_plot) {
+  main_grob <- ggplotGrob(main_plot)
+  legend_grob <- ggplotGrob(legend_plot)
+  gt <- gtable::gtable(
+    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.86, "in")),
+    heights = grid::unit(1, "null")
+  )
+  gt <- gtable::gtable_add_grob(gt, main_grob, t = 1, l = 1)
+  gt <- gtable::gtable_add_grob(gt, legend_grob, t = 1, l = 2)
+  gt
+}
+
 plot_matrix <- function(df, mode = c("raw", "delta")) {
   mode <- match.arg(mode)
   d <- build_matrix_data(df, mode)
@@ -151,7 +220,7 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
   d <- d %>%
     mutate(text_colour = if_else(abs(.data$fill_value) >= 0.55 * cap, "white", "#222222"))
   legend_title <- if (mode == "raw") "Slope (% per clinical increment)" else "Difference vs overall"
-  ggplot(d, aes(x = .data$x_label, y = .data$subgroup)) +
+  main_plot <- ggplot(d, aes(x = .data$x_label, y = .data$subgroup)) +
     geom_tile(
       aes(fill = .data$fill_value),
       width = 0.98, height = 0.98, colour = "white", linewidth = 0.70
@@ -160,26 +229,14 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
     facet_grid(. ~ ycol, labeller = label_parsed) +
     scale_fill_gradient2(
       low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
-      midpoint = 0, limits = c(-cap, cap), name = legend_title
-    ) +
-    guides(
-      fill = guide_colorbar(
-        title.position = "right",
-        title.hjust = 0.5,
-        title.theme = element_text(angle = 90, hjust = 0.5, size = 8.8, colour = "black", margin = margin(l = 8, unit = "pt")),
-        label.position = "right",
-        barwidth = grid::unit(0.22, "cm"),
-        barheight = grid::unit(6.25, "cm"),
-        ticks = TRUE,
-        ticks.colour = "#333333",
-        frame.colour = "#333333",
-        frame.linewidth = 0.35
-      )
+      midpoint = 0, limits = c(-cap, cap), guide = "none"
     ) +
     scale_x_discrete(drop = FALSE, labels = parse_plotmath_labels) +
     scale_colour_identity() +
     coord_equal(expand = FALSE) +
     theme_matrix()
+
+  combine_with_legend(main_plot, make_colorbar_legend(cap, mode, legend_title))
 }
 
 set_ppt_slide_size <- function(ppt, width_in, height_in) {
@@ -196,7 +253,7 @@ set_ppt_slide_size <- function(ppt, width_in, height_in) {
 
 add_blank <- function(ppt) add_slide(ppt, layout = "Blank", master = layout_summary(ppt)$master[1])
 add_full_plot <- function(ppt, p, left = 0.45, top = 0.35, width = 12.45, height = 6.75) {
-  ph_with(ppt, dml(ggobj = p), location = ph_location(left = left, top = top, width = width, height = height))
+  ph_with(ppt, dml(code = grid::grid.draw(p)), location = ph_location(left = left, top = top, width = width, height = height))
 }
 
 df <- read_compare_data()
