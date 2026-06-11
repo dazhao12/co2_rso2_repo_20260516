@@ -192,6 +192,7 @@ FIO2_SMOOTH_SP <- suppressWarnings(as.numeric(Sys.getenv("INTRA5_FIO2_SMOOTH_SP"
 if (!is.finite(FIO2_SMOOTH_SP)) FIO2_SMOOTH_SP <- 1.25
 FIO2_SMOOTH_SP <- max(0.2, min(2.0, FIO2_SMOOTH_SP))
 EXPORT_PNG <- tolower(Sys.getenv("INTRA5_EXPORT_PNG", "0")) %in% c("1", "true", "t", "yes", "y")
+SKIP_MARGINAL <- tolower(Sys.getenv("INTRA5_SKIP_MARGINAL", "0")) %in% c("1", "true", "t", "yes", "y")
 ADD_CLINICAL_COMPARE <- tolower(Sys.getenv("INTRA5_ADD_CLINICAL_COMPARE", "1")) %in% c("1", "true", "t", "yes", "y")
 CLINICAL_Q_WINDOW <- c(0.05, 0.95)
 CLINICAL_N_SEGMENTS <- suppressWarnings(as.integer(Sys.getenv("INTRA5_CLINICAL_N_SEGMENTS", "20")))
@@ -224,6 +225,15 @@ CLINICAL_STEP_FILL_COLORS <- c(
   "MAP" = "#FBE5D6",
   "CI" = "#DEEBF7"
 )
+XVAR_TICK_LABELS <- c(
+  "ET_CO2" = "EtCO2",
+  "TEMP" = "TEMP",
+  "FiO2_new" = "FiO2",
+  "MAP" = "MAP",
+  "CI" = "CI"
+)
+COMPARE_ERRBAR_LWD <- 0.5
+COMPARE_ERRBAR_CAP <- 0.20
 
 PROJECT_ROOT <- "/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025"
 OUT_FIG_BASE <- file.path(PROJECT_ROOT, "fig_output", "R_intraop5_slice_only_ppt_v2_4_1_2026_multismooth")
@@ -257,6 +267,7 @@ message("[RESULT_DIR] ", RESULT_DIR)
 message("[OUTDIR] ", OUTDIR)
 message("[PLOT_MODE] ", PLOT_MODE)
 message("[EXPORT_PNG] ", EXPORT_PNG)
+message("[SKIP_MARGINAL] ", SKIP_MARGINAL)
 message("[ADD_CLINICAL_COMPARE] ", ADD_CLINICAL_COMPARE)
 
 curve_files <- dir_ls(RESULT_DIR, recurse = TRUE, type = "file", regexp = "_curve_boot\\.csv$")
@@ -491,6 +502,10 @@ read_parquet_safe <- function(fp, cols) {
   arrow::read_parquet(fp, col_select = any_of(cols))
 }
 
+if (isTRUE(SKIP_MARGINAL)) {
+  message("[marginal] INTRA5_SKIP_MARGINAL=1; skip edge density.")
+  marginal_density_map <- list()
+} else {
 raw_cache_candidates <- find_unified_cache(PROJECT_ROOT)
 if (length(raw_cache_candidates)) {
   best_raw <- NULL
@@ -528,6 +543,7 @@ if (length(raw_cache_candidates)) {
 } else {
   warning("[marginal] no unified raw cache found; skip edge density.")
   marginal_density_map <- list()
+}
 }
 
 save_png <- function(p, path, w = FIG_W, h = FIG_H, dpi = 320) {
@@ -701,9 +717,16 @@ build_clinical_compare_data <- function(curves, input_quantiles = tibble()) {
   summary_rows <- list()
 
   for (d0 in pieces) {
-    subgroup <- unique(d0$subgroup)[[1]]
-    ycol <- unique(d0$ycol)[[1]]
-    xvar <- unique(d0$xvar)[[1]]
+    subgroup_vals <- unique(as.character(d0$subgroup))
+    ycol_vals <- unique(as.character(d0$ycol))
+    xvar_vals <- unique(as.character(d0$xvar))
+    if (length(subgroup_vals) != 1L || length(ycol_vals) != 1L || length(xvar_vals) != 1L) next
+    subgroup <- subgroup_vals[[1]]
+    ycol <- ycol_vals[[1]]
+    xvar <- xvar_vals[[1]]
+    clinical_step_value <- unname(CLINICAL_STEPS[[xvar]])
+    clinical_step_label <- unname(CLINICAL_STEP_LABELS[[xvar]])
+    if (!is.finite(clinical_step_value) || length(clinical_step_value) != 1L) next
     d <- d0 %>%
       group_by(.data$x) %>%
       summarise(pred_mean = mean(.data$pred_mean, na.rm = TRUE), .groups = "drop") %>%
@@ -720,7 +743,7 @@ build_clinical_compare_data <- function(curves, input_quantiles = tibble()) {
     x1 <- tail(edges, -1)
     y0 <- approx(d$x, d$pred_mean, xout = x0, ties = mean, rule = 1)$y
     y1 <- approx(d$x, d$pred_mean, xout = x1, ties = mean, rule = 1)$y
-    effect <- (y1 - y0) / (x1 - x0) * unname(CLINICAL_STEPS[[xvar]])
+    effect <- (y1 - y0) / (x1 - x0) * clinical_step_value
     ok <- is.finite(effect)
     if (!any(ok)) next
 
@@ -733,8 +756,8 @@ build_clinical_compare_data <- function(curves, input_quantiles = tibble()) {
       x_end = x1,
       pred_start = y0,
       pred_end = y1,
-      clinical_step = unname(CLINICAL_STEPS[[xvar]]),
-      clinical_step_label = unname(CLINICAL_STEP_LABELS[[xvar]]),
+      clinical_step = clinical_step_value,
+      clinical_step_label = clinical_step_label,
       signed_effect = effect,
       window_lo = lo,
       window_hi = hi,
@@ -748,8 +771,8 @@ build_clinical_compare_data <- function(curves, input_quantiles = tibble()) {
       subgroup = subgroup,
       ycol = ycol,
       xvar = xvar,
-      clinical_step = unname(CLINICAL_STEPS[[xvar]]),
-      clinical_step_label = unname(CLINICAL_STEP_LABELS[[xvar]]),
+      clinical_step = clinical_step_value,
+      clinical_step_label = clinical_step_label,
       signed_effect_q25 = qs[[1]],
       signed_effect_median = qs[[2]],
       signed_effect_q75 = qs[[3]],
@@ -766,35 +789,117 @@ build_clinical_compare_data <- function(curves, input_quantiles = tibble()) {
   )
 }
 
-plot_clinical_compare_bar <- function(summary_df) {
-  d <- summary_df %>%
+build_compare_plot_data <- function(summary_df, segment_df) {
+  if (!nrow(summary_df)) return(tibble())
+  signed <- summary_df %>%
+    transmute(
+      subgroup = .data$subgroup,
+      ycol = .data$ycol,
+      xvar = .data$xvar,
+      signed_est = .data$signed_effect_median,
+      signed_lo = .data$signed_effect_q25,
+      signed_hi = .data$signed_effect_q75,
+      window_lo = .data$window_lo,
+      window_hi = .data$window_hi,
+      window_source = .data$window_source,
+      clinical_step = .data$clinical_step,
+      clinical_step_label = .data$clinical_step_label,
+      n_segments = .data$n_segments
+    )
+  abs_df <- if (nrow(segment_df)) {
+    segment_df %>%
+      mutate(abs_effect = abs(.data$signed_effect)) %>%
+      group_by(.data$subgroup, .data$ycol, .data$xvar) %>%
+      summarise(
+        abs_lo = as.numeric(stats::quantile(.data$abs_effect, 0.25, na.rm = TRUE, names = FALSE)),
+        abs_est = as.numeric(stats::quantile(.data$abs_effect, 0.50, na.rm = TRUE, names = FALSE)),
+        abs_hi = as.numeric(stats::quantile(.data$abs_effect, 0.75, na.rm = TRUE, names = FALSE)),
+        .groups = "drop"
+      )
+  } else {
+    signed %>%
+      transmute(
+        subgroup = .data$subgroup,
+        ycol = .data$ycol,
+        xvar = .data$xvar,
+        abs_lo = abs(.data$signed_lo),
+        abs_est = abs(.data$signed_est),
+        abs_hi = abs(.data$signed_hi)
+      )
+  }
+  signed %>%
+    left_join(abs_df, by = c("subgroup", "ycol", "xvar")) %>%
     mutate(
-      xvar = factor(.data$xvar, levels = XVAR_ORDER[XVAR_ORDER %in% names(CLINICAL_STEPS)]),
-      x_label = unname(CLINICAL_STEP_LABELS[as.character(.data$xvar)]),
-      x_label = factor(.data$x_label, levels = unname(CLINICAL_STEP_LABELS[XVAR_ORDER[XVAR_ORDER %in% names(CLINICAL_STEPS)]])),
-      y_label = vapply(.data$ycol, compare_y_label, FUN.VALUE = character(1))
-    ) %>%
-    filter(!is.na(.data$xvar), is.finite(.data$signed_effect_median))
+      xvar = factor(as.character(.data$xvar), levels = XVAR_ORDER[XVAR_ORDER %in% names(CLINICAL_STEPS)])
+    )
+}
 
-  ggplot(d, aes(x = .data$x_label, y = .data$signed_effect_median, colour = .data$xvar, fill = .data$xvar)) +
-    geom_hline(yintercept = 0, linewidth = 0.45, colour = "#4D4D4D") +
-    geom_col(width = 0.66, linewidth = 0.45) +
-    geom_errorbar(aes(ymin = .data$signed_effect_q25, ymax = .data$signed_effect_q75), width = 0.18, linewidth = 0.45) +
-    facet_wrap(~y_label, nrow = 1, scales = "fixed") +
-    scale_colour_manual(values = CLINICAL_STEP_COLORS, drop = FALSE) +
-    scale_fill_manual(values = CLINICAL_STEP_FILL_COLORS, drop = FALSE) +
+get_compare_y_spec <- function(db, metric = c("abs", "signed")) {
+  metric <- match.arg(metric)
+  if (!nrow(db)) return(list(lims = c(0, 1), breaks = pretty(c(0, 1), n = 6)))
+  if (metric == "abs") {
+    vals <- c(0, db$abs_lo, db$abs_hi)
+    vals <- vals[is.finite(vals)]
+    if (!length(vals)) vals <- c(0, 1)
+    lo <- min(0, min(vals, na.rm = TRUE))
+    hi <- max(vals, na.rm = TRUE)
+    span <- max(hi - lo, 1e-8)
+    pad <- max(0.08 * span, 0.05)
+    br <- pretty(c(lo, hi + pad), n = 6)
+    br <- br[br >= lo - 1e-8]
+    lims <- c(lo, max(br, hi + pad, na.rm = TRUE))
+  } else {
+    vals <- c(0, db$signed_lo, db$signed_hi)
+    vals <- vals[is.finite(vals)]
+    if (!length(vals)) vals <- c(-1, 1)
+    lo <- min(vals, na.rm = TRUE)
+    hi <- max(vals, na.rm = TRUE)
+    span <- max(hi - lo, 1e-8)
+    pad <- max(0.08 * span, 0.05)
+    br <- pretty(c(lo - pad, hi + pad), n = 6)
+    lims <- range(br, lo - pad, hi + pad, finite = TRUE)
+  }
+  list(lims = lims, breaks = br)
+}
+
+plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed"), show_legend = FALSE) {
+  metric <- match.arg(metric)
+  d <- db %>%
+    filter(as.character(.data$ycol) == y_target, !is.na(.data$xvar))
+  if (!nrow(d)) return(NULL)
+  if (metric == "abs") {
+    y_est <- "abs_est"
+    y_lo <- "abs_lo"
+    y_hi <- "abs_hi"
+    y_lab <- "Absolute tissue O2 change (% per clinical increment)"
+  } else {
+    y_est <- "signed_est"
+    y_lo <- "signed_lo"
+    y_hi <- "signed_hi"
+    y_lab <- "Tissue O2 change (% per clinical increment)"
+  }
+  ggplot(d, aes(x = .data$xvar, fill = .data$xvar, colour = .data$xvar, y = .data[[y_est]])) +
+    geom_col(width = 0.6, linewidth = 0.5) +
+    geom_errorbar(
+      aes(ymin = .data[[y_lo]], ymax = .data[[y_hi]], colour = .data$xvar),
+      width = COMPARE_ERRBAR_CAP,
+      linewidth = COMPARE_ERRBAR_LWD,
+      show.legend = FALSE
+    ) +
+    geom_hline(yintercept = 0, colour = "#9E9E9E", linewidth = 0.35, linetype = "dashed") +
+    scale_fill_manual(values = CLINICAL_STEP_FILL_COLORS, labels = function(v) pretty_lab(v), drop = FALSE) +
+    scale_colour_manual(values = CLINICAL_STEP_COLORS, labels = function(v) pretty_lab(v), guide = "none", drop = FALSE) +
+    scale_x_discrete(labels = XVAR_TICK_LABELS, drop = FALSE) +
+    scale_y_continuous(limits = y_spec$lims, breaks = y_spec$breaks, expand = expansion(mult = c(0, 0.02))) +
     labs(
-      x = NULL,
-      y = "Tissue O2 change (% per clinical increment)",
+      x = "Intraoperative variable",
+      y = y_lab,
       title = NULL
     ) +
     theme_clean() +
     theme(
-      legend.position = "none",
-      strip.background = element_blank(),
-      strip.text = element_text(size = 11, colour = "black"),
-      axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 9),
-      panel.spacing.x = unit(0.35, "in")
+      legend.position = if (show_legend) "right" else "none",
+      axis.text.x = element_text(size = TICK_FONTSIZE)
     )
 }
 
@@ -975,9 +1080,42 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   }
   compare_summary <- clinical_compare$summary
   compare_segments <- clinical_compare$segments
-  compare_plot <- NULL
-  if (nrow(compare_summary)) {
-    compare_plot <- plot_clinical_compare_bar(compare_summary)
+  compare_data <- build_compare_plot_data(compare_summary, compare_segments)
+  compare_y_spec_signed <- get_compare_y_spec(compare_data, metric = "signed")
+  compare_y_spec_abs <- get_compare_y_spec(compare_data, metric = "abs")
+  compare_plot_map_signed <- list()
+  compare_plot_map_abs <- list()
+  if (nrow(compare_data)) {
+    for (y in Y_ORDER) {
+      p_signed <- plot_compare_channel(compare_data, y, compare_y_spec_signed, metric = "signed")
+      p_abs <- plot_compare_channel(compare_data, y, compare_y_spec_abs, metric = "abs")
+      compare_plot_map_signed[[y]] <- p_signed
+      compare_plot_map_abs[[y]] <- p_abs
+      if (!is.null(p_signed)) {
+        plot_index[[length(plot_index) + 1]] <- data.frame(
+          plot_id = glue("compare_signed_{subgroup_tag}_{y}"),
+          subgroup = subgroup_val,
+          ycol = y,
+          xvar = "clinical_compare",
+          sec = NA_real_,
+          plot_mode = paste0(PLOT_MODE, "_compare_signed"),
+          output_png = save_png(p_signed, file.path(out_root, glue("compare_signed_{subgroup_tag}_{y}.png")), FIG_W, FIG_H),
+          stringsAsFactors = FALSE
+        )
+      }
+      if (!is.null(p_abs)) {
+        plot_index[[length(plot_index) + 1]] <- data.frame(
+          plot_id = glue("compare_abs_{subgroup_tag}_{y}"),
+          subgroup = subgroup_val,
+          ycol = y,
+          xvar = "clinical_compare",
+          sec = NA_real_,
+          plot_mode = paste0(PLOT_MODE, "_compare_abs"),
+          output_png = save_png(p_abs, file.path(out_root, glue("compare_abs_{subgroup_tag}_{y}.png")), FIG_W, FIG_H),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
   }
 
   ppt_merge <- read_pptx()
@@ -989,9 +1127,17 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
     ppt_merge <- add_blank(ppt_merge)
     ppt_merge <- ppt_add_plots_in_row(ppt_merge, ps)
   }
-  if (!is.null(compare_plot)) {
+  compare_ps_signed <- lapply(Y_ORDER, function(y) compare_plot_map_signed[[y]])
+  compare_ps_signed <- Filter(Negate(is.null), compare_ps_signed)
+  if (length(compare_ps_signed)) {
     ppt_merge <- add_blank(ppt_merge)
-    ppt_merge <- ppt_add_full_plot(ppt_merge, compare_plot)
+    ppt_merge <- ppt_add_plots_in_row(ppt_merge, compare_ps_signed)
+  }
+  compare_ps_abs <- lapply(Y_ORDER, function(y) compare_plot_map_abs[[y]])
+  compare_ps_abs <- Filter(Negate(is.null), compare_ps_abs)
+  if (length(compare_ps_abs)) {
+    ppt_merge <- add_blank(ppt_merge)
+    ppt_merge <- ppt_add_plots_in_row(ppt_merge, compare_ps_abs)
   }
 
   ppt_single <- read_pptx()
@@ -1002,12 +1148,15 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
       ppt_single <- add_blank(ppt_single)
       ppt_single <- ppt_add_one(ppt_single, p, width = FIG_W, height = FIG_H, top = 0.8)
     }
-    if (nrow(compare_summary)) {
-      py <- compare_summary %>% filter(.data$ycol == y)
-      if (nrow(py)) {
-        ppt_single <- add_blank(ppt_single)
-        ppt_single <- ppt_add_full_plot(ppt_single, plot_clinical_compare_bar(py))
-      }
+    p_compare_signed <- compare_plot_map_signed[[y]]
+    if (!is.null(p_compare_signed)) {
+      ppt_single <- add_blank(ppt_single)
+      ppt_single <- ppt_add_one(ppt_single, p_compare_signed, width = FIG_W, height = FIG_H, top = 0.8)
+    }
+    p_compare_abs <- compare_plot_map_abs[[y]]
+    if (!is.null(p_compare_abs)) {
+      ppt_single <- add_blank(ppt_single)
+      ppt_single <- ppt_add_one(ppt_single, p_compare_abs, width = FIG_W, height = FIG_H, top = 0.8)
     }
   }
 
@@ -1023,6 +1172,7 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   if (length(hist_desc_rows)) write_csv(bind_rows(hist_desc_rows), file.path(out_root, "plot_hist_descriptions.csv"))
   if (nrow(compare_summary)) write_csv(compare_summary, file.path(out_root, "plot_data_clinical_step_summary.csv"))
   if (nrow(compare_segments)) write_csv(compare_segments, file.path(out_root, "plot_data_clinical_step_segments.csv"))
+  if (nrow(compare_data)) write_csv(compare_data, file.path(out_root, "plot_data_comparable_bar.csv"))
   write_csv(
     bind_rows(lapply(XVAR_ORDER, function(v) {
       sp <- get_x_axis_spec(v)
