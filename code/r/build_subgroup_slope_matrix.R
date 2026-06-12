@@ -93,13 +93,19 @@ read_compare_data <- function() {
     )
 }
 
-clip <- function(x, lim) pmax(pmin(x, lim), -lim)
+clip_range <- function(x, lower, upper) pmax(pmin(x, upper), lower)
 
 build_matrix_data <- function(df, mode = c("raw", "delta")) {
   mode <- match.arg(mode)
   if (mode == "raw") {
-    cap <- max(stats::quantile(abs(df$signed_est), 0.90, na.rm = TRUE), 0.5)
-    return(df %>% mutate(fill_value = clip(.data$signed_est, cap), fill_cap = cap))
+    fill_min <- -0.5
+    fill_max <- max(ceiling(stats::quantile(df$signed_est, 0.90, na.rm = TRUE) / 0.5) * 0.5, 0.5)
+    return(df %>%
+      mutate(
+        fill_value = clip_range(.data$signed_est, fill_min, fill_max),
+        fill_min = fill_min,
+        fill_max = fill_max
+      ))
   }
 
   overall_ref <- df %>%
@@ -108,25 +114,31 @@ build_matrix_data <- function(df, mode = c("raw", "delta")) {
   d <- df %>%
     left_join(overall_ref, by = c("ycol", "xvar")) %>%
     mutate(delta_overall = .data$signed_est - .data$overall_est)
-  cap <- max(stats::quantile(abs(d$delta_overall[as.character(d$subgroup) != "Overall"]), 0.95, na.rm = TRUE), 0.05)
-  d %>% mutate(fill_value = clip(.data$delta_overall, cap), fill_cap = cap)
+  fill_min <- -0.5
+  fill_max <- 0.5
+  d %>%
+    mutate(
+      fill_value = clip_range(.data$delta_overall, fill_min, fill_max),
+      fill_min = fill_min,
+      fill_max = fill_max
+    )
 }
 
 theme_matrix <- function() {
-  theme_minimal(base_size = 8.8) +
+  theme_minimal(base_size = 9.8) +
     theme(
       panel.grid = element_blank(),
       axis.title = element_blank(),
-      axis.text.x = element_text(size = 8.8, colour = "black", lineheight = 0.95),
-      axis.text.y = element_text(size = 8.8, colour = "black"),
+      axis.text.x = element_text(size = 9.8, colour = "black", lineheight = 0.95),
+      axis.text.y = element_text(size = 9.8, colour = "black"),
       axis.ticks = element_blank(),
-      strip.text = element_text(size = 10.8, colour = "black", face = "plain"),
-      legend.title = element_text(size = 8.8, colour = "black"),
-      legend.text = element_text(size = 8.2, colour = "black", margin = margin(l = 3, unit = "pt")),
+      strip.text = element_text(size = 11.8, colour = "black", face = "plain"),
+      legend.title = element_text(size = 9.8, colour = "black"),
+      legend.text = element_text(size = 9.2, colour = "black", margin = margin(l = 3, unit = "pt")),
       legend.box.margin = margin(0, 0, 0, 8, "pt"),
       legend.spacing.x = grid::unit(5, "pt"),
-      plot.caption = element_text(size = 8.0, colour = "#444444", hjust = 0, lineheight = 1.15),
-      plot.margin = margin(6, 2, 8, 6, "pt")
+      plot.caption = element_text(size = 9.0, colour = "#444444", hjust = 0, lineheight = 1.15),
+      plot.margin = margin(6, 0, 8, 6, "pt")
     )
 }
 
@@ -144,10 +156,10 @@ parse_plotmath_labels <- function(labels) {
   parse(text = as.character(labels))
 }
 
-legend_breaks <- function(cap, mode) {
-  by <- if (identical(mode, "raw")) 0.5 else 0.2
-  lo <- ceiling((-cap) / by) * by
-  hi <- floor(cap / by) * by
+legend_breaks <- function(fill_min, fill_max, mode) {
+  by <- 0.5
+  lo <- ceiling(fill_min / by) * by
+  hi <- floor(fill_max / by) * by
   if (lo > hi) return(0)
   seq(lo, hi, by = by)
 }
@@ -156,14 +168,15 @@ legend_labels <- function(x, mode) {
   if (identical(mode, "raw")) sprintf("%.1f", x) else sprintf("%.1f", x)
 }
 
-make_colorbar_legend <- function(cap, mode, title) {
-  fill_breaks <- legend_breaks(cap, mode)
-  ylim_pad <- 1.22
+make_colorbar_legend <- function(fill_min, fill_max, mode, title) {
+  fill_breaks <- legend_breaks(fill_min, fill_max, mode)
+  ylim_pad <- 0.10 * (fill_max - fill_min)
+  legend_steps <- 90
   bar_df <- data.frame(
     x = 1,
-    y = seq(-cap, cap, length.out = 300)
+    y = seq(fill_min, fill_max, length.out = legend_steps)
   )
-  bar_height <- (2 * cap) / 299
+  bar_height <- (fill_max - fill_min) / (legend_steps - 1)
   tick_df <- data.frame(
     y = fill_breaks,
     label = legend_labels(fill_breaks, mode)
@@ -173,7 +186,7 @@ make_colorbar_legend <- function(cap, mode, title) {
     geom_tile(width = 0.30, height = bar_height) +
     annotate(
       "rect",
-      xmin = 0.85, xmax = 1.15, ymin = -cap, ymax = cap,
+      xmin = 0.85, xmax = 1.15, ymin = fill_min, ymax = fill_max,
       fill = NA, colour = "#333333", linewidth = 0.35
     ) +
     geom_segment(
@@ -186,27 +199,32 @@ make_colorbar_legend <- function(cap, mode, title) {
       data = tick_df,
       aes(x = 1.31, y = .data$y, label = .data$label),
       inherit.aes = FALSE,
-      hjust = 0, size = 2.75, colour = "black"
+      hjust = 0, size = 3.05, colour = "black"
     ) +
     annotate(
       "text",
       x = 1.92, y = 0, label = title,
-      angle = 90, hjust = 0.5, vjust = 0.5, size = 3.0, colour = "black"
+      angle = 90, hjust = 0.5, vjust = 0.5, size = 3.3, colour = "black"
     ) +
     scale_fill_gradient2(
       low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
-      midpoint = 0, limits = c(-cap, cap), guide = "none"
+      midpoint = 0, limits = c(fill_min, fill_max), guide = "none"
     ) +
-    coord_cartesian(xlim = c(0.82, 2.08), ylim = c(-cap * ylim_pad, cap * ylim_pad), expand = FALSE, clip = "off") +
+    coord_cartesian(
+      xlim = c(0.82, 2.05),
+      ylim = c(fill_min - ylim_pad, fill_max + ylim_pad),
+      expand = FALSE,
+      clip = "off"
+    ) +
     theme_void() +
-    theme(plot.margin = margin(4, 4, 4, 4, "pt"))
+    theme(plot.margin = margin(4, 2, 4, 0, "pt"))
 }
 
 combine_with_legend <- function(main_plot, legend_plot) {
   main_grob <- ggplotGrob(main_plot)
   legend_grob <- ggplotGrob(legend_plot)
   gt <- gtable::gtable(
-    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.62, "in")),
+    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.56, "in")),
     heights = grid::unit(1, "null")
   )
   gt <- gtable::gtable_add_grob(gt, main_grob, t = 1, l = 1)
@@ -217,27 +235,37 @@ combine_with_legend <- function(main_plot, legend_plot) {
 plot_matrix <- function(df, mode = c("raw", "delta")) {
   mode <- match.arg(mode)
   d <- build_matrix_data(df, mode)
-  cap <- unique(d$fill_cap)[1]
-  d <- d %>%
-    mutate(text_colour = if_else(abs(.data$fill_value) >= 0.55 * cap, "white", "#222222"))
+  fill_min <- unique(d$fill_min)[1]
+  fill_max <- unique(d$fill_max)[1]
+  if (identical(mode, "raw")) {
+    d <- d %>%
+      mutate(text_colour = if_else(
+        .data$fill_value >= fill_max - 0.25 * (fill_max - fill_min) |
+          .data$fill_value <= fill_min + 0.05 * (fill_max - fill_min),
+        "white", "#222222"
+      ))
+  } else {
+    d <- d %>%
+      mutate(text_colour = if_else(abs(.data$fill_value) >= 0.75 * max(abs(fill_min), abs(fill_max)), "white", "#222222"))
+  }
   legend_title <- if (mode == "raw") "Slope (% per clinical increment)" else "Difference vs overall"
   main_plot <- ggplot(d, aes(x = .data$x_label, y = .data$subgroup)) +
     geom_tile(
       aes(fill = .data$fill_value),
       width = 0.98, height = 0.98, colour = "white", linewidth = 0.70
     ) +
-    geom_text(aes(label = .data$value_label, colour = .data$text_colour), size = 2.75) +
+    geom_text(aes(label = .data$value_label, colour = .data$text_colour), size = 3.05) +
     facet_grid(. ~ ycol, labeller = label_parsed) +
     scale_fill_gradient2(
       low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
-      midpoint = 0, limits = c(-cap, cap), guide = "none"
+      midpoint = 0, limits = c(fill_min, fill_max), guide = "none"
     ) +
     scale_x_discrete(drop = FALSE, labels = parse_plotmath_labels) +
     scale_colour_identity() +
-    coord_fixed(ratio = 0.82, expand = FALSE) +
+    coord_fixed(ratio = 0.72, expand = FALSE) +
     theme_matrix()
 
-  combine_with_legend(main_plot, make_colorbar_legend(cap, mode, legend_title))
+  combine_with_legend(main_plot, make_colorbar_legend(fill_min, fill_max, mode, legend_title))
 }
 
 set_ppt_slide_size <- function(ppt, width_in, height_in) {
