@@ -95,6 +95,13 @@ read_compare_data <- function() {
 
 clip_range <- function(x, lower, upper) pmax(pmin(x, upper), lower)
 
+nice_bounds <- function(x, n = 5) {
+  b <- pretty(x[is.finite(x)], n = n)
+  b <- b[is.finite(b)]
+  if (!length(b)) return(c(-0.5, 0.5))
+  c(min(b), max(b))
+}
+
 build_matrix_data <- function(df, mode = c("raw", "delta")) {
   mode <- match.arg(mode)
   if (mode == "raw") {
@@ -114,8 +121,10 @@ build_matrix_data <- function(df, mode = c("raw", "delta")) {
   d <- df %>%
     left_join(overall_ref, by = c("ycol", "xvar")) %>%
     mutate(delta_overall = .data$signed_est - .data$overall_est)
-  fill_min <- -0.5
-  fill_max <- 0.5
+  delta_vals <- d$delta_overall[as.character(d$subgroup) != "Overall"]
+  fill_bounds <- nice_bounds(c(0, delta_vals), n = 5)
+  fill_min <- fill_bounds[1]
+  fill_max <- fill_bounds[2]
   d %>%
     mutate(
       fill_value = clip_range(.data$delta_overall, fill_min, fill_max),
@@ -157,11 +166,15 @@ parse_plotmath_labels <- function(labels) {
 }
 
 legend_breaks <- function(fill_min, fill_max, mode) {
-  by <- 0.5
-  lo <- ceiling(fill_min / by) * by
-  hi <- floor(fill_max / by) * by
-  if (lo > hi) return(0)
-  seq(lo, hi, by = by)
+  if (identical(mode, "raw")) {
+    by <- 0.5
+    lo <- ceiling(fill_min / by) * by
+    hi <- floor(fill_max / by) * by
+    if (lo > hi) return(0)
+    return(seq(lo, hi, by = by))
+  }
+  b <- pretty(c(fill_min, fill_max), n = 5)
+  b[b >= fill_min & b <= fill_max]
 }
 
 legend_labels <- function(x, mode) {
@@ -203,7 +216,7 @@ make_colorbar_legend <- function(fill_min, fill_max, mode, title) {
     ) +
     annotate(
       "text",
-      x = 1.92, y = 0, label = title,
+      x = 1.92, y = (fill_min + fill_max) / 2, label = title,
       angle = 90, hjust = 0.5, vjust = 0.5, size = 3.3, colour = "black"
     ) +
     scale_fill_gradient2(
