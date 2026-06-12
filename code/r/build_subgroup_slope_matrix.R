@@ -158,7 +158,7 @@ legend_labels <- function(x, mode) {
 
 make_colorbar_legend <- function(cap, mode, title) {
   fill_breaks <- legend_breaks(cap, mode)
-  ylim_pad <- 1.16
+  ylim_pad <- 1.22
   bar_df <- data.frame(
     x = 1,
     y = seq(-cap, cap, length.out = 300)
@@ -170,15 +170,15 @@ make_colorbar_legend <- function(cap, mode, title) {
   )
 
   ggplot(bar_df, aes(x = .data$x, y = .data$y, fill = .data$y)) +
-    geom_tile(width = 0.32, height = bar_height) +
+    geom_tile(width = 0.30, height = bar_height) +
     annotate(
       "rect",
-      xmin = 0.84, xmax = 1.16, ymin = -cap, ymax = cap,
+      xmin = 0.85, xmax = 1.15, ymin = -cap, ymax = cap,
       fill = NA, colour = "#333333", linewidth = 0.35
     ) +
     geom_segment(
       data = tick_df,
-      aes(x = 1.16, xend = 1.24, y = .data$y, yend = .data$y),
+      aes(x = 1.15, xend = 1.24, y = .data$y, yend = .data$y),
       inherit.aes = FALSE,
       colour = "#333333", linewidth = 0.35
     ) +
@@ -190,14 +190,14 @@ make_colorbar_legend <- function(cap, mode, title) {
     ) +
     annotate(
       "text",
-      x = 1.88, y = 0, label = title,
+      x = 1.92, y = 0, label = title,
       angle = 90, hjust = 0.5, vjust = 0.5, size = 3.0, colour = "black"
     ) +
     scale_fill_gradient2(
       low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
       midpoint = 0, limits = c(-cap, cap), guide = "none"
     ) +
-    coord_cartesian(xlim = c(0.82, 2.02), ylim = c(-cap * ylim_pad, cap * ylim_pad), expand = FALSE, clip = "off") +
+    coord_cartesian(xlim = c(0.82, 2.08), ylim = c(-cap * ylim_pad, cap * ylim_pad), expand = FALSE, clip = "off") +
     theme_void() +
     theme(plot.margin = margin(4, 4, 4, 4, "pt"))
 }
@@ -206,7 +206,7 @@ combine_with_legend <- function(main_plot, legend_plot) {
   main_grob <- ggplotGrob(main_plot)
   legend_grob <- ggplotGrob(legend_plot)
   gt <- gtable::gtable(
-    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.58, "in")),
+    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.62, "in")),
     heights = grid::unit(1, "null")
   )
   gt <- gtable::gtable_add_grob(gt, main_grob, t = 1, l = 1)
@@ -234,7 +234,7 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
     ) +
     scale_x_discrete(drop = FALSE, labels = parse_plotmath_labels) +
     scale_colour_identity() +
-    coord_equal(expand = FALSE) +
+    coord_fixed(ratio = 0.82, expand = FALSE) +
     theme_matrix()
 
   combine_with_legend(main_plot, make_colorbar_legend(cap, mode, legend_title))
