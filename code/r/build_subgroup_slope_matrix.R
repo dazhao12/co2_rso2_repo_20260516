@@ -126,7 +126,7 @@ theme_matrix <- function() {
       legend.box.margin = margin(0, 0, 0, 8, "pt"),
       legend.spacing.x = grid::unit(5, "pt"),
       plot.caption = element_text(size = 8.0, colour = "#444444", hjust = 0, lineheight = 1.15),
-      plot.margin = margin(6, 10, 8, 6, "pt")
+      plot.margin = margin(6, 2, 8, 6, "pt")
     )
 }
 
@@ -158,6 +158,7 @@ legend_labels <- function(x, mode) {
 
 make_colorbar_legend <- function(cap, mode, title) {
   fill_breaks <- legend_breaks(cap, mode)
+  ylim_pad <- 1.12
   bar_df <- data.frame(
     x = 1,
     y = seq(-cap, cap, length.out = 300)
@@ -196,7 +197,7 @@ make_colorbar_legend <- function(cap, mode, title) {
       low = "#2166AC", mid = "#F7F7F7", high = "#B85C1E",
       midpoint = 0, limits = c(-cap, cap), guide = "none"
     ) +
-    coord_cartesian(xlim = c(0.82, 2.25), ylim = c(-cap, cap), expand = FALSE, clip = "off") +
+    coord_cartesian(xlim = c(0.82, 2.25), ylim = c(-cap * ylim_pad, cap * ylim_pad), expand = FALSE, clip = "off") +
     theme_void() +
     theme(plot.margin = margin(4, 4, 4, 4, "pt"))
 }
@@ -205,7 +206,7 @@ combine_with_legend <- function(main_plot, legend_plot) {
   main_grob <- ggplotGrob(main_plot)
   legend_grob <- ggplotGrob(legend_plot)
   gt <- gtable::gtable(
-    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.86, "in")),
+    widths = grid::unit.c(grid::unit(1, "null"), grid::unit(0.72, "in")),
     heights = grid::unit(1, "null")
   )
   gt <- gtable::gtable_add_grob(gt, main_grob, t = 1, l = 1)
