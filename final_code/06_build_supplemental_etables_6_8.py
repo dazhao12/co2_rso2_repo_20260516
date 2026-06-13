@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Build supplemental eTable 6/7/8 for CO2-rSO2 GAM models.
+Build supplemental eTable 7/8/9 for CO2-rSO2 Model A GAMs.
 
 This script reuses the latest model logic from:
-  contour_4_19_2026_intraop10_totalonly_noetco2_subgroup.py
+  01_main_gam_analysis.py
 
 Outputs:
-  - supplemental_etable6_model_performance_co2_rso2.csv
-  - supplemental_etable7_nonparametric_terms_co2_rso2.csv
-  - supplemental_etable8_parametric_terms_co2_rso2.csv
-  - Supplemental_eTables6_8_CO2_rSO2.xlsx
+  - supplemental_etable7_model_performance_co2_rso2.csv
+  - supplemental_etable8_nonparametric_terms_co2_rso2.csv
+  - supplemental_etable9_parametric_terms_co2_rso2.csv
+  - Supplemental_eTables7_9_CO2_rSO2.xlsx
 """
 
 import importlib.util
@@ -26,13 +26,20 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 
-WORK_DIR = Path("/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/GAM_Co2_Scto2_4_19_2026")
-MODEL_SCRIPT = WORK_DIR / "contour_4_19_2026_intraop10_totalonly_noetco2_subgroup.py"
+LOCAL_MODEL_SCRIPT = Path(__file__).resolve().parent / "01_main_gam_analysis.py"
+WORK_DIR = Path(os.getenv(
+    "ETABLE68_WORK_DIR",
+    "/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025/GAM_Co2_Scto2_4_19_2026",
+))
+MODEL_SCRIPT = Path(os.getenv("ETABLE68_MODEL_SCRIPT", str(LOCAL_MODEL_SCRIPT)))
 
-OUT_ET6 = WORK_DIR / "supplemental_etable6_model_performance_co2_rso2.csv"
-OUT_ET7 = WORK_DIR / "supplemental_etable7_nonparametric_terms_co2_rso2.csv"
-OUT_ET8 = WORK_DIR / "supplemental_etable8_parametric_terms_co2_rso2.csv"
-OUT_XLSX = WORK_DIR / "Supplemental_eTables6_8_CO2_rSO2.xlsx"
+os.environ.setdefault("INTRA5_HEMO_ADJUST_MODE", "map_ci_te")
+os.environ.setdefault("INTRA5_SUBSAMPLE_SIZE", "10000")
+
+OUT_ET6 = WORK_DIR / "supplemental_etable7_model_performance_co2_rso2.csv"
+OUT_ET7 = WORK_DIR / "supplemental_etable8_nonparametric_terms_co2_rso2.csv"
+OUT_ET8 = WORK_DIR / "supplemental_etable9_parametric_terms_co2_rso2.csv"
+OUT_XLSX = WORK_DIR / "Supplemental_eTables7_9_CO2_rSO2.xlsx"
 
 COHORT_MAP = {
     "rSO2_Ch1": "Left SctO2 cohort",
@@ -70,21 +77,12 @@ def safe_float(x) -> float:
         return np.nan
 
 
-def choose_model_spec(m, pool: pd.DataFrame) -> Dict[str, object]:
-    specs = m.build_model_specs(list(pool.columns), lag_cols_available=[c for c in pool.columns if "_lag" in str(c)])
-    if not specs:
-        raise RuntimeError("No valid model spec found for pooled data.")
-    for sp in specs:
-        if str(sp.get("effect_type", "")) == "total":
-            return sp
-    return specs[0]
-
-
 def build_df_base(m) -> pd.DataFrame:
+    model_extra = list(getattr(m, "MODEL_EXTRA_LOAD_VARS", getattr(m, "OPTIONAL_INTRAOP_COVARS", [])))
     need_cols = (
         ["stay_id", "patient_ID", "patient_id", "obstime"]
         + list(m.PRIMARY_VARS)
-        + list(m.MODEL_EXTRA_LOAD_VARS)
+        + model_extra
         + list(m.OUTCOMES)
         + list(m.ADJ_CONT_CAND)
         + list(m.ADJ_CAT_CAND)
@@ -124,7 +122,7 @@ def build_df_base(m) -> pd.DataFrame:
         [
             c
             for c in list(m.PRIMARY_VARS)
-            + list(m.MODEL_EXTRA_LOAD_VARS)
+            + model_extra
             + list(m.OUTCOMES)
             + list(m.ADJ_CONT_CAND)
             + list(m.ADJ_CAT_CAND)
@@ -173,7 +171,11 @@ def extract_term_feature_index(term) -> Optional[int]:
             try:
                 return int(feat)
             except Exception:
-                pass
+                try:
+                    arr = np.asarray(feat).reshape(-1)
+                    return int(arr[0])
+                except Exception:
+                    pass
     txt = repr(term)
     m = re.search(r"\((\d+)\)", txt)
     if m:
@@ -237,6 +239,8 @@ def collect_model_tables(
     model_label: str,
     feature_names: List[str],
     primary_vars: List[str],
+    tensor_vars: List[str],
+    smooth_covars: List[str],
     cont_cov: List[str],
     cat_cov: List[str],
     df_ref: pd.DataFrame,
@@ -279,10 +283,10 @@ def collect_model_tables(
         mc_r2 = np.nan
 
     fit_rows = [
-        ("N Samples", safe_float(st.get("n_samples"))),
-        ("N Features", safe_float(st.get("m_features"))),
-        ("Effective DOF (model)", safe_float(st.get("edof"))),
-        ("Deviance Explained", dev_exp),
+        ("Samples, n", safe_float(st.get("n_samples"))),
+        ("Features, n", safe_float(st.get("m_features"))),
+        ("Effective degrees of freedom (model)", safe_float(st.get("edof"))),
+        ("Deviance explained", dev_exp),
         ("McFadden R2", mc_r2),
         ("AIC", safe_float(st.get("AIC"))),
         ("AICc", safe_float(st.get("AICc"))),
@@ -290,12 +294,12 @@ def collect_model_tables(
         ("UBRE", safe_float(st.get("UBRE"))),
         ("Log Likelihood", safe_float(st.get("loglikelihood"))),
         ("Scale", safe_float(st.get("scale"))),
-        ("N Training Rows", float(len(df_ref))),
+        ("Training rows, n", float(len(df_ref))),
         ("RMSE (training sample)", rmse_train),
-        ("R2 Traditional (training sample)", r2_train),
-        ("N Eval Rows (full analytic pool)", float(len(df_eval_use))),
+        ("Traditional R2 (training sample)", r2_train),
+        ("Evaluation rows, n (full analytic pool)", float(len(df_eval_use))),
         ("RMSE (full analytic pool)", rmse_eval),
-        ("R2 Traditional (full analytic pool)", r2_eval),
+        ("Traditional R2 (full analytic pool)", r2_eval),
     ]
     et6 = pd.DataFrame(
         [
@@ -315,6 +319,13 @@ def collect_model_tables(
 
     rows7 = []
     rows8 = []
+    primary_idx = set(range(len(primary_vars)))
+    smooth_cov_idx = set(
+        range(
+            len(primary_vars) + len(tensor_vars),
+            len(primary_vars) + len(tensor_vars) + len(smooth_covars),
+        )
+    )
     coef_idx = 0
     for ti, term in enumerate(gam.terms):
         nc = int(getattr(term, "n_coefs", 0))
@@ -328,6 +339,19 @@ def collect_model_tables(
         edof_term = float(np.sum(ed_slice)) if len(ed_slice) else np.nan
 
         if term_type in ("SplineTerm", "TensorTerm"):
+            if term_type == "TensorTerm":
+                pair_start = len(primary_vars)
+                pair_i = max(0, feat_idx - pair_start) if feat_idx is not None else 0
+                pair_i = int(pair_i // 2)
+                pair_vars = tensor_vars[(2 * pair_i):(2 * pair_i + 2)]
+                var_name = " x ".join(pair_vars) if len(pair_vars) == 2 else var_name
+                display_type = "Tensor product smooth"
+            elif feat_idx in primary_idx:
+                display_type = "Primary smooth"
+            elif feat_idx in smooth_cov_idx:
+                display_type = "Adjustment smooth"
+            else:
+                display_type = "Smooth spline"
             chi2 = np.nan
             fstat = np.nan
             if cov_mat is not None and len(c_slice) == nc and nc > 0:
@@ -346,7 +370,7 @@ def collect_model_tables(
                     "model": model_label,
                     "model_tag": model_tag,
                     "variable": var_name,
-                    "term_type": "Smooth Spline" if term_type == "SplineTerm" else "Tensor Product",
+                    "term_type": display_type,
                     "n_basis_functions": nc,
                     "effect_degrees_of_freedom": edof_term,
                     "chi2_statistic": chi2,
@@ -437,9 +461,9 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
     # eTable 6 (wide)
-    ws6 = wb.create_sheet("eTable6_model_fit")
+    ws6 = wb.create_sheet("eTable7_model_fit")
     ws6.merge_cells("A1:D1")
-    ws6["A1"] = "eTable 6. Model performance and goodness-of-fit statistics for additive GAMs (no interaction terms)"
+    ws6["A1"] = "eTable 7. Model performance and goodness-of-fit statistics for Model A additive GAMs with tensor-product MAP-CI adjustment"
     ws6["A1"].font = title_font
     ws6["A1"].alignment = left
     header6 = ["Metric", "Left SctO2 cohort", "Right SctO2 cohort", "SftO2 cohort"]
@@ -451,10 +475,10 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         cell.alignment = left if c == 1 else center
 
     metric_order = [
-        "N Samples",
-        "N Features",
-        "Effective DOF (model)",
-        "Deviance Explained",
+        "Samples, n",
+        "Features, n",
+        "Effective degrees of freedom (model)",
+        "Deviance explained",
         "McFadden R2",
         "AIC",
         "AICc",
@@ -462,12 +486,12 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         "UBRE",
         "Log Likelihood",
         "Scale",
-        "N Training Rows",
+        "Training rows, n",
         "RMSE (training sample)",
-        "R2 Traditional (training sample)",
-        "N Eval Rows (full analytic pool)",
+        "Traditional R2 (training sample)",
+        "Evaluation rows, n (full analytic pool)",
         "RMSE (full analytic pool)",
-        "R2 Traditional (full analytic pool)",
+        "Traditional R2 (full analytic pool)",
     ]
     p6 = et6.pivot_table(index="metric", columns="cohort", values="value", aggfunc="first")
     r = 4
@@ -490,9 +514,9 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     ws6.column_dimensions["D"].width = 24
 
     # eTable 7
-    ws7 = wb.create_sheet("eTable7_continuous")
+    ws7 = wb.create_sheet("eTable8_continuous")
     ws7.merge_cells("A1:G1")
-    ws7["A1"] = "eTable 7. Continuous term estimates for additive GAMs (no interaction terms)"
+    ws7["A1"] = "eTable 8. Continuous term estimates for Model A additive GAMs with tensor-product MAP-CI adjustment"
     ws7["A1"].font = title_font
     ws7["A1"].alignment = left
     header7 = ["Model", "Variable", "Term Type", "N basis Functions", "Effect Degrees of Freedom", "F Statistic", "P Value"]
@@ -526,9 +550,9 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         ws7.column_dimensions[col].width = width
 
     # eTable 8
-    ws8 = wb.create_sheet("eTable8_categorical")
+    ws8 = wb.create_sheet("eTable9_categorical")
     ws8.merge_cells("A1:G1")
-    ws8["A1"] = "eTable 8. Categorical term estimates for additive GAMs (no interaction terms)"
+    ws8["A1"] = "eTable 9. Categorical term estimates for Model A additive GAMs with tensor-product MAP-CI adjustment"
     ws8["A1"].font = title_font
     ws8["A1"].alignment = left
     header8 = ["Model", "Variable", "Term Type", "Effect Degrees of Freedom", "Estimate(β)", "Std Error", "P Value"]
@@ -573,9 +597,8 @@ def main():
     ycols = [y for y in outcomes_env if y in YCOL_ORDER] if outcomes_env else list(YCOL_ORDER)
     if len(ycols) < len(YCOL_ORDER):
         print(f"[warn] ETABLE68_OUTCOMES override active, only running cohorts: {ycols}")
-    sample_n = int(os.getenv("ETABLE68_SUBSAMPLE_N", str(int(m.SUBSAMPLE_SIZE[0]) if len(m.SUBSAMPLE_SIZE) else 100000)))
+    sample_n = int(os.getenv("ETABLE68_SUBSAMPLE_N", "10000"))
     auto_tune = os.getenv("ETABLE68_AUTO_TUNE", "1" if bool(m.AUTO_TUNE_SMOOTH) else "0") == "1"
-    sample_method = os.getenv("ETABLE68_SAMPLE_METHOD", str(m.REF_SAMPLE_METHOD))
     replace = os.getenv("ETABLE68_REPLACE", "1" if bool(m.REF_SAMPLE_REPLACE) else "0") == "1"
 
     et6_all: List[pd.DataFrame] = []
@@ -583,39 +606,39 @@ def main():
     et8_all: List[pd.DataFrame] = []
 
     print(
-        f"[cfg] sample_n={sample_n}, auto_tune={int(auto_tune)}, sample_method={sample_method}, "
+        f"[cfg] model=Model A te(MAP,CI), sample_n={sample_n}, auto_tune={int(auto_tune)}, "
         f"replace={int(replace)}, outcomes={ycols}"
     )
     for ycol in ycols:
         print(f"[fit] {ycol}")
         pool = get_cached_pool(m, ycol=ycol, sec=1, subgroup_tag="All", subgroup_query="")
-        spec = choose_model_spec(m, pool=pool)
-        model_tag = str(spec.get("model_tag", "model"))
-        primary_vars = list(spec.get("primary_vars", []))
+        model_tag = "modelA_map_ci_te"
 
-        d_model, pvars, cont_cov, cat_cov, id_col = m.prepare_model_df(
+        d_model, pvars, tensor_vars, smooth_covars, cont_cov, cat_cov = m.prepare_model_df(
             pool,
             ycol=ycol,
             extra_exclude_covars=[],
-            primary_vars_override=primary_vars,
         )
         if len(d_model) < 500:
             raise RuntimeError(f"Insufficient rows for {ycol}: {len(d_model)}")
+        if list(tensor_vars) != ["MAP", "CI"]:
+            raise RuntimeError(f"Model A requires tensor_vars=['MAP', 'CI']; got {tensor_vars} for {ycol}")
 
-        df_ref = m.sample_rows(
-            d_model,
-            id_col=id_col,
-            target_n=int(sample_n),
-            replace=replace,
-            random_seed=int(m.SEED + 17),
-            method=sample_method,
-            ensure_exact_n=bool(m.SAMPLE_ENSURE_EXACT_N),
-        )
+        take_n = min(int(sample_n), len(d_model))
+        df_ref = d_model.sample(n=take_n, replace=replace, random_state=int(m.SEED + 17))
         if len(df_ref) < 500:
             raise RuntimeError(f"Reference sample too small for {ycol}: {len(df_ref)}")
 
         if auto_tune:
-            tuned = m.tune_smoothing(df_ref, ycol=ycol, primary_vars=pvars, cont_cov=cont_cov, cat_cov=cat_cov)
+            tuned = m.tune_smoothing(
+                df_ref,
+                ycol=ycol,
+                primary_vars=pvars,
+                tensor_vars=tensor_vars,
+                smooth_covars=smooth_covars,
+                cont_cov=cont_cov,
+                cat_cov=cat_cov,
+            )
             gam = tuned["gam"]
             n_splines_used = tuned.get("n_splines_main", [])
             lam_used = tuned.get("lam", None)
@@ -624,15 +647,21 @@ def main():
                 df_model=df_ref,
                 ycol=ycol,
                 primary_vars=pvars,
+                tensor_vars=tensor_vars,
+                smooth_covars=smooth_covars,
                 cont_cov=cont_cov,
                 cat_cov=cat_cov,
                 n_splines_main=int(m.N_SPLINES_MAIN),
                 lam_fixed=float(m.LAM_FIXED),
             )
-            n_splines_used = [int(m.N_SPLINES_MAIN)] * len(pvars)
+            n_splines_used = (
+                [int(m.N_SPLINES_MAIN)] * len(pvars)
+                + [int(m.N_SPLINES_TENSOR)] * int(len(tensor_vars) / 2)
+                + [int(m.N_SPLINES_COV)] * len(smooth_covars)
+            )
             lam_used = float(m.LAM_FIXED)
 
-        feature_names = m.build_feature_names(pvars, cont_cov, cat_cov)
+        feature_names = m.build_feature_names(pvars, tensor_vars, smooth_covars, cont_cov, cat_cov)
         cohort = COHORT_MAP.get(ycol, ycol)
         model_label = MODEL_LABEL_MAP.get(ycol, ycol)
         et6, et7, et8 = collect_model_tables(
@@ -642,6 +671,8 @@ def main():
             model_label=model_label,
             feature_names=feature_names,
             primary_vars=pvars,
+            tensor_vars=tensor_vars,
+            smooth_covars=smooth_covars,
             cont_cov=cont_cov,
             cat_cov=cat_cov,
             df_ref=df_ref,
