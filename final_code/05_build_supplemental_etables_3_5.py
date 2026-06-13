@@ -32,7 +32,9 @@ OUT_ET5 = WORK_DIR / "supplemental_etable5_patient_level_co2_rso2.csv"
 OUT_XLSX = WORK_DIR / "Supplemental_eTables3_5_CO2_rSO2.xlsx"
 
 YCOLS = ["rSO2_Ch1", "rSO2_Ch2", "rSO2_Ch3"]
-ET4_COVARS = ["TEMP", "FiO2_new", "MAP", "SV", "HR", "CI"]
+# Model A dynamic covariates: primary exposures, hemodynamic tensor inputs,
+# and respiratory adjustment terms. SV and HR belong to Model B/fallback.
+ET4_COVARS = ["TEMP", "FiO2_new", "MAP", "CI", "RRtotal", "TVinsp", "Pmean"]
 YLABEL = {
     "rSO2_Ch1": "Left SctO2 cohort",
     "rSO2_Ch2": "Right SctO2 cohort",
@@ -40,16 +42,16 @@ YLABEL = {
 }
 COHORTS = ["Left SctO2 cohort", "Right SctO2 cohort", "SftO2 cohort"]
 
-# eTable3 artifact display threshold aligned to primary analytic bounds:
+# eTable artifact display threshold aligned to primary analytic bounds:
 ET_ART_LO = 20.0
 ET_ART_HI = 50.0
-Y_ART_LO = 20.0
+Y_ART_LO = 25.0
 Y_ART_HI = 95.0
 
-# Primary analytic strict threshold in current 4_19 code:
+# Primary analytic strict threshold in current Model A code:
 ET_STRICT_LO = 20.0
 ET_STRICT_HI = 50.0
-Y_STRICT_LO = 20.0
+Y_STRICT_LO = 25.0
 Y_STRICT_HI = 95.0
 
 
@@ -203,10 +205,10 @@ def build_etable3(df: pd.DataFrame) -> pd.DataFrame:
         den_patients = int(id_s[valid_id_s].nunique())
 
         criteria = [
-            ("EtCO2 ≤20", et_nm <= ET_ART_LO),
-            ("EtCO2 ≥50", et_nm >= ET_ART_HI),
-            ("Tissue oxygen ≤20", yy_nm <= Y_ART_LO),
-            ("Tissue oxygen ≥95", yy_nm >= Y_ART_HI),
+            (f"EtCO2 ≤{ET_ART_LO:g}", et_nm <= ET_ART_LO),
+            (f"EtCO2 ≥{ET_ART_HI:g}", et_nm >= ET_ART_HI),
+            (f"Tissue oxygen ≤{Y_ART_LO:g}", yy_nm <= Y_ART_LO),
+            (f"Tissue oxygen ≥{Y_ART_HI:g}", yy_nm >= Y_ART_HI),
         ]
 
         for crit, m in criteria:
@@ -492,10 +494,10 @@ def format_etable3_rows(et3: pd.DataFrame) -> List[Tuple[List[str], str]]:
     )
 
     criteria_order = [
-        "EtCO2 ≤20",
-        "EtCO2 ≥50",
-        "Tissue oxygen ≤20",
-        "Tissue oxygen ≥95",
+        f"EtCO2 ≤{ET_ART_LO:g}",
+        f"EtCO2 ≥{ET_ART_HI:g}",
+        f"Tissue oxygen ≤{Y_ART_LO:g}",
+        f"Tissue oxygen ≥{Y_ART_HI:g}",
     ]
     for crit in criteria_order:
         sub = et3.loc[et3["outlier_criterion"] == crit].set_index("cohort")
@@ -531,12 +533,13 @@ def format_etable4_rows(et4: pd.DataFrame) -> List[Tuple[List[str], str]]:
     )
 
     cov_order = [
-        ("TEMP", "Temperature", "temperature", "°C"),
+        ("TEMP", "Temperature", "temperature", "deg C"),
         ("FiO2_new", "FiO2", "FiO2", "%"),
         ("MAP", "MAP", "MAP", "mmHg"),
-        ("SV", "SV", "SV", "mL"),
-        ("HR", "HR", "HR", "beats/min"),
-        ("CI", "CI", "CI", "L/min/m²"),
+        ("CI", "CI", "CI", "L/min/m2"),
+        ("RRtotal", "Respiratory rate", "respiratory rate", "breaths/min"),
+        ("TVinsp", "Inspiratory tidal volume", "inspiratory tidal volume", "mL"),
+        ("Pmean", "Mean airway pressure", "mean airway pressure", "cmH2O"),
     ]
     for cov, label, name_text, unit in cov_order:
         sub = et4.loc[et4["covariate"] == cov].set_index("cohort")
@@ -690,7 +693,7 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
         wb=wb,
         sheet_name="eTable3_artifact",
         title=(
-            "eTable 3. Summary of timestamp-level outlier exclusions in left cerebral, right cerebral, "
+            "eTable 4. Summary of timestamp-level outlier exclusions in left cerebral, right cerebral, "
             "and forearm tissue oxygen saturation cohorts"
         ),
         first_col_header="Outlier criterion",
@@ -704,7 +707,10 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
                 "site-specific tissue oxygen saturation."
             ),
             (
-                "Thresholds used for artifact reporting: EtCO2 ≤20 or ≥50 mmHg; tissue oxygen saturation ≤20% or ≥95%."
+                (
+                    f"Thresholds used for artifact reporting: EtCO2 ≤{ET_ART_LO:g} or ≥{ET_ART_HI:g} mmHg; "
+                    f"tissue oxygen saturation ≤{Y_ART_LO:g}% or ≥{Y_ART_HI:g}%."
+                )
             ),
         ],
     )
@@ -713,22 +719,26 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
         wb=wb,
         sheet_name="eTable4_imputation",
         title=(
-            "eTable 4. Missingness and imputation of intraoperative time-varying covariates in left cerebral, "
+            "eTable 5. Missingness and imputation of intraoperative time-varying covariates in left cerebral, "
             "right cerebral, and forearm tissue oxygenation cohorts"
         ),
         first_col_header="Covariate",
         rows=format_etable4_rows(et4),
         abbreviations=(
             "SctO2, cerebral tissue oxygen saturation; EtCO2, end-tidal carbon dioxide; "
-            "FiO2, fraction of inspired oxygen."
+            "FiO2, fraction of inspired oxygen; MAP, mean arterial pressure; CI, cardiac index."
         ),
         footnotes=[
             (
-                "* Available data points represent analytic observations after excluding timestamps with EtCO2 "
-                "or site-specific tissue oxygen artifact values."
+                "* Available data points represent final analytic timestamp-level observations after "
+                "cohort-defining EtCO2 and site-specific tissue oxygenation range restrictions."
             ),
             "Percentages are calculated using available data points in each cohort as the denominator.",
-            "Median imputation combines subject-level median and global median imputation.",
+            (
+                "Dynamic covariates were screened using prespecified physiologic ranges, and missing values "
+                "were imputed sequentially by within-patient forward filling, patient-level median, and cohort median."
+            ),
+            "Median imputation combines patient-level median and cohort-median imputation.",
             "† Values represent missing-episode-level duration summary based on monitor-axis timestamps in the cohort patients.",
             "‡ Values represent the median of patient-level total missing duration, including patients with 0 minutes missing.",
             "§ Values represent the median of patient-level total missing duration among patients with any missing data (>0 minutes).",
@@ -739,14 +749,17 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
         wb=wb,
         sheet_name="eTable5_patient_level",
         title=(
-            "eTable 5. Patient-level summary of intraoperative EtCO2 and tissue oxygenation in left cerebral, "
+            "eTable 6. Patient-level summary of intraoperative EtCO2 and tissue oxygenation in left cerebral, "
             "right cerebral, and forearm tissue oxygenation cohorts"
         ),
         first_col_header="Variable",
         rows=format_etable5_rows(et5),
         abbreviations="SctO2, cerebral tissue oxygen saturation.",
         footnotes=[
-            "* Included data points met strict thresholds: 20<EtCO2<50 mmHg and 20<tissue oxygen saturation<95%.",
+            (
+                f"* Included data points met strict thresholds: {ET_STRICT_LO:g}<EtCO2<{ET_STRICT_HI:g} mmHg "
+                f"and {Y_STRICT_LO:g}<tissue oxygen saturation<{Y_STRICT_HI:g}%."
+            ),
             "† Mean of patient-level means over the intraoperative period.",
             "‡ Mean of patient-level SDs over the intraoperative period.",
         ],
