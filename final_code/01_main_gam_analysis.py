@@ -242,7 +242,7 @@ PRETTY_LABELS = {
     "HR": "Heart Rate (bpm)",
     "RRtotal": "Respiratory Rate (/min)",
     "TVinsp": "Inspiratory Tidal Volume (mL)",
-    "Pmean": "Mean Airway Pressure (cmH2O)",
+    "Pmean": "Positive End-Expiratory Pressure (cmH2O)",
     "rSO2_Ch1": "Left SctO₂ (%)",
     "rSO2_Ch2": "Right SctO₂ (%)",
     "rSO2_Ch3": "SftO₂ (%)",

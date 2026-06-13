@@ -539,7 +539,7 @@ def format_etable4_rows(et4: pd.DataFrame) -> List[Tuple[List[str], str]]:
         ("CI", "CI", "CI", "L/min/m2"),
         ("RRtotal", "Respiratory rate", "respiratory rate", "breaths/min"),
         ("TVinsp", "Inspiratory tidal volume", "inspiratory tidal volume", "mL"),
-        ("Pmean", "Mean airway pressure", "mean airway pressure", "cmH2O"),
+        ("Pmean", "Positive end-expiratory pressure", "positive end-expiratory pressure", "cmH2O"),
     ]
     for cov, label, name_text, unit in cov_order:
         sub = et4.loc[et4["covariate"] == cov].set_index("cohort")
