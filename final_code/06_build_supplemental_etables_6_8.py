@@ -54,6 +54,23 @@ MODEL_LABEL_MAP = {
     "rSO2_Ch3": "SftO2 model",
 }
 YCOL_ORDER = ["rSO2_Ch1", "rSO2_Ch2", "rSO2_Ch3"]
+ETABLE7_VARIABLE_ORDER = [
+    "ET_CO2",
+    "TEMP",
+    "FiO2_new",
+    "MAP x CI",
+    "RRtotal",
+    "TVinsp",
+    "Pmean",
+    "Age",
+    "BMI",
+    "Cardiac_index",
+    "Mean_blood_pressure",
+    "Hb",
+    "Left_SctO2",
+    "Right_SctO2",
+    "SstO2",
+]
 
 
 def load_module(script_path: Path):
@@ -77,6 +94,16 @@ def safe_float(x) -> float:
         return v if np.isfinite(v) else np.nan
     except Exception:
         return np.nan
+
+
+def sort_etable7(et7: pd.DataFrame) -> pd.DataFrame:
+    d = et7.copy()
+    model_rank = {k: i for i, k in enumerate(YCOL_ORDER)}
+    var_rank = {k: i for i, k in enumerate(ETABLE7_VARIABLE_ORDER)}
+    d["model_rank"] = d["ycol"].map(model_rank).fillna(len(model_rank))
+    d["variable_rank"] = d["variable"].map(var_rank).fillna(len(var_rank))
+    d = d.sort_values(["model_rank", "variable_rank", "variable"], kind="mergesort")
+    return d.drop(columns=["model_rank", "variable_rank"])
 
 
 def build_df_base(m) -> pd.DataFrame:
@@ -535,9 +562,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         cell.border = border
         cell.alignment = center if c >= 4 else left
     r = 4
-    et7s = et7.copy()
-    et7s["model_rank"] = et7s["ycol"].map({k: i for i, k in enumerate(YCOL_ORDER)})
-    et7s = et7s.sort_values(["model_rank", "variable"]).drop(columns=["model_rank"])
+    et7s = sort_etable7(et7)
     for _, row in et7s.iterrows():
         vals = [
             row["model"],
@@ -760,6 +785,8 @@ def main():
 
     d6 = pd.concat(et6_all, ignore_index=True) if et6_all else pd.DataFrame()
     d7 = pd.concat(et7_all, ignore_index=True) if et7_all else pd.DataFrame()
+    if not d7.empty:
+        d7 = sort_etable7(d7)
     d8 = pd.concat(et8_all, ignore_index=True) if et8_all else pd.DataFrame()
 
     d6.to_csv(OUT_ET6, index=False)
