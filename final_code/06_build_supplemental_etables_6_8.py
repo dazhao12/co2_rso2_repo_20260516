@@ -71,6 +71,26 @@ ETABLE7_VARIABLE_ORDER = [
     "Right_SctO2",
     "SstO2",
 ]
+ETABLE7_VARIABLE_LABELS = {
+    "ET_CO2": "EtCO2",
+    "TEMP": "Temperature",
+    "FiO2_new": "FiO2",
+    "MAP x CI": "MAP-CI interaction",
+    "RRtotal": "Respiratory rate",
+    "TVinsp": "Tidal volume",
+    "Pmean": "PEEP",
+    "Cardiac_index": "Preoperative CI",
+    "Mean_blood_pressure": "Preoperative MAP",
+    "Hb": "Hemoglobin",
+    "Left_SctO2": "Preoperative left SctO2",
+    "Right_SctO2": "Preoperative right SctO2",
+    "SstO2": "Preoperative SftO2",
+}
+ETABLE7_TERM_LABELS = {
+    "Primary smooth": "Penalized spline",
+    "Adjustment smooth": "Penalized spline",
+    "Tensor product smooth": "Tensor-product penalized spline",
+}
 
 
 def load_module(script_path: Path):
@@ -85,7 +105,7 @@ def fmt_p(p: float) -> str:
         return "NA"
     if p < 0.001:
         return "<0.001"
-    return f"{p:.4f}"
+    return f"{p:.3f}"
 
 
 def safe_float(x) -> float:
@@ -104,6 +124,14 @@ def sort_etable7(et7: pd.DataFrame) -> pd.DataFrame:
     d["variable_rank"] = d["variable"].map(var_rank).fillna(len(var_rank))
     d = d.sort_values(["model_rank", "variable_rank", "variable"], kind="mergesort")
     return d.drop(columns=["model_rank", "variable_rank"])
+
+
+def etable7_variable_label(variable: str) -> str:
+    return ETABLE7_VARIABLE_LABELS.get(str(variable), str(variable))
+
+
+def etable7_term_label(term_type: str) -> str:
+    return ETABLE7_TERM_LABELS.get(str(term_type), str(term_type))
 
 
 def build_df_base(m) -> pd.DataFrame:
@@ -554,7 +582,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     ws7["A1"] = "eTable 7. Continuous term estimates for Model A generalized additive models"
     ws7["A1"].font = title_font
     ws7["A1"].alignment = left
-    header7 = ["Model", "Variable", "Term Type", "N basis Functions", "Effect Degrees of Freedom", "F Statistic", "P Value"]
+    header7 = ["Model", "Variable", "Term Type", "N basis functions", "Effect degrees of freedom", "F statistic", "P value"]
     for c, v in enumerate(header7, start=1):
         cell = ws7.cell(3, c, v)
         cell.font = header_font
@@ -566,12 +594,12 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     for _, row in et7s.iterrows():
         vals = [
             row["model"],
-            row["variable"],
-            row["term_type"],
+            etable7_variable_label(row["variable"]),
+            etable7_term_label(row["term_type"]),
             int(row["n_basis_functions"]) if np.isfinite(safe_float(row["n_basis_functions"])) else "",
             f"{float(row['effect_degrees_of_freedom']):.2f}" if np.isfinite(safe_float(row["effect_degrees_of_freedom"])) else "",
             f"{float(row['f_statistic']):.2f}" if np.isfinite(safe_float(row["f_statistic"])) else "",
-            row["p_value_display"],
+            fmt_p(safe_float(row["p_value"])),
         ]
         for c, v in enumerate(vals, start=1):
             cell = ws7.cell(r, c, v)
@@ -579,7 +607,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
             cell.border = border
             cell.alignment = center if c >= 4 else left
         r += 1
-    for col, width in {"A": 24, "B": 18, "C": 18, "D": 18, "E": 24, "F": 14, "G": 10}.items():
+    for col, width in {"A": 24, "B": 28, "C": 32, "D": 18, "E": 24, "F": 14, "G": 10}.items():
         ws7.column_dimensions[col].width = width
 
     # eTable 8
