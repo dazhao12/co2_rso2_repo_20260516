@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Build supplemental eTable 7/8/9 for CO2-rSO2 Model A GAMs.
+Build supplemental eTable 6/7/8 for CO2-rSO2 Model A GAMs.
 
 This script reuses the latest model logic from:
   01_main_gam_analysis.py
 
 Outputs:
-  - supplemental_etable7_model_performance_co2_rso2.csv
-  - supplemental_etable8_nonparametric_terms_co2_rso2.csv
-  - supplemental_etable9_parametric_terms_co2_rso2.csv
-  - Supplemental_eTables7_9_CO2_rSO2.xlsx
+  - supplemental_etable6_model_performance_co2_rso2.csv
+  - supplemental_etable6_model_performance_co2_rso2.md
+  - supplemental_etable7_nonparametric_terms_co2_rso2.csv
+  - supplemental_etable8_parametric_terms_co2_rso2.csv
+  - Supplemental_eTables6_8_CO2_rSO2.xlsx
 """
 
 import importlib.util
@@ -36,10 +37,11 @@ MODEL_SCRIPT = Path(os.getenv("ETABLE68_MODEL_SCRIPT", str(LOCAL_MODEL_SCRIPT)))
 os.environ.setdefault("INTRA5_HEMO_ADJUST_MODE", "map_ci_te")
 os.environ.setdefault("INTRA5_SUBSAMPLE_SIZE", "10000")
 
-OUT_ET6 = WORK_DIR / "supplemental_etable7_model_performance_co2_rso2.csv"
-OUT_ET7 = WORK_DIR / "supplemental_etable8_nonparametric_terms_co2_rso2.csv"
-OUT_ET8 = WORK_DIR / "supplemental_etable9_parametric_terms_co2_rso2.csv"
-OUT_XLSX = WORK_DIR / "Supplemental_eTables7_9_CO2_rSO2.xlsx"
+OUT_ET6 = WORK_DIR / "supplemental_etable6_model_performance_co2_rso2.csv"
+OUT_ET6_MD = WORK_DIR / "supplemental_etable6_model_performance_co2_rso2.md"
+OUT_ET7 = WORK_DIR / "supplemental_etable7_nonparametric_terms_co2_rso2.csv"
+OUT_ET8 = WORK_DIR / "supplemental_etable8_parametric_terms_co2_rso2.csv"
+OUT_XLSX = WORK_DIR / "Supplemental_eTables6_8_CO2_rSO2.xlsx"
 
 COHORT_MAP = {
     "rSO2_Ch1": "Left SctO2 cohort",
@@ -261,6 +263,7 @@ def collect_model_tables(
     y_train = df_ref[ycol].astype(float).values
     yhat_train = np.asarray(gam.predict(X_train), dtype=float)
     rmse_train = float(np.sqrt(np.mean((y_train - yhat_train) ** 2)))
+    mae_train = float(np.mean(np.abs(y_train - yhat_train)))
     ss_res_train = float(np.sum((y_train - yhat_train) ** 2))
     ss_tot_train = float(np.sum((y_train - np.mean(y_train)) ** 2))
     r2_train = 1.0 - ss_res_train / ss_tot_train if ss_tot_train > 0 else np.nan
@@ -270,6 +273,7 @@ def collect_model_tables(
     y_eval = df_eval_use[ycol].astype(float).values
     yhat_eval = np.asarray(gam.predict(X_eval), dtype=float)
     rmse_eval = float(np.sqrt(np.mean((y_eval - yhat_eval) ** 2)))
+    mae_eval = float(np.mean(np.abs(y_eval - yhat_eval)))
     ss_res_eval = float(np.sum((y_eval - yhat_eval) ** 2))
     ss_tot_eval = float(np.sum((y_eval - np.mean(y_eval)) ** 2))
     r2_eval = 1.0 - ss_res_eval / ss_tot_eval if ss_tot_eval > 0 else np.nan
@@ -296,9 +300,11 @@ def collect_model_tables(
         ("Scale", safe_float(st.get("scale"))),
         ("Training rows, n", float(len(df_ref))),
         ("RMSE (training sample)", rmse_train),
+        ("MAE (training sample)", mae_train),
         ("Traditional R2 (training sample)", r2_train),
         ("Evaluation rows, n (full analytic pool)", float(len(df_eval_use))),
         ("RMSE (full analytic pool)", rmse_eval),
+        ("MAE (full analytic pool)", mae_eval),
         ("Traditional R2 (full analytic pool)", r2_eval),
     ]
     et6 = pd.DataFrame(
@@ -461,9 +467,9 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
     # eTable 6 (wide)
-    ws6 = wb.create_sheet("eTable7_model_fit")
+    ws6 = wb.create_sheet("eTable6_model_fit")
     ws6.merge_cells("A1:D1")
-    ws6["A1"] = "eTable 7. Model performance and goodness-of-fit statistics for Model A additive GAMs with tensor-product MAP-CI adjustment"
+    ws6["A1"] = "eTable 6. Model performance and goodness-of-fit statistics for Model A generalized additive models"
     ws6["A1"].font = title_font
     ws6["A1"].alignment = left
     header6 = ["Metric", "Left SctO2 cohort", "Right SctO2 cohort", "SftO2 cohort"]
@@ -488,9 +494,11 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         "Scale",
         "Training rows, n",
         "RMSE (training sample)",
+        "MAE (training sample)",
         "Traditional R2 (training sample)",
         "Evaluation rows, n (full analytic pool)",
         "RMSE (full analytic pool)",
+        "MAE (full analytic pool)",
         "Traditional R2 (full analytic pool)",
     ]
     p6 = et6.pivot_table(index="metric", columns="cohort", values="value", aggfunc="first")
@@ -514,9 +522,9 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     ws6.column_dimensions["D"].width = 24
 
     # eTable 7
-    ws7 = wb.create_sheet("eTable8_continuous")
+    ws7 = wb.create_sheet("eTable7_continuous")
     ws7.merge_cells("A1:G1")
-    ws7["A1"] = "eTable 8. Continuous term estimates for Model A additive GAMs with tensor-product MAP-CI adjustment"
+    ws7["A1"] = "eTable 7. Continuous term estimates for Model A generalized additive models"
     ws7["A1"].font = title_font
     ws7["A1"].alignment = left
     header7 = ["Model", "Variable", "Term Type", "N basis Functions", "Effect Degrees of Freedom", "F Statistic", "P Value"]
@@ -550,9 +558,9 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         ws7.column_dimensions[col].width = width
 
     # eTable 8
-    ws8 = wb.create_sheet("eTable9_categorical")
+    ws8 = wb.create_sheet("eTable8_categorical")
     ws8.merge_cells("A1:G1")
-    ws8["A1"] = "eTable 9. Categorical term estimates for Model A additive GAMs with tensor-product MAP-CI adjustment"
+    ws8["A1"] = "eTable 8. Categorical term estimates for Model A generalized additive models"
     ws8["A1"].font = title_font
     ws8["A1"].alignment = left
     header8 = ["Model", "Variable", "Term Type", "Effect Degrees of Freedom", "Estimate(β)", "Std Error", "P Value"]
@@ -586,6 +594,70 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         ws8.column_dimensions[col].width = width
 
     wb.save(out_xlsx)
+
+
+def _metric_value(p6: pd.DataFrame, metric: str, cohort: str) -> float:
+    if metric not in p6.index or cohort not in p6.columns:
+        return np.nan
+    return safe_float(p6.loc[metric, cohort])
+
+
+def _fmt_metric_value(value: float, kind: str) -> str:
+    if not np.isfinite(safe_float(value)):
+        return "-"
+    value = float(value)
+    if kind == "int":
+        return f"{value:,.0f}"
+    if kind == "edf":
+        return f"{value:.2f}"
+    if kind == "aic":
+        return f"{value:,.0f}"
+    if kind == "pct":
+        return f"{value * 100:.1f}"
+    if kind == "r2":
+        return f"{value:.3f}"
+    if kind == "err":
+        return f"{value:.2f}"
+    return f"{value:.3f}"
+
+
+def write_etable6_markdown(et6: pd.DataFrame, out_md: Path) -> None:
+    p6 = et6.pivot_table(index="metric", columns="cohort", values="value", aggfunc="first")
+    cohorts = ["Left SctO2 cohort", "Right SctO2 cohort", "SftO2 cohort"]
+    header = ["Metric", "Left SctO2 Model", "Right SctO2 Model", "SftO2 Model"]
+    rows = [
+        ("N Samples", "Samples, n", "int"),
+        ("N Features", "Features, n", "int"),
+        ("Effect Degrees of Freedom", "Effective degrees of freedom (model)", "edf"),
+        ("AIC", "AIC", "aic"),
+        ("GCV", "GCV", "num"),
+        ("Scale Parameter", "Scale", "num"),
+        ("Deviance Explained (%)", "Deviance explained", "pct"),
+        ("R2", "Traditional R2 (training sample)", "r2"),
+        ("RMSE", "RMSE (training sample)", "err"),
+        ("MAE", "MAE (training sample)", "err"),
+    ]
+
+    lines = [
+        "## eTable 6. Model performance and goodness-of-fit statistics for Model A generalized additive models of left cerebral, right cerebral, and forearm tissue oxygenation",
+        "",
+        "| " + " | ".join(header) + " |",
+        "| --- | --- | --- | --- |",
+    ]
+    for display, source, kind in rows:
+        vals = [_fmt_metric_value(_metric_value(p6, source, cohort), kind) for cohort in cohorts]
+        lines.append("| " + " | ".join([display] + vals) + " |")
+    lines.extend(
+        [
+            "",
+            "Notes:",
+            "- Metrics are calculated from the 10,000-row Model A fitting sample unless otherwise specified.",
+            "- Model A included smooth terms for EtCO2, temperature, and FiO2, tensor-product MAP-CI adjustment, smooth respiratory covariates, and baseline covariate adjustment.",
+            "- SctO2, cerebral tissue oxygen saturation; SftO2, forearm tissue oxygen saturation; EtCO2, end-tidal carbon dioxide; FiO2, fraction of inspired oxygen; MAP, mean arterial pressure; CI, cardiac index; AIC, Akaike information criterion; GCV, generalized cross-validation; RMSE, root mean square error; MAE, mean absolute error.",
+            "",
+        ]
+    )
+    out_md.write_text("\n".join(lines), encoding="utf-8")
 
 
 def main():
@@ -694,9 +766,11 @@ def main():
     d7.to_csv(OUT_ET7, index=False)
     d8.to_csv(OUT_ET8, index=False)
     write_xlsx(d6, d7, d8, OUT_XLSX)
+    write_etable6_markdown(d6, OUT_ET6_MD)
 
     print("[write]")
     print(f" - {OUT_ET6}")
+    print(f" - {OUT_ET6_MD}")
     print(f" - {OUT_ET7}")
     print(f" - {OUT_ET8}")
     print(f" - {OUT_XLSX}")
