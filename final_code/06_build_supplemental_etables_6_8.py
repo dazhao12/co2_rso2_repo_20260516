@@ -91,6 +91,24 @@ ETABLE7_TERM_LABELS = {
     "Adjustment smooth": "Penalized spline",
     "Tensor product smooth": "Tensor-product penalized spline",
 }
+ETABLE8_VARIABLE_ORDER = [
+    "Smoking_new",
+    "Drinking_status",
+    "Diabetes_status",
+    "Hypertension",
+    "Carotid_artery_disease",
+    "Statin_1",
+    "SEX",
+]
+ETABLE8_VARIABLE_LABELS = {
+    "Smoking_new": "Smoking status",
+    "Drinking_status": "Drinking status",
+    "Diabetes_status": "Diabetes",
+    "Hypertension": "Hypertension",
+    "Carotid_artery_disease": "Carotid artery disease",
+    "Statin_1": "Statin use",
+    "SEX": "Male sex",
+}
 
 
 def load_module(script_path: Path):
@@ -132,6 +150,20 @@ def etable7_variable_label(variable: str) -> str:
 
 def etable7_term_label(term_type: str) -> str:
     return ETABLE7_TERM_LABELS.get(str(term_type), str(term_type))
+
+
+def sort_etable8(et8: pd.DataFrame) -> pd.DataFrame:
+    d = et8.copy()
+    model_rank = {k: i for i, k in enumerate(YCOL_ORDER)}
+    var_rank = {k: i for i, k in enumerate(ETABLE8_VARIABLE_ORDER)}
+    d["model_rank"] = d["ycol"].map(model_rank).fillna(len(model_rank))
+    d["variable_rank"] = d["variable"].map(var_rank).fillna(len(var_rank))
+    d = d.sort_values(["model_rank", "variable_rank", "variable"], kind="mergesort")
+    return d.drop(columns=["model_rank", "variable_rank"])
+
+
+def etable8_variable_label(variable: str) -> str:
+    return ETABLE8_VARIABLE_LABELS.get(str(variable), str(variable))
 
 
 def build_df_base(m) -> pd.DataFrame:
@@ -616,7 +648,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     ws8["A1"] = "eTable 8. Categorical term estimates for Model A generalized additive models"
     ws8["A1"].font = title_font
     ws8["A1"].alignment = left
-    header8 = ["Model", "Variable", "Term Type", "Effect Degrees of Freedom", "Estimate(β)", "Std Error", "P Value"]
+    header8 = ["Model", "Variable", "Term Type", "Effect degrees of freedom", "Estimate (β)", "Std error", "P value"]
     for c, v in enumerate(header8, start=1):
         cell = ws8.cell(3, c, v)
         cell.font = header_font
@@ -624,18 +656,16 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
         cell.border = border
         cell.alignment = center if c >= 4 else left
     r = 4
-    et8s = et8.copy()
-    et8s["model_rank"] = et8s["ycol"].map({k: i for i, k in enumerate(YCOL_ORDER)})
-    et8s = et8s.sort_values(["model_rank", "variable"]).drop(columns=["model_rank"])
+    et8s = sort_etable8(et8)
     for _, row in et8s.iterrows():
         vals = [
             row["model"],
-            row["variable"],
+            etable8_variable_label(row["variable"]),
             row["term_type"],
             f"{float(row['effect_degrees_of_freedom']):.2f}" if np.isfinite(safe_float(row["effect_degrees_of_freedom"])) else "",
-            f"{float(row['estimate_beta']):.4f}" if np.isfinite(safe_float(row["estimate_beta"])) else "",
-            f"{float(row['std_error']):.4f}" if np.isfinite(safe_float(row["std_error"])) else "",
-            row["p_value_display"],
+            f"{float(row['estimate_beta']):.3f}" if np.isfinite(safe_float(row["estimate_beta"])) else "",
+            f"{float(row['std_error']):.3f}" if np.isfinite(safe_float(row["std_error"])) else "",
+            fmt_p(safe_float(row["p_value"])),
         ]
         for c, v in enumerate(vals, start=1):
             cell = ws8.cell(r, c, v)
@@ -643,7 +673,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
             cell.border = border
             cell.alignment = center if c >= 4 else left
         r += 1
-    for col, width in {"A": 24, "B": 22, "C": 16, "D": 24, "E": 14, "F": 14, "G": 10}.items():
+    for col, width in {"A": 24, "B": 24, "C": 16, "D": 24, "E": 14, "F": 14, "G": 10}.items():
         ws8.column_dimensions[col].width = width
 
     wb.save(out_xlsx)
@@ -816,6 +846,8 @@ def main():
     if not d7.empty:
         d7 = sort_etable7(d7)
     d8 = pd.concat(et8_all, ignore_index=True) if et8_all else pd.DataFrame()
+    if not d8.empty:
+        d8 = sort_etable8(d8)
 
     d6.to_csv(OUT_ET6, index=False)
     d7.to_csv(OUT_ET7, index=False)
