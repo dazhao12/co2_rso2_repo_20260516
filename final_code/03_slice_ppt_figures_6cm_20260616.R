@@ -82,7 +82,7 @@ parse_x_order <- function(raw, valid, desired) {
 XVAR_ORDER <- XVAR_ORDER_DEFAULT
 
 PRETTY_LABELS <- c(
-  "ET_CO2" = "End-Tidal CO₂ (mmHg)",
+  "ET_CO2" = "EtCO₂ (mmHg)",
   "TEMP" = "Temperature (°C)",
   "FiO2_new" = "FiO₂ (%)",
   "MAP" = "Mean Arterial Pressure (mmHg)",
@@ -104,7 +104,7 @@ pretty_lab <- function(x) {
 
 # Use plotmath labels in figures so subscripts/units render reliably in PPT.
 AXIS_LABEL_EXPR <- list(
-  "ET_CO2" = quote("End-Tidal" ~ CO[2] ~ "(mmHg)"),
+  "ET_CO2" = quote("EtCO"[2] ~ "(mmHg)"),
   "TEMP" = quote("Temperature" ~ "(" * degree * "C)"),
   "FiO2_new" = quote(FiO[2] ~ "(%)"),
   "MAP" = quote("Mean Arterial Pressure" ~ "(mmHg)"),
@@ -835,15 +835,19 @@ format_pairwise_star <- function(p) {
   "ns"
 }
 
-build_compare_pairwise_data <- function(segment_df) {
+build_compare_pairwise_data <- function(segment_df, metric = c("signed", "abs")) {
+  metric <- match.arg(metric)
   if (!isTRUE(ADD_CLINICAL_PAIRWISE) || !nrow(segment_df)) return(tibble())
   x_levels <- XVAR_ORDER[XVAR_ORDER %in% unique(as.character(segment_df$xvar))]
   x_levels <- x_levels[x_levels %in% names(CLINICAL_STEPS)]
   if (length(x_levels) < 2) return(tibble())
 
+  segment_df <- segment_df %>%
+    mutate(pairwise_effect = if (metric == "abs") abs(.data$signed_effect) else .data$signed_effect)
+
   rows <- list()
   groups <- segment_df %>%
-    filter(.data$xvar %in% x_levels, is.finite(.data$signed_effect)) %>%
+    filter(.data$xvar %in% x_levels, is.finite(.data$pairwise_effect)) %>%
     group_by(.data$subgroup, .data$ycol) %>%
     group_split()
 
@@ -855,8 +859,8 @@ build_compare_pairwise_data <- function(segment_df) {
     if (length(present) < 2) next
     comps <- utils::combn(present, 2, simplify = FALSE)
     tmp <- lapply(comps, function(cc) {
-      v1 <- g$signed_effect[as.character(g$xvar) == cc[1]]
-      v2 <- g$signed_effect[as.character(g$xvar) == cc[2]]
+      v1 <- g$pairwise_effect[as.character(g$xvar) == cc[1]]
+      v2 <- g$pairwise_effect[as.character(g$xvar) == cc[2]]
       v1 <- v1[is.finite(v1)]
       v2 <- v2[is.finite(v2)]
       if (length(v1) < 2 || length(v2) < 2) return(NULL)
@@ -865,6 +869,7 @@ build_compare_pairwise_data <- function(segment_df) {
         error = function(e) NA_real_
       )
       tibble(
+        metric = metric,
         subgroup = subgroup_val,
         ycol = y_val,
         var1 = cc[1],
@@ -924,8 +929,8 @@ get_compare_y_spec <- function(db, metric = c("abs", "signed"), pairwise_df = NU
     }
     lims <- c(lower, hi_data + upper_pad)
   }
-  if (metric == "signed" && !is.null(pairwise_df) && nrow(pairwise_df)) {
-    vals_hi <- c(db$signed_hi, db$signed_est, 0)
+  if (!is.null(pairwise_df) && nrow(pairwise_df)) {
+    vals_hi <- if (metric == "abs") c(db$abs_hi, db$abs_est, 0) else c(db$signed_hi, db$signed_est, 0)
     vals_hi <- vals_hi[is.finite(vals_hi)]
     max_bar <- if (length(vals_hi)) max(vals_hi, na.rm = TRUE) else 1
     n_brackets <- pairwise_df %>%
@@ -962,7 +967,7 @@ plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed
     mutate(x_pos = match(as.character(.data$xvar), x_levels))
 
   ann <- tibble()
-  if (metric == "signed" && isTRUE(ADD_CLINICAL_PAIRWISE) && !is.null(pairwise_df) && nrow(pairwise_df)) {
+  if (isTRUE(ADD_CLINICAL_PAIRWISE) && !is.null(pairwise_df) && nrow(pairwise_df)) {
     ann <- pairwise_df %>%
       filter(as.character(.data$ycol) == y_target) %>%
       arrange(.data$x1, .data$x2)
@@ -1230,15 +1235,17 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   compare_summary <- clinical_compare$summary
   compare_segments <- clinical_compare$segments
   compare_data <- build_compare_plot_data(compare_summary, compare_segments)
-  compare_pairwise <- build_compare_pairwise_data(compare_segments)
-  compare_y_spec_signed <- get_compare_y_spec(compare_data, metric = "signed", pairwise_df = compare_pairwise)
-  compare_y_spec_abs <- get_compare_y_spec(compare_data, metric = "abs")
+  compare_pairwise_signed <- build_compare_pairwise_data(compare_segments, metric = "signed")
+  compare_pairwise_abs <- build_compare_pairwise_data(compare_segments, metric = "abs")
+  compare_pairwise <- bind_rows(compare_pairwise_signed, compare_pairwise_abs)
+  compare_y_spec_signed <- get_compare_y_spec(compare_data, metric = "signed", pairwise_df = compare_pairwise_signed)
+  compare_y_spec_abs <- get_compare_y_spec(compare_data, metric = "abs", pairwise_df = compare_pairwise_abs)
   compare_plot_map_signed <- list()
   compare_plot_map_abs <- list()
   if (nrow(compare_data)) {
     for (y in Y_ORDER) {
-      p_signed <- plot_compare_channel(compare_data, y, compare_y_spec_signed, metric = "signed", pairwise_df = compare_pairwise)
-      p_abs <- plot_compare_channel(compare_data, y, compare_y_spec_abs, metric = "abs")
+      p_signed <- plot_compare_channel(compare_data, y, compare_y_spec_signed, metric = "signed", pairwise_df = compare_pairwise_signed)
+      p_abs <- plot_compare_channel(compare_data, y, compare_y_spec_abs, metric = "abs", pairwise_df = compare_pairwise_abs)
       compare_plot_map_signed[[y]] <- p_signed
       compare_plot_map_abs[[y]] <- p_abs
       if (!is.null(p_signed)) {
