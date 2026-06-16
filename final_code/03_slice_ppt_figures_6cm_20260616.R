@@ -194,6 +194,8 @@ FIO2_SMOOTH_SP <- max(0.2, min(2.0, FIO2_SMOOTH_SP))
 EXPORT_PNG <- tolower(Sys.getenv("INTRA5_EXPORT_PNG", "0")) %in% c("1", "true", "t", "yes", "y")
 SKIP_MARGINAL <- tolower(Sys.getenv("INTRA5_SKIP_MARGINAL", "0")) %in% c("1", "true", "t", "yes", "y")
 ADD_CLINICAL_COMPARE <- tolower(Sys.getenv("INTRA5_ADD_CLINICAL_COMPARE", "1")) %in% c("1", "true", "t", "yes", "y")
+ADD_CLINICAL_PAIRWISE <- tolower(Sys.getenv("INTRA5_ADD_CLINICAL_PAIRWISE", "1")) %in% c("1", "true", "t", "yes", "y")
+PAIRWISE_P_ADJUST_METHOD <- Sys.getenv("INTRA5_PAIRWISE_P_ADJUST", "holm")
 CLINICAL_Q_WINDOW <- c(0.05, 0.95)
 CLINICAL_N_SEGMENTS <- suppressWarnings(as.integer(Sys.getenv("INTRA5_CLINICAL_N_SEGMENTS", "20")))
 if (!is.finite(CLINICAL_N_SEGMENTS) || CLINICAL_N_SEGMENTS < 2) CLINICAL_N_SEGMENTS <- 20L
@@ -234,6 +236,8 @@ XVAR_TICK_LABELS <- c(
 )
 COMPARE_ERRBAR_LWD <- 0.5
 COMPARE_ERRBAR_CAP <- 0.20
+COMPARE_BRACKET_LWD <- 0.35
+COMPARE_BRACKET_TEXT_SIZE <- 2.4
 
 PROJECT_ROOT <- normalizePath(
   Sys.getenv("CO2_PROJECT_ROOT", "/N/project/waveform_mortality/ZhaoZhang/contour_zhao_all_9_15_2025"),
@@ -823,7 +827,72 @@ build_compare_plot_data <- function(summary_df, segment_df) {
     )
 }
 
-get_compare_y_spec <- function(db, metric = c("abs", "signed")) {
+format_pairwise_star <- function(p) {
+  if (!is.finite(p)) return("NA")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  "ns"
+}
+
+build_compare_pairwise_data <- function(segment_df) {
+  if (!isTRUE(ADD_CLINICAL_PAIRWISE) || !nrow(segment_df)) return(tibble())
+  x_levels <- XVAR_ORDER[XVAR_ORDER %in% unique(as.character(segment_df$xvar))]
+  x_levels <- x_levels[x_levels %in% names(CLINICAL_STEPS)]
+  if (length(x_levels) < 2) return(tibble())
+
+  rows <- list()
+  groups <- segment_df %>%
+    filter(.data$xvar %in% x_levels, is.finite(.data$signed_effect)) %>%
+    group_by(.data$subgroup, .data$ycol) %>%
+    group_split()
+
+  for (g in groups) {
+    if (!nrow(g)) next
+    subgroup_val <- as.character(g$subgroup[1])
+    y_val <- as.character(g$ycol[1])
+    present <- x_levels[x_levels %in% unique(as.character(g$xvar))]
+    if (length(present) < 2) next
+    comps <- utils::combn(present, 2, simplify = FALSE)
+    tmp <- lapply(comps, function(cc) {
+      v1 <- g$signed_effect[as.character(g$xvar) == cc[1]]
+      v2 <- g$signed_effect[as.character(g$xvar) == cc[2]]
+      v1 <- v1[is.finite(v1)]
+      v2 <- v2[is.finite(v2)]
+      if (length(v1) < 2 || length(v2) < 2) return(NULL)
+      p_val <- tryCatch(
+        stats::wilcox.test(v1, v2, exact = FALSE)$p.value,
+        error = function(e) NA_real_
+      )
+      tibble(
+        subgroup = subgroup_val,
+        ycol = y_val,
+        var1 = cc[1],
+        var2 = cc[2],
+        x1 = match(cc[1], x_levels),
+        x2 = match(cc[2], x_levels),
+        n1 = length(v1),
+        n2 = length(v2),
+        median1 = stats::median(v1, na.rm = TRUE),
+        median2 = stats::median(v2, na.rm = TRUE),
+        median_diff = stats::median(v1, na.rm = TRUE) - stats::median(v2, na.rm = TRUE),
+        p_value = p_val,
+        p_adjust_method = PAIRWISE_P_ADJUST_METHOD
+      )
+    })
+    tmp <- Filter(Negate(is.null), tmp)
+    if (!length(tmp)) next
+    d <- bind_rows(tmp)
+    d$p_adj <- stats::p.adjust(d$p_value, method = PAIRWISE_P_ADJUST_METHOD)
+    d$p_label <- vapply(d$p_adj, format_pairwise_star, character(1))
+    d$comparison <- paste(d$var1, d$var2, sep = "_vs_")
+    rows[[length(rows) + 1]] <- d
+  }
+
+  if (length(rows)) bind_rows(rows) else tibble()
+}
+
+get_compare_y_spec <- function(db, metric = c("abs", "signed"), pairwise_df = NULL) {
   metric <- match.arg(metric)
   if (!nrow(db)) return(list(lims = c(0, 1), breaks = pretty(c(0, 1), n = 6)))
   if (metric == "abs") {
@@ -855,10 +924,24 @@ get_compare_y_spec <- function(db, metric = c("abs", "signed")) {
     }
     lims <- c(lower, hi_data + upper_pad)
   }
+  if (metric == "signed" && !is.null(pairwise_df) && nrow(pairwise_df)) {
+    vals_hi <- c(db$signed_hi, db$signed_est, 0)
+    vals_hi <- vals_hi[is.finite(vals_hi)]
+    max_bar <- if (length(vals_hi)) max(vals_hi, na.rm = TRUE) else 1
+    n_brackets <- pairwise_df %>%
+      count(.data$subgroup, .data$ycol, name = "n") %>%
+      pull("n")
+    n_brackets <- if (length(n_brackets)) max(n_brackets, na.rm = TRUE) else 0
+    span <- max(diff(lims), 1e-8)
+    step <- max(0.08 * span, 0.10)
+    lims[2] <- max(lims[2], max_bar + step * (n_brackets + 1.2), na.rm = TRUE)
+    br <- pretty(lims, n = 6)
+    br <- br[br >= lims[1] & br <= lims[2]]
+  }
   list(lims = lims, breaks = br)
 }
 
-plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed"), show_legend = FALSE) {
+plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed"), show_legend = FALSE, pairwise_df = NULL) {
   metric <- match.arg(metric)
   d <- db %>%
     filter(as.character(.data$ycol) == y_target, !is.na(.data$xvar))
@@ -874,7 +957,32 @@ plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed
     y_hi <- "signed_hi"
     y_lab <- "Slope (% per clinical increment)"
   }
-  ggplot(d, aes(x = .data$xvar, fill = .data$xvar, colour = .data$xvar, y = .data[[y_est]])) +
+  x_levels <- XVAR_ORDER[XVAR_ORDER %in% unique(as.character(d$xvar))]
+  d <- d %>%
+    mutate(x_pos = match(as.character(.data$xvar), x_levels))
+
+  ann <- tibble()
+  if (metric == "signed" && isTRUE(ADD_CLINICAL_PAIRWISE) && !is.null(pairwise_df) && nrow(pairwise_df)) {
+    ann <- pairwise_df %>%
+      filter(as.character(.data$ycol) == y_target) %>%
+      arrange(.data$x1, .data$x2)
+    if (nrow(ann)) {
+      vals_hi <- c(d[[y_hi]], d[[y_est]], 0)
+      vals_hi <- vals_hi[is.finite(vals_hi)]
+      base_y <- if (length(vals_hi)) max(vals_hi, na.rm = TRUE) else 0
+      span <- max(diff(y_spec$lims), 1e-8)
+      step <- max(0.08 * span, 0.10)
+      tip <- max(0.02 * span, 0.03)
+      ann <- ann %>%
+        mutate(
+          y_position = base_y + step * row_number(),
+          y_tip = .data$y_position - tip,
+          x_mid = (.data$x1 + .data$x2) / 2
+        )
+    }
+  }
+
+  p <- ggplot(d, aes(x = .data$x_pos, fill = .data$xvar, colour = .data$xvar, y = .data[[y_est]])) +
     geom_col(width = 0.6, linewidth = 0.5) +
     geom_errorbar(
       aes(ymin = .data[[y_lo]], ymax = .data[[y_hi]], colour = .data$xvar),
@@ -885,7 +993,12 @@ plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed
     geom_hline(yintercept = 0, colour = "#9E9E9E", linewidth = 0.35, linetype = "dashed") +
     scale_fill_manual(values = CLINICAL_STEP_FILL_COLORS, labels = function(v) pretty_lab(v), drop = FALSE) +
     scale_colour_manual(values = CLINICAL_STEP_COLORS, labels = function(v) pretty_lab(v), guide = "none", drop = FALSE) +
-    scale_x_discrete(labels = XVAR_TICK_LABELS, drop = FALSE) +
+    scale_x_continuous(
+      breaks = seq_along(x_levels),
+      labels = unname(XVAR_TICK_LABELS[x_levels]),
+      limits = c(0.4, length(x_levels) + 0.6),
+      expand = expansion(mult = c(0, 0))
+    ) +
     scale_y_continuous(limits = y_spec$lims, breaks = y_spec$breaks, expand = expansion(mult = c(0, 0.02))) +
     labs(
       x = "Intraoperative variable",
@@ -897,6 +1010,42 @@ plot_compare_channel <- function(db, y_target, y_spec, metric = c("abs", "signed
       legend.position = if (show_legend) "right" else "none",
       axis.text.x = element_text(size = TICK_FONTSIZE)
     )
+
+  if (nrow(ann)) {
+    p <- p +
+      geom_segment(
+        data = ann,
+        aes(x = .data$x1, xend = .data$x2, y = .data$y_position, yend = .data$y_position),
+        inherit.aes = FALSE,
+        linewidth = COMPARE_BRACKET_LWD,
+        colour = "black"
+      ) +
+      geom_segment(
+        data = ann,
+        aes(x = .data$x1, xend = .data$x1, y = .data$y_tip, yend = .data$y_position),
+        inherit.aes = FALSE,
+        linewidth = COMPARE_BRACKET_LWD,
+        colour = "black"
+      ) +
+      geom_segment(
+        data = ann,
+        aes(x = .data$x2, xend = .data$x2, y = .data$y_tip, yend = .data$y_position),
+        inherit.aes = FALSE,
+        linewidth = COMPARE_BRACKET_LWD,
+        colour = "black"
+      ) +
+      geom_text(
+        data = ann,
+        aes(x = .data$x_mid, y = .data$y_position, label = .data$p_label),
+        inherit.aes = FALSE,
+        vjust = -0.15,
+        size = COMPARE_BRACKET_TEXT_SIZE,
+        family = BASE_FAMILY,
+        colour = "black"
+      )
+  }
+
+  p
 }
 
 smooth_fio2_curves <- function(d) {
@@ -1081,13 +1230,14 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   compare_summary <- clinical_compare$summary
   compare_segments <- clinical_compare$segments
   compare_data <- build_compare_plot_data(compare_summary, compare_segments)
-  compare_y_spec_signed <- get_compare_y_spec(compare_data, metric = "signed")
+  compare_pairwise <- build_compare_pairwise_data(compare_segments)
+  compare_y_spec_signed <- get_compare_y_spec(compare_data, metric = "signed", pairwise_df = compare_pairwise)
   compare_y_spec_abs <- get_compare_y_spec(compare_data, metric = "abs")
   compare_plot_map_signed <- list()
   compare_plot_map_abs <- list()
   if (nrow(compare_data)) {
     for (y in Y_ORDER) {
-      p_signed <- plot_compare_channel(compare_data, y, compare_y_spec_signed, metric = "signed")
+      p_signed <- plot_compare_channel(compare_data, y, compare_y_spec_signed, metric = "signed", pairwise_df = compare_pairwise)
       p_abs <- plot_compare_channel(compare_data, y, compare_y_spec_abs, metric = "abs")
       compare_plot_map_signed[[y]] <- p_signed
       compare_plot_map_abs[[y]] <- p_abs
@@ -1172,6 +1322,7 @@ render_one_subgroup <- function(curve_df_sub, subgroup_val) {
   if (length(hist_desc_rows)) write_csv(bind_rows(hist_desc_rows), file.path(out_root, "plot_hist_descriptions.csv"))
   if (nrow(compare_summary)) write_csv(compare_summary, file.path(out_root, "plot_data_clinical_step_summary.csv"))
   if (nrow(compare_segments)) write_csv(compare_segments, file.path(out_root, "plot_data_clinical_step_segments.csv"))
+  if (nrow(compare_pairwise)) write_csv(compare_pairwise, file.path(out_root, "plot_data_clinical_step_pairwise.csv"))
   if (nrow(compare_data)) write_csv(compare_data, file.path(out_root, "plot_data_comparable_bar.csv"))
   write_csv(
     bind_rows(lapply(XVAR_ORDER, function(v) {
