@@ -738,6 +738,13 @@ def write_formatted_workbook(et3: pd.DataFrame, et4: pd.DataFrame, et5: pd.DataF
                 "Dynamic covariates were screened using prespecified physiologic ranges, and missing values "
                 "were imputed sequentially by within-patient forward filling, patient-level median, and cohort median."
             ),
+            (
+                "Respiratory rate, inspiratory tidal volume, and positive end-expiratory pressure are "
+                "ventilator-derived variables expected to be recorded together. Missingness was assessed "
+                "separately for each variable at each analytic timestamp; if one of these variables was absent "
+                "while the other two were present, only the absent variable was counted as missing in its "
+                "corresponding row."
+            ),
             "Median imputation combines patient-level median and cohort-median imputation.",
             "† Values represent missing-episode-level duration summary based on monitor-axis timestamps in the cohort patients.",
             "‡ Values represent the median of patient-level total missing duration, including patients with 0 minutes missing.",
