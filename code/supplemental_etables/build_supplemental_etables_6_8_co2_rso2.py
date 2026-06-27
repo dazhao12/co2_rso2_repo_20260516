@@ -15,6 +15,7 @@ Outputs:
 
 import importlib.util
 import json
+import math
 import os
 import re
 from pathlib import Path
@@ -59,7 +60,14 @@ def fmt_p(p: float) -> str:
         return "NA"
     if p < 0.001:
         return "<0.001"
-    return f"{p:.4f}"
+    return f"{p:.3f}"
+
+
+def wald_p_from_estimate(est: float, se: float) -> float:
+    if not (np.isfinite(est) and np.isfinite(se)) or se <= 0:
+        return np.nan
+    z = abs(est / se)
+    return 2.0 * (1.0 - 0.5 * (1.0 + math.erf(z / math.sqrt(2.0))))
 
 
 def safe_float(x) -> float:
@@ -400,6 +408,7 @@ def collect_model_tables(
             else:
                 est = float(c_slice[0]) if len(c_slice) else np.nan
                 se = float(se_slice[0]) if len(se_slice) else np.nan
+            wald_p = wald_p_from_estimate(est, se)
             rows8.append(
                 {
                     "ycol": ycol,
@@ -411,8 +420,8 @@ def collect_model_tables(
                     "effect_degrees_of_freedom": 1.0,
                     "estimate_beta": est,
                     "std_error": se,
-                    "p_value": pval,
-                    "p_value_display": fmt_p(pval),
+                    "p_value": wald_p,
+                    "p_value_display": fmt_p(wald_p),
                 }
             )
 
@@ -492,7 +501,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     # eTable 7
     ws7 = wb.create_sheet("eTable7_continuous")
     ws7.merge_cells("A1:G1")
-    ws7["A1"] = "eTable 7. Continuous term estimates for additive GAMs (no interaction terms)"
+    ws7["A1"] = "eTable 7. Smooth term estimates for generalized additive models"
     ws7["A1"].font = title_font
     ws7["A1"].alignment = left
     header7 = ["Model", "Variable", "Term Type", "N basis Functions", "Effect Degrees of Freedom", "F Statistic", "P Value"]
@@ -528,7 +537,7 @@ def write_xlsx(et6: pd.DataFrame, et7: pd.DataFrame, et8: pd.DataFrame, out_xlsx
     # eTable 8
     ws8 = wb.create_sheet("eTable8_categorical")
     ws8.merge_cells("A1:G1")
-    ws8["A1"] = "eTable 8. Categorical term estimates for additive GAMs (no interaction terms)"
+    ws8["A1"] = "eTable 8. Binary categorical covariate estimates for generalized additive models"
     ws8["A1"].font = title_font
     ws8["A1"].alignment = left
     header8 = ["Model", "Variable", "Term Type", "Effect Degrees of Freedom", "Estimate(β)", "Std Error", "P Value"]
