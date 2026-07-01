@@ -102,9 +102,9 @@ y_labels <- c(
 x_levels <- c("ET_CO2", "FiO2_new", "TEMP")
 if (identical(LABEL_MODE, "range")) {
   x_labels <- c(
-    "ET_CO2" = "atop(EtCO[2], '(5-95%)')",
-    "TEMP" = "atop(TEMP, '(5-95%)')",
-    "FiO2_new" = "atop(FiO[2], '(5-95%)')"
+    "ET_CO2" = "EtCO[2]",
+    "TEMP" = "TEMP",
+    "FiO2_new" = "FiO[2]"
   )
 } else {
   x_labels <- c(
@@ -215,7 +215,7 @@ theme_matrix <- function() {
       panel.grid = element_blank(),
       axis.title = element_blank(),
       text = element_text(family = PLOT_FONT_FAMILY),
-      axis.text.x = element_text(size = MATRIX_AXIS_X_SIZE, colour = "black", lineheight = 0.88, hjust = 0.5, family = PLOT_FONT_FAMILY),
+      axis.text.x = element_text(size = MATRIX_AXIS_X_SIZE, colour = "black", lineheight = 0.88, hjust = 0.5, margin = margin(t = 3.5, unit = "pt"), family = PLOT_FONT_FAMILY),
       axis.text.y = element_text(size = MATRIX_AXIS_Y_SIZE, colour = "black", hjust = 1, margin = margin(r = 4, unit = "pt"), family = PLOT_FONT_FAMILY),
       axis.ticks = element_line(colour = "#5F5F5F", linewidth = 0.35),
       axis.ticks.length = grid::unit(2.0, "pt"),
