@@ -263,7 +263,7 @@ legend_labels <- function(x, mode) {
 }
 
 make_colorbar_legend <- function(fill_min, fill_max, mode, title) {
-  title_parse <- grepl("\\[|\\(|~|paste", title)
+  title_parse <- grepl("\\[|~|paste", title)
   fill_breaks <- legend_breaks(fill_min, fill_max, mode)
   ylim_pad <- MATRIX_LEGEND_Y_PAD_FRAC * (fill_max - fill_min)
   legend_steps <- 90
@@ -308,7 +308,7 @@ make_colorbar_legend <- function(fill_min, fill_max, mode, title) {
       midpoint = 0, limits = c(fill_min, fill_max), guide = "none"
     ) +
     coord_cartesian(
-      xlim = c(0.48, 1.76),
+      xlim = c(0.48, 2.05),
       ylim = c(fill_min - ylim_pad - MATRIX_LEGEND_Y_SHIFT, fill_max + ylim_pad - MATRIX_LEGEND_Y_SHIFT),
       expand = FALSE,
       clip = "off"
@@ -348,7 +348,7 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
     d <- d %>%
       mutate(text_colour = if_else(abs(.data$fill_value) >= 0.75 * max(abs(fill_min), abs(fill_max)), "white", "#222222"))
   }
-  legend_title <- if (mode == "raw") "paste('Adjusted Tissue O'[2], ' Change (%)')" else "Difference vs overall"
+  legend_title <- if (mode == "raw") "Tissue Oxygen Saturation Change (%)" else "Difference vs overall"
   main_plot <- ggplot(d, aes(x = .data$x_label, y = .data$subgroup)) +
     geom_tile(
       aes(fill = .data$fill_value),
