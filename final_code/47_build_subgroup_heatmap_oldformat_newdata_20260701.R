@@ -348,7 +348,7 @@ plot_matrix <- function(df, mode = c("raw", "delta")) {
     d <- d %>%
       mutate(text_colour = if_else(abs(.data$fill_value) >= 0.75 * max(abs(fill_min), abs(fill_max)), "white", "#222222"))
   }
-  legend_title <- if (mode == "raw") "Tissue Oxygen Saturation Change (%)" else "Difference vs overall"
+  legend_title <- if (mode == "raw") "Tissue Oxygenation Change (%)" else "Difference vs overall"
   main_plot <- ggplot(d, aes(x = .data$x_label, y = .data$subgroup)) +
     geom_tile(
       aes(fill = .data$fill_value),
