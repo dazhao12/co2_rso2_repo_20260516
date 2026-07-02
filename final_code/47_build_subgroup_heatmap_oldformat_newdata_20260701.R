@@ -81,12 +81,12 @@ MATRIX_STRIP_SIZE <- 10.4
 MATRIX_VALUE_SIZE <- 2.85
 MATRIX_LEGEND_TEXT_SIZE <- 8.2
 MATRIX_LEGEND_TITLE_SIZE <- 8.8
-MATRIX_LEGEND_Y_PAD_FRAC <- suppressWarnings(as.numeric(Sys.getenv("SUBGROUP_MATRIX_LEGEND_Y_PAD_FRAC", "0.17")))
-if (is.na(MATRIX_LEGEND_Y_PAD_FRAC)) MATRIX_LEGEND_Y_PAD_FRAC <- 0.17
+MATRIX_LEGEND_Y_PAD_FRAC <- suppressWarnings(as.numeric(Sys.getenv("SUBGROUP_MATRIX_LEGEND_Y_PAD_FRAC", "0.128")))
+if (is.na(MATRIX_LEGEND_Y_PAD_FRAC)) MATRIX_LEGEND_Y_PAD_FRAC <- 0.128
 MATRIX_LEGEND_Y_SHIFT <- suppressWarnings(as.numeric(Sys.getenv("SUBGROUP_MATRIX_LEGEND_Y_SHIFT", "0")))
 if (is.na(MATRIX_LEGEND_Y_SHIFT)) MATRIX_LEGEND_Y_SHIFT <- 0
-MATRIX_LEGEND_OVERLAP_CM <- suppressWarnings(as.numeric(Sys.getenv("SUBGROUP_MATRIX_LEGEND_OVERLAP_CM", "0")))
-if (is.na(MATRIX_LEGEND_OVERLAP_CM)) MATRIX_LEGEND_OVERLAP_CM <- 0
+MATRIX_LEGEND_OVERLAP_CM <- suppressWarnings(as.numeric(Sys.getenv("SUBGROUP_MATRIX_LEGEND_OVERLAP_CM", "0.90")))
+if (is.na(MATRIX_LEGEND_OVERLAP_CM)) MATRIX_LEGEND_OVERLAP_CM <- 0.90
 MATRIX_FILL_MIN <- -0.5
 MATRIX_FILL_MAX <- as.numeric(Sys.getenv("SUBGROUP_MATRIX_FILL_MAX", "3.0"))
 MATRIX_TILE_BORDER <- "white"
@@ -215,7 +215,7 @@ theme_matrix <- function() {
       panel.grid = element_blank(),
       axis.title = element_blank(),
       text = element_text(family = PLOT_FONT_FAMILY),
-      axis.text.x = element_text(size = MATRIX_AXIS_X_SIZE, colour = "black", lineheight = 0.88, hjust = 0.5, margin = margin(t = 3.5, unit = "pt"), family = PLOT_FONT_FAMILY),
+      axis.text.x = element_text(size = MATRIX_AXIS_X_SIZE, colour = "black", lineheight = 0.88, hjust = 0.5, margin = margin(t = 5.2, unit = "pt"), family = PLOT_FONT_FAMILY),
       axis.text.y = element_text(size = MATRIX_AXIS_Y_SIZE, colour = "black", hjust = 1, margin = margin(r = 4, unit = "pt"), family = PLOT_FONT_FAMILY),
       axis.ticks = element_line(colour = "#5F5F5F", linewidth = 0.35),
       axis.ticks.length = grid::unit(2.0, "pt"),
